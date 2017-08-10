@@ -23,7 +23,7 @@ class MemuserSpec extends Specification{
         UserController userController = new UserController()
 
         when:
-        def user = userController.createUser(memUser)
+        userController.createUser(memUser)
         def users = userController.getUsers()
 
         then:
