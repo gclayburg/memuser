@@ -3,6 +3,8 @@ package com.garyclayburg.memuser
 import org.springframework.boot.test.context.SpringBootTest
 import spock.lang.Specification
 
+import javax.servlet.http.HttpServletRequest
+
 /**
  * <br><br>
  * Created 2017-08-10 07:57
@@ -19,15 +21,18 @@ class MemuserSpec extends Specification{
 
     def "createuser"(){
         given:
-        MemUser memUser = new MemUser(userName: "hi",id: 9)
+        MemUser memUser = new MemUser(userName: "hi")
         UserController userController = new UserController()
+        HttpServletRequest mockRequest = Mock()
+        mockRequest.getRequestURL() >> new StringBuffer("http://www.example.com/Users")
+
 
         when:
-        userController.createUser(memUser)
-        def users = userController.getUsers()
+        Object createdUser = userController.createUser(mockRequest,memUser)
+        UserFragmentList users = userController.getUsers()
 
         then:
-        users.contains(memUser)
-        userController.getUser("hi") == memUser
+        users.getResources().contains(memUser)
+        userController.getUser(((MemUser)createdUser).id) == memUser
     }
 }
