@@ -15,7 +15,6 @@ import java.time.ZonedDateTime
 
 @SpringBootApplication
 class MemuserApplication {
-
     static void main(String[] args) {
         SpringApplication.run MemuserApplication, args
     }
@@ -24,14 +23,7 @@ class MemuserApplication {
 @RestController
 class UserController {
 
-    Map<String, MemUser> userMap
-
-    UserController() {
-        userMap = new HashMap<>()
-//        def now = ZonedDateTime.now()
-//        Meta newmeta = new Meta(location: "http://example.com/Users", created: now, lastModified: now, resourceType: "User")
-//        userMap.put("bill", new MemUser(userName: "bjones", id: 1, meta: newmeta))
-    }
+    Map<String, MemUser> userMap = new HashMap<>()
 
     @GetMapping("/Users")
     def getUsers() {
@@ -49,7 +41,7 @@ class UserController {
             memUser.setMeta(
                     new Meta(location: request.getRequestURL().append("/").append(memUser.getId()).toString(), created: now, lastModified: now, resourceType: "User"))
             userMap.put(memUser.id, memUser)
-            return memUser
+            return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
         }
@@ -57,7 +49,6 @@ class UserController {
 
     @GetMapping("/Users/{id}")
     def getUser(@PathVariable("id") String id) {
-        println "looking for: $id"
         userMap.get(id) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
     }
 }
@@ -79,8 +70,7 @@ class MemUser {
         data.put(name, value)
     }
 
-    void setPassword(String password){
-    }
+    void setPassword(String password) {}
 }
 
 @Canonical
@@ -93,16 +83,12 @@ class Meta {
 }
 
 @Canonical
-class UserFragmentList{
-    List<String> schemas
+class UserFragmentList {
+    List<String> schemas = ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
     int totalResults
 
     @JsonProperty("Resources")
     List<MemUser> Resources
-
-    UserFragmentList() {
-        schemas = ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
-    }
 
     @JsonProperty("Resources")
     void setResources(List<MemUser> resources) {

@@ -33,6 +33,6 @@ class MemuserSpec extends Specification{
 
         then:
         users.getResources().contains(memUser)
-        userController.getUser(((MemUser)createdUser).id) == memUser
+        userController.getUser(((MemUser)createdUser.getBody()).id) == memUser
     }
 }
