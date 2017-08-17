@@ -10,6 +10,3 @@ COPY ./injectenv.sh /injectenv.sh
 RUN chmod 755 /injectenv.sh
 ENTRYPOINT ["/injectenv.sh"]
 
-#CMD echo "The application will start in ${JHIPSTER_SLEEP}s..." && \
-#    sleep ${JHIPSTER_SLEEP} && \
-#    java -Djava.security.egd=file:/dev/./urandom -jar /app.jar
