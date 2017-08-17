@@ -78,6 +78,9 @@ class MemUser {
     void setData(String name, Object value) {
         data.put(name, value)
     }
+
+    void setPassword(String password){
+    }
 }
 
 @Canonical
