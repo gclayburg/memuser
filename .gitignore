@@ -22,3 +22,10 @@ nbbuild/
 dist/
 nbdist/
 .nb-gradle/
+
+#Ignore generated log files
+*.log
+*.out
+#Gradle
+.gradle/
+build/
