@@ -31,7 +31,7 @@ include::{snippets}/createalice/http-request.adoc[]
 
 And the response is:
 
-include::{snippets}/createalice/http-response77.adoc[]
+include::{snippets}/createalice/http-response.adoc[]
 
 TBD
 hi againss!!
