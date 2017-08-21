@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.transform.Canonical
+import groovy.util.logging.Slf4j
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.http.HttpStatus
@@ -20,10 +21,12 @@ class MemuserApplication {
     }
 }
 
+@Slf4j
 @RestController
 class UserController {
 
     Map<String, MemUser> userMap = new HashMap<>()
+    Map<String, MemUser> userNameMap = new HashMap<>()
 
     @GetMapping("/Users")
     def getUsers() {
@@ -35,15 +38,33 @@ class UserController {
 
     @PostMapping("/Users")
     def createUser(HttpServletRequest request, @RequestBody MemUser memUser) {
-        if (!userMap.get(memUser.userName)) {
+        log.info("create")
+        if (!userNameMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
                     new Meta(location: request.getRequestURL().append("/").append(memUser.getId()).toString(), created: now, lastModified: now, resourceType: "User"))
             userMap.put(memUser.id, memUser)
+            userNameMap.put(memUser.userName,memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
         } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+        }
+    }
+
+    @PutMapping("/Users/{id}")
+    def putUser(@RequestBody MemUser memUser,@PathVariable("id") String id) {
+        log.info("put")
+        if (userMap.get(memUser?.id) != null && memUser.id == id) {
+            def meta = userMap.get(memUser.id).getMeta()
+            meta.setLastModified(ZonedDateTime.now())
+            memUser.setMeta(meta)
+            userNameMap.remove(userMap.get(memUser.id).userName) //userName for id may have changed
+            userMap.put(memUser.id,memUser)
+            userNameMap.put(memUser.userName,memUser)
+            return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
+        } else {
+            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
         }
     }
 
@@ -55,8 +76,7 @@ class UserController {
 
 @Canonical
 class MemUser {
-    String userName
-    String id
+    String id, userName
     Meta meta
     protected Map<String, Object> data = new HashMap<>()
 
@@ -75,11 +95,8 @@ class MemUser {
 
 @Canonical
 class Meta {
-    String location
-    ZonedDateTime created
-    ZonedDateTime lastModified
-    String version
-    String resourceType
+    String location, version, resourceType
+    ZonedDateTime created, lastModified
 }
 
 @Canonical

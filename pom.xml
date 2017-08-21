@@ -118,12 +118,41 @@
                     </execution>
                 </executions>
                 <dependencies>
+                    <dependency> <!-- used for generating tabs in html -->
+                        <groupId>io.spring.asciidoctor</groupId>
+                        <artifactId>spring-asciidoctor-extensions</artifactId>
+                        <version>0.1.0.RELEASE</version>
+                    </dependency>
                     <dependency>
                         <groupId>org.springframework.restdocs</groupId>
                         <artifactId>spring-restdocs-asciidoctor</artifactId>
                         <version>${spring-restdocs.version}</version>
                     </dependency>
                 </dependencies>
+            </plugin>
+            <plugin>
+                <artifactId>maven-resources-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <!--
+                            makes documentation available at:
+                            http://localhost:8080/docs/api.html
+                            -->
+                            <outputDirectory>${project.build.outputDirectory}/static/docs</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/generated-docs</directory>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>
@@ -165,8 +194,15 @@
                     </execution>
                 </executions>
             </plugin>
+
         </plugins>
     </build>
 
+    <pluginRepositories>
+        <pluginRepository>
+            <id>spring-release</id> <!-- for spring-asciidoctor-extensions -->
+            <url>https://repo.spring.io/release</url>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>

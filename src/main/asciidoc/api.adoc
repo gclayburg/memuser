@@ -1,0 +1,92 @@
+= RESTful Notes API Guide
+Gary Clayburg;
+:doctype: book
+:icons: font
+:source-highlighter: highlightjs
+:highlightjsdir: highlight
+:toc: left
+:toclevels: 4
+:sectlinks:
+
+[[overview]]
+= Overview
+
+[[create-user]]
+== Create
+
+
+Create a user with curl:
+
+[source,indent=0,role="primary"]
+.Curl
+include::{snippets}/createalice/curl-request.adoc[]
+
+[source,indent=0,role="secondary"]
+.Httpie
+include::{snippets}/createalice/httpie-request.adoc[]
+
+[source,indent=0,role="secondary"]
+.Http
+include::{snippets}/createalice/http-request.adoc[]
+
+And the response is:
+
+include::{snippets}/createalice/http-response77.adoc[]
+
+TBD
+hi againss!!
+here we go now
+
+[[overview-http-verbs]]
+== HTTP verbs
+
+RESTful notes tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP verbs.
+
+|===
+| Verb | Usage
+
+| `GET`
+| Used to retrieve a resource
+
+| `POST`
+| Used to create a new resource
+
+| `PATCH`
+| Used to update an existing resource, including partial updates
+
+| `DELETE`
+| Used to delete an existing resource
+|===
+
+[[overview-http-status-codes]]
+== HTTP status codes
+
+RESTful notes tries to adhere as closely as possible to standard HTTP and REST conventions in its
+use of HTTP status codes.
+
+|===
+| Status code | Usage
+
+| `200 OK`
+| The request completed successfully
+
+| `201 Created`
+| A new resource has been created successfully. The resource's URI is available from the response's
+`Location` header
+
+| `204 No Content`
+| An update to an existing resource has been applied successfully
+
+| `400 Bad Request`
+| The request was malformed. The response body will include an error providing further information
+
+| `404 Not Found`
+| The requested resource did not exist
+|===
+
+[[overview-errors]]
+== Errors
+
+TBD
+
