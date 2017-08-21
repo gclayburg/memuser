@@ -30,6 +30,14 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
 
         stage "docker"
         sh "mvn docker:build -DpushImage"
+        step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', healthy: '1', includePattern: '', messagesPattern: '', unHealthy: '2'])
+/*
+i.e. match this:
+12:31:12 [qbb_fastWarDockerBranch] asciidoctor: WARNING: api-guide.adoc: line 380: no callouts refer to list item 1
+
+asciidoctor: WARNING: api-guide.adoc: line 457: include file not found: /home/jenkins/workspace/visualsync/service-core/target/generated-snippets/createone/curl-request.adoc
+*/
+
         stage "archive"
         step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
 
