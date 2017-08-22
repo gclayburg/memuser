@@ -1,0 +1,129 @@
+apply plugin: 'groovy'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'application'
+apply plugin: 'org.asciidoctor.convert'
+//apply plugin: 'codenarc'
+apply plugin: 'org.kordamp.gradle.livereload'
+
+
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
+        classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
+    }
+}
+version = "${version}"
+group = "${group}"
+
+
+jar {
+    baseName = 'spring-restdocs-sample'
+    version =  '0.0.1'
+    dependsOn asciidoctor
+    from ("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
+}
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.spring.io/release"
+    }
+
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy' //groovy-all ?
+    compile 'org.springframework.boot:spring-boot-starter-web'
+    compile 'org.springframework.boot:spring-boot-starter-actuator'
+    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    testCompile 'org.springframework.boot:spring-boot-starter-test'
+    testCompile "org.spockframework:spock-spring:${spockVersion}"
+    testCompile "org.spockframework:spock-core:${spockVersion}"
+    testCompile 'com.jayway.jsonpath:json-path-assert:0.8.1'
+    testCompile "org.springframework.restdocs:spring-restdocs-mockmvc:${springRestDocsVersion}"
+}
+
+ext {
+    snippetsDir = file('target/generated-snippets')
+}
+
+asciidoctor {
+    dependsOn test
+    sourceDir = file('src/main/asciidoc')
+    outputDir "build/asciidoc"
+//    outputDir "$projectDir/src/main/resources/public"
+    inputs.dir snippetsDir
+    backends 'html5'
+    dependencies {
+        asciidoctor 'io.spring.asciidoctor:spring-asciidoctor-extensions:0.1.0.RELEASE'
+    }
+
+    attributes 'source-highlighter' : 'prettify',
+            'imagesdir':'images',
+            'toc':'left',
+            'icons': 'font',
+            'setanchors':'true',
+            'idprefix':'',
+            'idseparator':'-',
+            'docinfo1':'true',
+            'snippets': snippetsDir
+}
+
+liveReload {
+    docRoot asciidoctor.outputDir.canonicalPath
+    dependsOn asciidoctor
+}
+
+task cleanTempDir(type: Delete) {
+    delete fileTree(dir: 'src/main/resources/public')
+}
+
+clean {
+    dependsOn cleanTempDir
+}
+
+build {
+    dependsOn asciidoctor
+}
+
+//codenarcMain {
+//    ignoreFailures false
+//    configFile file('gradle/codenarc/codenarc.groovy')
+//}
+
+
+//codenarcTest {
+//    configFile file('gradle/codenarc/codenarcTest.groovy')
+//}
+
+task publish(type: GradleBuild) {
+    dependsOn asciidoctor
+    buildFile = file('publish.gradle')
+    tasks = ['publishGhPages']
+}
+
+ext['spring-restdocs.version'] = '1.2.1.RELEASE'
+
+/*
+gradle continuous build in one terminal:
+$ cd dev/memuser
+$ gradle asciidoctor -t
+
+enable livereload in another terminal:
+$ cd dev/memuser
+$ gradle liveReload
+
+in the browser open url http://localhost:35729/html5/api.html
+-enable livereload browser plugin
+
+maven resources plugin makes content available at:
+http://localhost:8080/docs/api.html
+ */

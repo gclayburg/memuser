@@ -26,7 +26,8 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
         whereami()
 
         stage "build/test"
-        sh "mvn clean install"
+//        sh "mvn clean install"
+        sh "gradle clean build"
         step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
 
         stage "docker"
