@@ -46,6 +46,15 @@ class UserDocsSpec extends BaseDocsSpec {
         resultActions.andExpect(status().isOk())
     }
 
+    def "nobody"(){
+        when:
+        ResultActions resultActions = mockMvc.perform(get('/Users/nobodyhere')
+                .accept(MediaType.APPLICATION_JSON))
+
+
+        then:
+        resultActions.andExpect(status().isNotFound())
+    }
     def "hello users"(){
         when:
         ResultActions resultActions = mockMvc.perform(get('/Users')
