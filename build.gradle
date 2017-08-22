@@ -4,6 +4,7 @@ apply plugin: 'application'
 apply plugin: 'org.asciidoctor.convert'
 //apply plugin: 'codenarc'
 apply plugin: 'org.kordamp.gradle.livereload'
+apply plugin: 'docker'
 
 
 buildscript {
@@ -16,6 +17,7 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
         classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
+        classpath "se.transmode.gradle:gradle-docker:1.2"
     }
 }
 version = "${version}"
@@ -92,6 +94,22 @@ clean {
 
 build {
     dependsOn asciidoctor
+}
+
+task buildDocker(type: Docker){
+    dockerfile = file('src/main/docker/Dockerfile')
+    tag = "registry:5000/memuser"
+    dependsOn build
+    doFirst {
+        copy {
+            from jar.archivePath
+            into stageDir
+        }
+        copy {
+            from 'src/main/docker/injectenv.sh'
+            into stageDir
+        }
+    }
 }
 
 //codenarcMain {
