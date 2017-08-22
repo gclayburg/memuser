@@ -27,11 +27,12 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
 
         stage "build/test"
 //        sh "mvn clean install"
-        sh "gradle clean build"
+        sh "gradle clean buildDocker"
         step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
 
         stage "docker"
-        sh "mvn docker:build -DpushImage"
+        sh "pwd"
+//        sh "mvn docker:build -DpushImage"
 /*
 i.e. match this:
 12:31:12 [qbb_fastWarDockerBranch] asciidoctor: WARNING: api-guide.adoc: line 380: no callouts refer to list item 1
