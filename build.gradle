@@ -42,7 +42,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy' //groovy-all ?
+    compile 'org.codehaus.groovy:groovy-all' //groovy-all ?
     compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'org.springframework.boot:spring-boot-starter-actuator'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
