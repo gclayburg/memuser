@@ -40,7 +40,8 @@ asciidoctor: WARNING: api-guide.adoc: line 457: include file not found: /home/je
 */
 
         stage "archive"
-        step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+//        step([$class: 'JUnitResultArchiver', testResults: '**/target/surefire-reports/TEST-*.xml'])
+        step([$class: 'JUnitResultArchiver', testResults: '**/build/test-results/test/TEST-*.xml'])
 
         println "flow complete!"
     }
