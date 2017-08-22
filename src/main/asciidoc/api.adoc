@@ -19,7 +19,7 @@ Create a user with curl:
 
 [source,indent=0,role="primary"]
 .Curl
-include::{snippets}/createalice/curl-request.adoc[]
+include::{snippets}/createalice/curljunk-request.adoc[]
 
 [source,indent=0,role="secondary"]
 .Httpie
