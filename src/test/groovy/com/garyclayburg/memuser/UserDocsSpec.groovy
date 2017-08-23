@@ -7,22 +7,12 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.http.MediaType
 import org.springframework.test.web.servlet.MvcResult
 import org.springframework.test.web.servlet.ResultActions
-import spock.lang.*
 
 import java.time.ZonedDateTime
 
-import static org.hamcrest.Matchers.is
-import static org.hamcrest.Matchers.notNullValue
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.document
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.preprocessResponse
-import static org.springframework.restdocs.operation.preprocess.Preprocessors.prettyPrint
-import static org.springframework.restdocs.payload.PayloadDocumentation.fieldWithPath
-import static org.springframework.restdocs.payload.PayloadDocumentation.responseFields
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath
 
 /**
  * <br><br>
@@ -34,46 +24,51 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @Slf4j
 class UserDocsSpec extends BaseDocsSpec {
 
+    public static final String SCIM_JSON = "application/scim+json"
     @Autowired
     ObjectMapper objectMapper;
 
-    def "hello info"(){
+    def "hello info"() {
         when:
         ResultActions resultActions = mockMvc.perform(get('/info')
-        .accept(MediaType.APPLICATION_JSON))
+                .accept(MediaType.APPLICATION_JSON))
 
         then:
         resultActions.andExpect(status().isOk())
     }
 
-    def "nobody"(){
+    def "nobody"() {
         when:
         ResultActions resultActions = mockMvc.perform(get('/Users/nobodyhere')
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(SCIM_JSON))
 
 
         then:
         resultActions.andExpect(status().isNotFound())
     }
-    def "hello users"(){
+
+    def "hello users"() {
         when:
         ResultActions resultActions = mockMvc.perform(get('/Users')
-        .accept(MediaType.APPLICATION_JSON))
+                .accept(SCIM_JSON))
 
 
         then:
         resultActions.andExpect(status().isOk())
-        .andDo(document("emptyusers"))
+                .andDo(document("emptyusers"))
     }
 
-    def "create list"(){
+    def "create list"() {
         when: "create alice"
         ResultActions createActions = mockMvc.perform(post('/Users')
-        .contentType(MediaType.APPLICATION_JSON)
-        .content('{\n' +
-                '  "userName": "alice"\n' +
-                '}')
-                .accept(MediaType.APPLICATION_JSON))
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "userName": "alicesmith",
+  "displayName": "Alice P Smith"
+}
+""")
+                .accept(SCIM_JSON))
 
         then:
         def mvcResult = createActions.andExpect(status().isCreated())
@@ -82,38 +77,115 @@ class UserDocsSpec extends BaseDocsSpec {
         MemUser createdUser = unmarshall(mvcResult)
 
         when:
-        ResultActions resultActionsAlice = mockMvc.perform(get('/Users/' +createdUser.id)
-                .accept(MediaType.APPLICATION_JSON))
+        ResultActions resultActionsAlice = mockMvc.perform(get('/Users/' + createdUser.id)
+                .accept(SCIM_JSON))
 
         then:
         resultActionsAlice.andExpect(status().isOk())
                 .andDo(document("getalice"))
         when:
         ResultActions dupCreateActions = mockMvc.perform(post('/Users')
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(SCIM_JSON)
                 .content('{\n' +
-                '  "userName": "alice"\n' +
+                '  "userName": "alicesmith"\n' +
                 '}')
-                .accept(MediaType.APPLICATION_JSON))
+                .accept(SCIM_JSON))
 
         then: "no duplicate username allowed"
         dupCreateActions.andExpect(status().is4xxClientError())
+                .andDo(document("duplicatealicesmith"))
 
         when: "change username"
-        createdUser.setUserName("alicesmith")
+        createdUser.setUserName("alicejones")
+        createdUser.setSchemas(null)
+        createdUser.setMeta(null)
+        def aliceData = createdUser.getData()
+        createdUser.getData().remove("displayName")
         String strAlice = objectMapper.writeValueAsString(createdUser)
         def startput = ZonedDateTime.now()
-        ResultActions changeUserNameACtions = mockMvc.perform(put('/Users/' +createdUser.id)
-                .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
+        ResultActions changeUserNameACtions = mockMvc.perform(put('/Users/' + createdUser.id)
+                .accept(SCIM_JSON)
+                .contentType(SCIM_JSON)
                 .content(strAlice))
         def aliceModified = unmarshall(changeUserNameACtions.andReturn())
 
         then:
         changeUserNameACtions.andExpect(status().isOk())
-        aliceModified.getUserName() == "alicesmith"
+                .andDo(document("changeusername"))
+        aliceModified.getUserName() == "alicejones"
         aliceModified.getMeta().getLastModified().isAfter(startput)
         aliceModified.getMeta().getCreated().isBefore(startput)
+        aliceModified.getData().get("displayName") != "Alice P Smith"
+
+        when: "change alice username with displayname"
+        changeUserNameACtions = mockMvc.perform(put('/Users/' + createdUser.id)
+                .accept(SCIM_JSON)
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "id": """ + "\"" + createdUser.id + "\"" + """,
+  "userName": "alicejones",
+  "displayName": "Alice P Smith"
+}
+"""))
+        aliceModified = unmarshall(changeUserNameACtions.andReturn())
+
+        then:
+        changeUserNameACtions.andExpect(status().isOk())
+                .andDo(document("changeusernamedisplayname"))
+        aliceModified.getUserName() == "alicejones"
+        aliceModified.getMeta().getLastModified().isAfter(startput)
+        aliceModified.getMeta().getCreated().isBefore(startput)
+        aliceModified.getData().get("displayName") == "Alice P Smith"
+
+
+        when: "create tom"
+        createActions = mockMvc.perform(post('/Users')
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "userName": "tomjones",
+  "name": {
+    "formatted": "Dr. Tom J Jones",
+    "familyName": "Jones",
+    "givenName": "Tom",
+    "middleName": "Jackson",
+    "honorificPrefix": "Dr."
+  },
+  "displayName": "Tom Jones"
+}
+""")
+                .accept(SCIM_JSON))
+
+        then:
+        createActions.andExpect(status().isCreated())
+                .andDo(document("createtom"))
+
+        when: "create harry"
+        createActions = mockMvc.perform(post('/Users')
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "userName": "harry",
+  "displayName": "Tom Jones",
+  "mailcode": "CHP",
+  "emailaddress": "tomjones@gmail.com"
+}
+""")
+                .accept(SCIM_JSON))
+
+        then:
+        createActions.andExpect(status().isCreated())
+                .andDo(document("createharry"))
+
+        when:
+        ResultActions resultActionsList = mockMvc.perform(get('/Users/')
+                .accept(SCIM_JSON))
+
+        then:
+        resultActionsList.andExpect(status().isOk())
+                .andDo(document("getlist"))
+
     }
 
     MemUser unmarshall(MvcResult mvcResult) {

@@ -179,6 +179,10 @@
                 <groupId>org.codehaus.gmavenplus</groupId>
                 <artifactId>gmavenplus-plugin</artifactId>
                 <version>1.5</version>
+                <configuration>
+                    <stubsOutputDirectory>${project.build.directory}/generated-sources/groovy-stubs</stubsOutputDirectory>
+                    <testStubsOutputDirectory>${project.build.directory}/generated-sources/groovy-stubs</testStubsOutputDirectory>
+                </configuration>
                 <executions>
                     <execution>
                         <goals>

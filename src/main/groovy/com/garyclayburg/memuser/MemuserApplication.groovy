@@ -36,7 +36,7 @@ class UserController {
         return userFragmentList
     }
 
-    @PostMapping("/Users")
+    @PostMapping(name = "/Users")
     def createUser(HttpServletRequest request, @RequestBody MemUser memUser) {
         log.info("create")
         if (!userNameMap.get(memUser.userName)) {
@@ -44,8 +44,9 @@ class UserController {
             def now = ZonedDateTime.now()
             memUser.setMeta(
                     new Meta(location: request.getRequestURL().append("/").append(memUser.getId()).toString(), created: now, lastModified: now, resourceType: "User"))
+            memUser.schemas ?: memUser.setSchemas("urn:ietf:params:scim:schemas:core:2.0:User")
             userMap.put(memUser.id, memUser)
-            userNameMap.put(memUser.userName,memUser)
+            userNameMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
@@ -53,15 +54,15 @@ class UserController {
     }
 
     @PutMapping("/Users/{id}")
-    def putUser(@RequestBody MemUser memUser,@PathVariable("id") String id) {
+    def putUser(@RequestBody MemUser memUser, @PathVariable("id") String id) {
         log.info("put")
         if (userMap.get(memUser?.id) != null && memUser.id == id) {
             def meta = userMap.get(memUser.id).getMeta()
             meta.setLastModified(ZonedDateTime.now())
             memUser.setMeta(meta)
             userNameMap.remove(userMap.get(memUser.id).userName) //userName for id may have changed
-            userMap.put(memUser.id,memUser)
-            userNameMap.put(memUser.userName,memUser)
+            userMap.put(memUser.id, memUser)
+            userNameMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
@@ -76,7 +77,7 @@ class UserController {
 
 @Canonical
 class MemUser {
-    String id, userName
+    String id, userName, schemas
     Meta meta
     protected Map<String, Object> data = new HashMap<>()
 
