@@ -59,6 +59,13 @@ dependencies {
 ext {
     snippetsDir = file('target/generated-snippets')
 }
+processResources{
+    expand(project.properties)
+}
+gitProperties {
+    dateFormat = "yyyy-MM-dd'T'HH:mmZ"
+    dateFormatTimeZone = "PST"
+}
 
 asciidoctor {
     dependsOn test
