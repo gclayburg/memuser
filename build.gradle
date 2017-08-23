@@ -63,7 +63,7 @@ processResources{
     expand(project.properties)
 }
 gitProperties {
-    dateFormat = "yyyy-MM-dd'T'HH:mmZ"
+    dateFormat = "yyyy-MM-dd'T'HH:mm:ssZ"
     dateFormatTimeZone = "America/Denver"
 }
 
