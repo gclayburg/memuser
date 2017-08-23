@@ -110,6 +110,7 @@ task buildDocker(type: Docker){
     dockerfile = file('src/main/docker/Dockerfile')
     tag = "registry:5000/memuser"
     dependsOn build
+    push = project.hasProperty('pushdocker')
     doFirst {
         copy {
             from jar.archivePath

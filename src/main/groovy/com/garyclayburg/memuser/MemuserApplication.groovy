@@ -55,7 +55,6 @@ class UserController {
 
     @PutMapping("/Users/{id}")
     def putUser(@RequestBody MemUser memUser, @PathVariable("id") String id) {
-        log.info("put")
         if (userMap.get(memUser?.id) != null && memUser.id == id) {
             def meta = userMap.get(memUser.id).getMeta()
             meta.setLastModified(ZonedDateTime.now())

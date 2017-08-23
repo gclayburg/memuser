@@ -27,11 +27,11 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
 
         stage "build/test"
 //        sh "mvn clean install"
-        sh "./gradlew clean buildDocker"
+        sh "./gradlew clean buildDocker -Ppushdocker"
         step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
 
         stage "docker"
-        sh "pwd && ls"
+        sh "pwd && ls "
 //        sh "mvn docker:build -DpushImage"
 /*
 i.e. match this:
