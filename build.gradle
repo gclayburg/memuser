@@ -24,12 +24,9 @@ apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'org.kordamp.gradle.livereload'
 apply plugin: 'docker'
 
-version = "${version}"
 group = "${group}"
 
 jar {
-    baseName = "${appname}"
-    version =  '0.0.1'
     dependsOn asciidoctor
     from ("${asciidoctor.outputDir}/html5") {
         into 'static/docs'
@@ -45,6 +42,7 @@ repositories {
 }
 
 dependencies {
+    compile 'org.springframework.boot:spring-boot-devtools'
     compile 'org.codehaus.groovy:groovy-all'
     compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'org.springframework.boot:spring-boot-starter-actuator'
@@ -108,7 +106,9 @@ build {
 
 task buildDocker(type: Docker){
     dockerfile = file('src/main/docker/Dockerfile')
-    tag = "registry:5000/memuser"
+    def dockerbasename ="registry:5000/memuser"
+    tag = dockerbasename
+    tagVersion = "latest"
     dependsOn build
     push = project.hasProperty('pushdocker')
     doFirst {
@@ -119,6 +119,13 @@ task buildDocker(type: Docker){
         copy {
             from 'src/main/docker/injectenv.sh'
             into stageDir
+        }
+    }
+    doLast{
+        println "also tagging image with ${dockerbasename}:${project.version}"
+        exec{
+            //docker tag registry:5000/memuser:latest registry:5000/memuser:0.0.2
+            commandLine "docker", "tag", tag, dockerbasename+":"+project.version
         }
     }
 }
