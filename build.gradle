@@ -28,7 +28,7 @@ version = "${version}"
 group = "${group}"
 
 jar {
-    baseName = 'spring-restdocs-sample'
+    baseName = "${appname}"
     version =  '0.0.1'
     dependsOn asciidoctor
     from ("${asciidoctor.outputDir}/html5") {
@@ -45,7 +45,7 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all' //groovy-all ?
+    compile 'org.codehaus.groovy:groovy-all'
     compile 'org.springframework.boot:spring-boot-starter-web'
     compile 'org.springframework.boot:spring-boot-starter-actuator'
     compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
