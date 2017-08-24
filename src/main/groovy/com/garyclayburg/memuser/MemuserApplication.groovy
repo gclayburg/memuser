@@ -23,7 +23,7 @@ class MemuserApplication {
 
 @Slf4j
 @RestController
-@RequestMapping('/api')
+@RequestMapping('/api/v1')
 class UserController {
 
     Map<String, MemUser> userMap = new HashMap<>()

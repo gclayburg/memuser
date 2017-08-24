@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserDocsSpec extends BaseDocsSpec {
 
     public static final String SCIM_JSON = "application/scim+json"
-    public static final String USERS = '/api/Users'
+    public static final String USERS = '/api/v1/Users'
     public static final String USERSD = USERS + '/'
     @Autowired
     ObjectMapper objectMapper
