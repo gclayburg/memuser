@@ -23,6 +23,7 @@ class MemuserApplication {
 
 @Slf4j
 @RestController
+@RequestMapping('/api')
 class UserController {
 
     Map<String, MemUser> userMap = new HashMap<>()
@@ -36,7 +37,7 @@ class UserController {
         return userFragmentList
     }
 
-    @PostMapping(name = "/Users")
+    @PostMapping("/Users")
     def createUser(HttpServletRequest request, @RequestBody MemUser memUser) {
         log.info("create")
         if (!userNameMap.get(memUser.userName)) {
