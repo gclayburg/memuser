@@ -122,18 +122,24 @@ task buildDocker(type: Docker){
         }
     }
     doLast{
-        println "also tagging image with ${dockerbasename}:${project.version}"
+        println "also tagging ${project.name} image with ${dockerbasename}:${project.version}"
         exec{
-            //docker tag registry:5000/memuser:latest registry:5000/memuser:0.0.2
+            //docker tag registry:5000/memuser:latest registry:5000/memuser:0.5.0
             commandLine "docker", "tag", tag, dockerbasename+":"+project.version
         }
     }
 }
 
+/*
+java -jar build/libs/memuser-0.5.0.jar
+
+This is simlar to bootRun, except that we are executing the jar file instead of the exploded build dir.
+This allows us to include static files like /docs/api.html
+ */
 task bootJarRun(type: JavaExec) {
     dependsOn bootRepackage
     main = "-jar"
-    args relativePath("build/libs/memuser-0.0.4.jar")
+    args jar.archivePath
 }
 
 //codenarcMain {
