@@ -3,7 +3,6 @@ Gary Clayburg;
 :doctype: book
 :icons: font
 :source-highlighter: highlightjs
-//:highlightjsdir: highlight
 :toc: left
 :toclevels: 4
 :sectlinks:
