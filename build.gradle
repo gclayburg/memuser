@@ -130,6 +130,12 @@ task buildDocker(type: Docker){
     }
 }
 
+task bootJarRun(type: JavaExec) {
+    dependsOn bootRepackage
+    main = "-jar"
+    args relativePath("build/libs/memuser-0.0.4.jar")
+}
+
 //codenarcMain {
 //    ignoreFailures false
 //    configFile file('gradle/codenarc/codenarc.groovy')
