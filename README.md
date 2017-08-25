@@ -1,3 +1,7 @@
+[![](https://images.microbadger.com/badges/version/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own version badge on microbadger.com")
+
+[![](https://images.microbadger.com/badges/image/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own image badge on microbadger.com")
+
 # memuser
 In-memory storage of User data
 
@@ -33,4 +37,5 @@ $ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
 ```
 
 More examples can be found in the guide.
+
 
