@@ -20,15 +20,15 @@ import java.time.ZonedDateTime
 class MemuserApplication {
     static void main(String[] args) {
         def context = SpringApplication.run(MemuserApplication, args)
-        Environment env = context.getEnvironment()
-        log.info("\n----------------------------------------------------------\n\t" +
-                "Application '{}' is ready for e-business! Access URLs:\n\t" +
-                "Local: \t\thttp://localhost:{}\n\t" +
-                "External: \thttp://{}:{}\n----------------------------------------------------------",
-                env.getProperty("spring.application.name"),
-                env.getProperty("server.port"),
-                InetAddress.getLocalHost().getHostAddress(),
-                env.getProperty("server.port"));
+        Environment env = context.environment
+        log.info('\n----------------------------------------------------------\n\t' +
+                'Application \'{}\' is ready for e-business! Access URLs:\n\t' +
+                'Local: \t\thttp://localhost:{}\n\t' +
+                'External: \thttp://{}:{}\n----------------------------------------------------------',
+                env.getProperty('spring.application.name'),
+                env.getProperty('server.port'),
+                InetAddress.localHost.hostAddress,
+                env.getProperty('server.port'))
     }
 }
 
@@ -37,10 +37,10 @@ class MemuserApplication {
 @RequestMapping('/api/v1')
 class UserController {
 
-    Map<String, MemUser> userMap = new HashMap<>()
-    Map<String, MemUser> userNameMap = new HashMap<>()
+    Map<String, MemUser> userMap = [:]
+    Map<String, MemUser> userNameMap = [:]
 
-    @GetMapping("/Users")
+    @GetMapping('/Users')
     def getUsers() {
         UserFragmentList userFragmentList = new UserFragmentList()
         List<MemUser> memUserList = new ArrayList<>(userMap.values())
@@ -48,40 +48,40 @@ class UserController {
         return userFragmentList
     }
 
-    @PostMapping("/Users")
-    def createUser(HttpServletRequest request, @RequestBody MemUser memUser) {
-        log.info("create")
+    @PostMapping('/Users')
+    def addUser(HttpServletRequest request, @RequestBody MemUser memUser) {
         if (!userNameMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
-                    new Meta(location: request.getRequestURL().append("/").append(memUser.getId()).toString(), created: now, lastModified: now, resourceType: "User"))
-            memUser.schemas ?: memUser.setSchemas("urn:ietf:params:scim:schemas:core:2.0:User")
+                    new Meta(location: request.requestURL.append('/').append(memUser.id).toString(),
+                            created: now,
+                            lastModified: now,
+                            resourceType: 'User',))
+            memUser.schemas ?: memUser.setSchemas('urn:ietf:params:scim:schemas:core:2.0:User')
             userMap.put(memUser.id, memUser)
             userNameMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
-        } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
         }
+        return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
     }
 
-    @PutMapping("/Users/{id}")
-    def putUser(@RequestBody MemUser memUser, @PathVariable("id") String id) {
+    @PutMapping('/Users/{id}')
+    def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
         if (userMap.get(memUser?.id) != null && memUser.id == id) {
-            def meta = userMap.get(memUser.id).getMeta()
-            meta.setLastModified(ZonedDateTime.now())
-            memUser.setMeta(meta)
+            def meta = userMap.get(memUser.id).meta
+            meta.lastModified = ZonedDateTime.now()
+            memUser.meta = meta
             userNameMap.remove(userMap.get(memUser.id).userName) //userName for id may have changed
             userMap.put(memUser.id, memUser)
             userNameMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
-        } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
         }
+        return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
     }
 
-    @GetMapping("/Users/{id}")
-    def getUser(@PathVariable("id") String id) {
+    @GetMapping('/Users/{id}')
+    def getUser(@PathVariable('id') String id) {
         userMap.get(id) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
     }
 }
@@ -90,7 +90,7 @@ class UserController {
 class MemUser {
     String id, userName, schemas
     Meta meta
-    protected Map<String, Object> data = new HashMap<>()
+    protected Map<String, Object> data = [:]
 
     @JsonAnyGetter
     Map<String, Object> getData() {
@@ -113,13 +113,13 @@ class Meta {
 
 @Canonical
 class UserFragmentList {
-    List<String> schemas = ["urn:ietf:params:scim:api:messages:2.0:ListResponse"]
+    List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
     int totalResults
 
-    @JsonProperty("Resources")
+    @JsonProperty('Resources')
     List<MemUser> Resources
 
-    @JsonProperty("Resources")
+    @JsonProperty('Resources')
     void setResources(List<MemUser> resources) {
         Resources = resources
         totalResults = resources ? resources.size() : 0

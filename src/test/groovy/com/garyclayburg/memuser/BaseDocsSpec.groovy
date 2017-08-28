@@ -11,7 +11,6 @@ import org.springframework.web.context.WebApplicationContext
 import spock.lang.*
 import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*
 
-
 /**
  * <br><br>
  * Created 2017-08-17 09:20
@@ -23,7 +22,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*
 class BaseDocsSpec extends Specification {
 
     @Rule
-    JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation("target/generated-snippets")
+    JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('target/generated-snippets')
 
     protected MockMvc mockMvc
 
@@ -31,7 +30,7 @@ class BaseDocsSpec extends Specification {
     private WebApplicationContext context
 
     def "setup"() {
-        log.info("setup spec")
+        log.info('setup spec')
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context)
                 .apply(documentationConfiguration(this.restDocumentation).uris().withPort(10001)).build()
     }

@@ -12,27 +12,26 @@ import javax.servlet.http.HttpServletRequest
  * @author Gary Clayburg
  */
 @SpringBootTest
-class MemuserSpec extends Specification{
+class MemuserSpec extends Specification {
 
-    def "contextok"(){
+    def "contextok"() {
         expect:
         true
     }
 
-    def "createuser"(){
+    def "adduser"() {
         given:
-        MemUser memUser = new MemUser(userName: "hi")
+        MemUser memUser = new MemUser(userName: 'hi')
         UserController userController = new UserController()
         HttpServletRequest mockRequest = Mock()
-        mockRequest.getRequestURL() >> new StringBuffer("http://www.example.com/Users")
-
+        mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
 
         when:
-        Object createdUser = userController.createUser(mockRequest,memUser)
-        UserFragmentList users = userController.getUsers()
+        Object createdUser = userController.addUser(mockRequest, memUser)
+        UserFragmentList users = userController.users
 
         then:
-        users.getResources().contains(memUser)
-        userController.getUser(((MemUser)createdUser.getBody()).id) == memUser
+        users.resources.contains(memUser)
+        userController.getUser(((MemUser) createdUser.getBody()).id) == memUser
     }
 }
