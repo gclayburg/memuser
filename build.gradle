@@ -125,7 +125,7 @@ task buildDocker(type: Docker){
     push = project.hasProperty('pushdocker')
     doFirst {
         copy {
-            from 'src/main/docker/**'
+            from "${project.rootDir}/src/main/docker/bootrunner.sh"
             into stageDir
         }
     }
