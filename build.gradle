@@ -104,20 +104,28 @@ build {
     dependsOn asciidoctor
 }
 
+task dockerizeBootJarL1(type: Copy, dependsOn: bootRepackage){
+    from zipTree(jar.archivePath)
+    into "${buildDir}/docker/layer1"
+    exclude "/BOOT-INF/classes/**"
+}
+
+task dockerizeBootJarL2(type: Copy, dependsOn: dockerizeBootJarL1){
+    from zipTree(jar.archivePath)
+    into "${buildDir}/docker/layer2"
+    include "/BOOT-INF/classes/**"
+}
+
 task buildDocker(type: Docker){
     dockerfile = file('src/main/docker/Dockerfile')
     def dockerbasename ="registry:5000/memuser"
     tag = dockerbasename
     tagVersion = "latest"
-    dependsOn build
+    dependsOn dockerizeBootJarL2
     push = project.hasProperty('pushdocker')
     doFirst {
         copy {
-            from jar.archivePath
-            into stageDir
-        }
-        copy {
-            from 'src/main/docker/injectenv.sh'
+            from 'src/main/docker/**'
             into stageDir
         }
     }
