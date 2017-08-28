@@ -69,7 +69,6 @@ asciidoctor {
     dependsOn test
     sourceDir = file('src/main/asciidoc')
     outputDir "build/asciidoc"
-//    outputDir "$projectDir/src/main/resources/public"
     inputs.dir snippetsDir
     backends 'html5'
     dependencies {
