@@ -10,8 +10,8 @@ RUN chmod 755 /home/springboot/bootrunner.sh && chown springboot:springboot /hom
 WORKDIR /home/springboot
 USER springboot
 
-ADD layer1/ /app/
-ADD layer2/ /app/
+ADD dependenciesLayer/ /app/
+ADD classesLayer/ /app/
 
 VOLUME /tmp
 EXPOSE 8080

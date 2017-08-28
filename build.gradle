@@ -105,13 +105,13 @@ build {
 
 task dockerizeBootJarL1(type: Copy, dependsOn: bootRepackage){
     from zipTree(jar.archivePath)
-    into "${buildDir}/docker/layer1"
+    into "${buildDir}/docker/dependenciesLayer"
     exclude "/BOOT-INF/classes/**"
 }
 
 task dockerizeBootJarL2(type: Copy, dependsOn: dockerizeBootJarL1){
     from zipTree(jar.archivePath)
-    into "${buildDir}/docker/layer2"
+    into "${buildDir}/docker/classesLayer"
     include "/BOOT-INF/classes/**"
 }
 
