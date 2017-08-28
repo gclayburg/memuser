@@ -7,6 +7,7 @@ import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
@@ -14,10 +15,20 @@ import org.springframework.web.bind.annotation.*
 import javax.servlet.http.HttpServletRequest
 import java.time.ZonedDateTime
 
+@Slf4j
 @SpringBootApplication
 class MemuserApplication {
     static void main(String[] args) {
-        SpringApplication.run MemuserApplication, args
+        def context = SpringApplication.run(MemuserApplication, args)
+        Environment env = context.getEnvironment()
+        log.info("\n----------------------------------------------------------\n\t" +
+                "Application '{}' is ready for e-business! Access URLs:\n\t" +
+                "Local: \t\thttp://localhost:{}\n\t" +
+                "External: \thttp://{}:{}\n----------------------------------------------------------",
+                env.getProperty("spring.application.name"),
+                env.getProperty("server.port"),
+                InetAddress.getLocalHost().getHostAddress(),
+                env.getProperty("server.port"));
     }
 }
 
