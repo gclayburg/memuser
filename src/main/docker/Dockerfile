@@ -10,9 +10,10 @@ ADD dependenciesLayer/ /app/
 ADD classesLayer/ /app/
 
 ARG VCS_REF
+ARG VCS_URL
 LABEL maintainer="gclaybur@comcast.net" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url="https://github.com/gclayburg/memuser"
+      org.label-schema.vcs-url=$VCS_URL
 
 VOLUME /tmp
 EXPOSE 8080
