@@ -11,9 +11,16 @@ ADD classesLayer/ /app/
 
 ARG VCS_REF
 ARG VCS_URL
+ARG BUILD_DATE
+ARG VERSION
+ARG DESCRIPTION
 LABEL maintainer="gclaybur@comcast.net" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url=$VCS_URL
+      org.label-schema.vcs-url=$VCS_URL \
+      org.label-schema.build-date=$BUILD_DATE \
+      org.label-schema.version=$VERSION \
+      org.label-schema.schema-version="1.0" \
+      org.label-schema.description=$DESCRIPTION
 
 VOLUME /tmp
 EXPOSE 8080

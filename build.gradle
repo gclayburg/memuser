@@ -1,5 +1,8 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import org.ajoberstar.grgit.operation.OpenOp
+
+import java.time.ZonedDateTime
 
 buildscript {
     repositories {
@@ -10,6 +13,7 @@ buildscript {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
         classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
+        classpath 'org.ajoberstar:grgit:1.1.0'
     }
 }
 
@@ -57,6 +61,9 @@ dependencies {
 
 ext {
     snippetsDir = file('target/generated-snippets')
+    def openOp = new OpenOp(dir: project.rootDir)
+    git = openOp.call()
+    revision = git.head().id
 }
 processResources{
     expand(project.properties)
@@ -126,15 +133,40 @@ task copyDockerResources(type: Copy, dependsOn: createClassesLayer){
 task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
     inputDir = project.file(dockerBuildDir)
     tags = [dockerimage+':' + version, dockerimage +':latest']
+
     if (project.hasProperty('dockerhubimage')){
         println('configure dockerhub images')
         tags.add(dockerhubimage + ':' + version)
         tags.add(dockerhubimage + ':latest')
 
     }
-    Object mygitid = getGitProperty('git.commit.id.abbrev')
+    String gitchanges = ''
+    if (!git.status().isClean()){
+        gitchanges = '['
+        if (git.status().staged.added.size() >0)
+            gitchanges += "${git.status().staged.added.size()} staged added,"
+        if (git.status().staged.modified.size() >0)
+            gitchanges += "${git.status().staged.modified.size()} staged modified,"
+        if (git.status().staged.removed.size() >0)
+            gitchanges += "${git.status().staged.removed.size()} staged removed,"
+        if (git.status().unstaged.added.size() >0)
+            gitchanges = "$gitchanges ${git.status().unstaged.added.size()} unstaged added,"
+        if (git.status().unstaged.modified.size() >0)
+            gitchanges = "$gitchanges ${git.status().unstaged.modified.size()} unstaged modified,"
+        if (git.status().unstaged.removed.size() >0)
+            gitchanges = "$gitchanges ${git.status().unstaged.removed.size()} unstaged removed,"
+        gitchanges += "]"
+        println "gitchanges: $gitchanges"
 
-    buildArgs = ["VCS_REF":mygitid,"VCS_URL":vcsurl]
+    }
+    gitchanges += ' ' +project.property('description')
+    buildArgs = ['VCS_REF':git.head().id,
+                 'VCS_URL':vcsurl,
+                 'BUILD_DATE':ZonedDateTime.now().toString(),
+                 'VERSION':version,
+                 'DESCRIPTION': "$gitchanges",
+    ]
+
 }
 
 task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
@@ -143,15 +175,6 @@ task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
 
 task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
     imageName = dockerimage +":latest"
-}
-
-private Object getGitProperty(String propsKey) {
-    File propertiesFile = new File("$buildDir/resources/main/git.properties")
-    Properties properties = new Properties()
-    propertiesFile.withInputStream {
-        properties.load(it)
-    }
-    properties."$propsKey"
 }
 
 /*
