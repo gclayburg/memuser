@@ -121,12 +121,14 @@ task createDependenciesLayer(type: Copy, dependsOn: bootRepackage){
     from zipTree(jar.archivePath)
     into "${dockerBuildDir}/dependenciesLayer"
     exclude "/BOOT-INF/classes/**"
+    exclude "/META-INF/**"
 }
 
 task createClassesLayer(type: Copy, dependsOn: createDependenciesLayer){
     from zipTree(jar.archivePath)
     into "${dockerBuildDir}/classesLayer"
     include "/BOOT-INF/classes/**"
+    exclude "/META-INF/**"
 }
 
 task copyDockerResources(type: Copy, dependsOn: createClassesLayer){
