@@ -64,6 +64,7 @@ ext {
     def openOp = new OpenOp(dir: project.rootDir)
     git = openOp.call()
     revision = git.head().id
+    gitchanges = getGitStatus()
 }
 processResources{
     expand(project.properties)
@@ -95,6 +96,7 @@ asciidoctor {
 }
 
 liveReload {
+    description = "run in a terminal window, view docs in browser http://localhost:35729/html5/api.html"
     docRoot asciidoctor.outputDir.canonicalPath
     dependsOn asciidoctor
 }
@@ -129,8 +131,18 @@ task copyDockerResources(type: Copy, dependsOn: createClassesLayer){
     from "${project.rootDir}/src/main/docker"
     into dockerBuildDir
 }
+springBoot{
+    buildInfo{
+        additionalProperties =[
+                'org.label-schema.vcs-ref':git.head().id,
+                'org.label-schema.vcs-url':vcsurl,
+                'org.label-schema.description':gitchanges
+        ]
+    }
+}
 
 task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
+    description = "build and tag a Docker Image"
     inputDir = project.file(dockerBuildDir)
     tags = [dockerimage+':' + version, dockerimage +':latest']
 
@@ -140,26 +152,8 @@ task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
         tags.add(dockerhubimage + ':latest')
 
     }
-    String gitchanges = ''
-    if (!git.status().isClean()){
-        gitchanges = '['
-        if (git.status().staged.added.size() >0)
-            gitchanges += "${git.status().staged.added.size()} staged added,"
-        if (git.status().staged.modified.size() >0)
-            gitchanges += "${git.status().staged.modified.size()} staged modified,"
-        if (git.status().staged.removed.size() >0)
-            gitchanges += "${git.status().staged.removed.size()} staged removed,"
-        if (git.status().unstaged.added.size() >0)
-            gitchanges = "$gitchanges ${git.status().unstaged.added.size()} unstaged added,"
-        if (git.status().unstaged.modified.size() >0)
-            gitchanges = "$gitchanges ${git.status().unstaged.modified.size()} unstaged modified,"
-        if (git.status().unstaged.removed.size() >0)
-            gitchanges = "$gitchanges ${git.status().unstaged.removed.size()} unstaged removed,"
-        gitchanges += "]"
-        println "gitchanges: $gitchanges"
-
-    }
-    gitchanges += ' ' +project.property('description')
+    println "boot " + bootBuildInfo.getProjectVersion()
+    String gitchanges = getGitStatus()
     buildArgs = ['VCS_REF':git.head().id,
                  'VCS_URL':vcsurl,
                  'BUILD_DATE':ZonedDateTime.now().toString(),
@@ -169,11 +163,38 @@ task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
 
 }
 
+private String getGitStatus() {
+    String gitchanges = ''
+    def gitChangeList = []
+    if (git.status().isClean()) {
+        gitchanges = '[git: clean]'
+    } else {
+        if (git.status().staged.added.size() > 0)
+            gitChangeList.add("${git.status().staged.added.size()} staged added")
+        if (git.status().staged.modified.size() > 0)
+            gitChangeList.add("${git.status().staged.modified.size()} staged modified")
+        if (git.status().staged.removed.size() > 0)
+            gitChangeList.add("${git.status().staged.removed.size()} staged removed")
+        if (git.status().unstaged.added.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.added.size()} unstaged added")
+        if (git.status().unstaged.modified.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.modified.size()} unstaged modified")
+        if (git.status().unstaged.removed.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.removed.size()} unstaged removed")
+        def join = gitChangeList.join(',')
+        gitchanges = '[git: ' + join + ']'
+    }
+    gitchanges += ' ' + project.property('description')
+    gitchanges
+}
+
 task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
+    description = "docker push <imageName>:<version>"
     imageName = dockerimage +":" + version
 }
 
 task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
+    description = "docker push <imageName>:latest"
     imageName = dockerimage +":latest"
 }
 
