@@ -5,11 +5,16 @@ import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.context.ApplicationContext
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
 
 import javax.servlet.http.HttpServletRequest
@@ -20,16 +25,35 @@ import java.time.ZonedDateTime
 class MemuserApplication {
     static void main(String[] args) {
         def context = SpringApplication.run(MemuserApplication, args)
+        def bean = context.getBean("versionPrint")
+        bean.printVersion()
+    }
+}
+
+@Slf4j
+@Component
+class VersionPrint{
+    @Value('${info.app.version}')
+    private String version
+
+    @Autowired
+    private ApplicationContext context
+
+    public void printVersion(){
         Environment env = context.environment
         log.info('\n----------------------------------------------------------\n\t' +
-                'Application \'{}\' is ready for e-business! Access URLs:\n\t' +
-                'Local: \t\thttp://localhost:{}\n\t' +
+                '\'{}\' is ready for e-business! \t\t\t version: {}\n\t' +
+                'Local: \t\thttp://localhost:{} \t\t\t {}\n\t' +
                 'External: \thttp://{}:{}\n----------------------------------------------------------',
                 env.getProperty('spring.application.name'),
+                env.getProperty('info.app.version'),
                 env.getProperty('server.port'),
+                env.getProperty('build.org.label-schema.description'),
                 InetAddress.localHost.hostAddress,
                 env.getProperty('server.port'))
+        log.info("  now running versions "+version)
     }
+
 }
 
 @Slf4j
