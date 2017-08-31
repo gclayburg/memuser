@@ -65,6 +65,8 @@ ext {
     git = openOp.call()
     revision = git.head().id
     gitchanges = getGitStatus()
+    build_date = ZonedDateTime.now().toString()
+
 }
 processResources{
     expand(project.properties)
@@ -136,7 +138,8 @@ springBoot{
         additionalProperties =[
                 'org.label-schema.vcs-ref':git.head().id,
                 'org.label-schema.vcs-url':vcsurl,
-                'org.label-schema.description':gitchanges
+                'org.label-schema.description':gitchanges,
+                'org.label-schema.build-date':build_date,
         ]
     }
 }
@@ -154,10 +157,10 @@ task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
     }
     println "boot " + bootBuildInfo.getProjectVersion()
     String gitchanges = getGitStatus()
-    buildArgs = ['VCS_REF':git.head().id,
-                 'VCS_URL':vcsurl,
-                 'BUILD_DATE':ZonedDateTime.now().toString(),
-                 'VERSION':version,
+    buildArgs = ['VCS_REF'    :git.head().id,
+                 'VCS_URL'    :vcsurl,
+                 'BUILD_DATE' : build_date,
+                 'VERSION'    :version,
                  'DESCRIPTION': "$gitchanges",
     ]
 

@@ -6,10 +6,9 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.info.BuildProperties
 import org.springframework.context.ApplicationContext
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
@@ -32,26 +31,29 @@ class MemuserApplication {
 
 @Slf4j
 @Component
-class VersionPrint{
-    @Value('${info.app.version}')
-    private String version
-
+class UpBanner {
     @Autowired
     private ApplicationContext context
 
-    public void printVersion(){
+    @Autowired(required = false)
+    private BuildProperties buildProperties
+
+    void printVersion() {
         Environment env = context.environment
-        log.info('\n----------------------------------------------------------\n\t' +
-                '\'{}\' is ready for e-business! \t\t\t version: {}\n\t' +
-                'Local: \t\thttp://localhost:{} \t\t\t {}\n\t' +
-                'External: \thttp://{}:{}\n----------------------------------------------------------',
-                env.getProperty('spring.application.name'),
-                env.getProperty('info.app.version'),
-                env.getProperty('server.port'),
-                env.getProperty('build.org.label-schema.description'),
-                InetAddress.localHost.hostAddress,
-                env.getProperty('server.port'))
-        log.info("  now running versions "+version)
+        String banner = '\n------------------------------------------------------------------------------------\n'
+        String c1r1 = String.format('%s:%s is UP!', env.getProperty('spring.application.name'), env.getProperty('info.app.version'))
+        String c1r2 = String.format('Local:     http://localhost:%s', env.getProperty('server.port'))
+        String c1r3 = String.format('External:  http://%s:%s ', InetAddress.localHost.hostAddress, env.getProperty('server.port'))
+        String c2r1 = String.format('build-date: %s', buildProperties?.get('org.label-schema.build-date') ?: 'unknown')
+        String c2r2 = String.format('vcs-ref: %s', buildProperties?.get('org.label-schema.vcs-ref') ?: 'unknown')
+        String c2r3 = String.format('vcs-url: %s', buildProperties?.get('org.label-schema.vcs-url') ?: 'unknown')
+        String c2r4 = String.format('description: %s', buildProperties?.get('org.label-schema.description') ?: 'unknown')
+        banner += String.format('\t%-45s %s\n', c1r1, c2r1)
+        banner += String.format('\t%-45s %s\n', c1r2, c2r2)
+        banner += String.format('\t%-45s %s\n', c1r3, c2r3)
+        banner += String.format('\t%-45s %s\n', '', c2r4)
+        banner += '------------------------------------------------------------------------------------'
+        log.info(banner)
     }
 
 }
