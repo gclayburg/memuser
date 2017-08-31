@@ -35,15 +35,17 @@ class UpBanner {
     @Autowired
     private ApplicationContext context
 
+    @Autowired
+    private Environment environment
+
     @Autowired(required = false)
     private BuildProperties buildProperties
 
     void printVersion() {
-        Environment env = context.environment
         String banner = '\n------------------------------------------------------------------------------------\n'
-        String c1r1 = String.format('%s:%s is UP!', env.getProperty('spring.application.name'), env.getProperty('info.app.version'))
-        String c1r2 = String.format('Local:     http://localhost:%s', env.getProperty('server.port'))
-        String c1r3 = String.format('External:  http://%s:%s ', InetAddress.localHost.hostAddress, env.getProperty('server.port'))
+        String c1r1 = String.format('%s:%s is UP!', getEnvProperty('spring.application.name'), getEnvProperty('info.app.version'))
+        String c1r2 = String.format('Local:     http://localhost:%s', getEnvProperty('server.port'))
+        String c1r3 = String.format('External:  http://%s:%s ', InetAddress.localHost.hostAddress, getEnvProperty('server.port'))
         String c2r1 = String.format('build-date: %s', buildProperties?.get('org.label-schema.build-date') ?: 'unknown')
         String c2r2 = String.format('vcs-ref: %s', buildProperties?.get('org.label-schema.vcs-ref') ?: 'unknown')
         String c2r3 = String.format('vcs-url: %s', buildProperties?.get('org.label-schema.vcs-url') ?: 'unknown')
@@ -54,6 +56,14 @@ class UpBanner {
         banner += String.format('\t%-45s %s\n', '', c2r4)
         banner += '------------------------------------------------------------------------------------'
         log.info(banner)
+    }
+
+    private String getEnvProperty(String key) {
+        try {
+            environment.getProperty(key)
+        } catch (IllegalArgumentException ignored) {
+            '<cannot parse>'
+        }
     }
 
 }
