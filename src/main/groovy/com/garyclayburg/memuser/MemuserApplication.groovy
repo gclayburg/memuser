@@ -24,7 +24,7 @@ import java.time.ZonedDateTime
 class MemuserApplication {
     static void main(String[] args) {
         def context = SpringApplication.run(MemuserApplication, args)
-        def bean = context.getBean("versionPrint")
+        def bean = context.getBean("upBanner")
         bean.printVersion()
     }
 }
