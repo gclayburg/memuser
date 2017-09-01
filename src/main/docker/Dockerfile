@@ -14,7 +14,7 @@ ARG VCS_URL
 ARG BUILD_DATE
 ARG VERSION
 ARG DESCRIPTION
-LABEL maintainer="gclaybur@comcast.net" \
+LABEL maintainer="https://github.com/gclayburg" \
       org.label-schema.vcs-ref=$VCS_REF \
       org.label-schema.vcs-url=$VCS_URL \
       org.label-schema.build-date=$BUILD_DATE \
