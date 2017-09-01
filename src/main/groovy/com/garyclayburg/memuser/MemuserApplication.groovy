@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.info.BuildProperties
-import org.springframework.context.ApplicationContext
 import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
@@ -32,9 +31,6 @@ class MemuserApplication {
 @Slf4j
 @Component
 class UpBanner {
-    @Autowired
-    private ApplicationContext context
-
     @Autowired
     private Environment environment
 
@@ -61,7 +57,7 @@ class UpBanner {
     private String getEnvProperty(String key) {
         try {
             environment.getProperty(key)
-        } catch (IllegalArgumentException ignored) {
+        } catch (IllegalArgumentException ignored) { //i.e. it may need to be filtered first through build.gradle
             '<cannot parse>'
         }
     }

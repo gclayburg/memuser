@@ -33,7 +33,7 @@ group = "${group}"
 
 jar {
     dependsOn asciidoctor
-    from ("${asciidoctor.outputDir}/html5") {
+    from("${asciidoctor.outputDir}/html5") {
         into 'static/docs'
     }
 }
@@ -43,7 +43,6 @@ repositories {
     maven {
         url "https://repo.spring.io/release"
     }
-
 }
 
 dependencies {
@@ -66,11 +65,12 @@ ext {
     revision = git.head().id
     gitchanges = getGitStatus()
     build_date = ZonedDateTime.now().toString()
-
 }
-processResources{
+
+processResources {
     expand(project.properties)
 }
+
 gitProperties {
     dateFormat = "yyyy-MM-dd'T'HH:mmZ"
     dateFormatTimeZone = "America/Denver"
@@ -86,14 +86,14 @@ asciidoctor {
         asciidoctor 'io.spring.asciidoctor:spring-asciidoctor-extensions:0.1.0.RELEASE'
     }
 
-    attributes 'source-highlighter' : 'prettify',
-            'imagesdir':'images',
-            'toc':'left',
+    attributes 'source-highlighter': 'prettify',
+            'imagesdir': 'images',
+            'toc': 'left',
             'icons': 'font',
-            'setanchors':'true',
-            'idprefix':'',
-            'idseparator':'-',
-            'docinfo1':'true',
+            'setanchors': 'true',
+            'idprefix': '',
+            'idseparator': '-',
+            'docinfo1': 'true',
             'snippets': snippetsDir
 }
 
@@ -117,52 +117,51 @@ build {
 
 final dockerBuildDir = "${project.buildDir.absolutePath}/docker"
 
-task createDependenciesLayer(type: Copy, dependsOn: bootRepackage){
+task createDependenciesLayer(type: Copy, dependsOn: bootRepackage) {
     from zipTree(jar.archivePath)
     into "${dockerBuildDir}/dependenciesLayer"
     exclude "/BOOT-INF/classes/**"
     exclude "/META-INF/**"
 }
 
-task createClassesLayer(type: Copy, dependsOn: createDependenciesLayer){
+task createClassesLayer(type: Copy, dependsOn: bootRepackage) {
     from zipTree(jar.archivePath)
     into "${dockerBuildDir}/classesLayer"
     include "/BOOT-INF/classes/**"
     include "/META-INF/**"
 }
 
-task copyDockerResources(type: Copy, dependsOn: createClassesLayer){
+task copyDockerResources(type: Copy, dependsOn: bootRepackage) {
     from "${project.rootDir}/src/main/docker"
     into dockerBuildDir
 }
-springBoot{
-    buildInfo{
-        additionalProperties =[
-                'org.label-schema.vcs-ref':git.head().id,
-                'org.label-schema.vcs-url':vcsurl,
-                'org.label-schema.description':gitchanges,
-                'org.label-schema.build-date':build_date,
+springBoot {
+    buildInfo {
+        additionalProperties = [
+                'org.label-schema.vcs-ref'    : git.head().id,
+                'org.label-schema.vcs-url'    : vcsurl,
+                'org.label-schema.description': gitchanges,
+                'org.label-schema.build-date' : build_date,
         ]
     }
 }
 
-task buildImage(type: DockerBuildImage, dependsOn: copyDockerResources){
+task buildImage(type: DockerBuildImage, dependsOn: ['copyDockerResources','createClassesLayer','createDependenciesLayer']) {
     description = "build and tag a Docker Image"
     inputDir = project.file(dockerBuildDir)
-    tags = [dockerimage+':' + version, dockerimage +':latest']
+    tags = [dockerimage + ':' + version, dockerimage + ':latest']
 
-    if (project.hasProperty('dockerhubimage')){
+    if (project.hasProperty('dockerhubimage')) {
         println('configure dockerhub images')
         tags.add(dockerhubimage + ':' + version)
         tags.add(dockerhubimage + ':latest')
 
     }
     println "boot " + bootBuildInfo.getProjectVersion()
-    String gitchanges = getGitStatus()
-    buildArgs = ['VCS_REF'    :git.head().id,
-                 'VCS_URL'    :vcsurl,
+    buildArgs = ['VCS_REF'    : git.head().id,
+                 'VCS_URL'    : vcsurl,
                  'BUILD_DATE' : build_date,
-                 'VERSION'    :version,
+                 'VERSION'    : version,
                  'DESCRIPTION': "$gitchanges",
     ]
 
@@ -195,12 +194,12 @@ private String getGitStatus() {
 
 task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
     description = "docker push <imageName>:<version>"
-    imageName = dockerimage +":" + version
+    imageName = dockerimage + ":" + version
 }
 
 task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
     description = "docker push <imageName>:latest"
-    imageName = dockerimage +":latest"
+    imageName = dockerimage + ":latest"
 }
 
 /*

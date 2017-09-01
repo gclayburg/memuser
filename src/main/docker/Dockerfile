@@ -1,4 +1,4 @@
-FROM openjdk:8-jre-alpine
+FROM openjdk:8u131-jre-alpine
 
 RUN adduser -D -s /bin/sh springboot
 COPY ./bootrunner.sh /home/springboot/bootrunner.sh
@@ -6,8 +6,8 @@ RUN chmod 755 /home/springboot/bootrunner.sh && chown springboot:springboot /hom
 WORKDIR /home/springboot
 USER springboot
 
-ADD dependenciesLayer/ /app/
-ADD classesLayer/ /app/
+ADD dependenciesLayer/ /home/springboot/app/
+ADD classesLayer/ /home/springboot/app/
 
 ARG VCS_REF
 ARG VCS_URL
