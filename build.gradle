@@ -68,6 +68,7 @@ ext {
 }
 
 processResources {
+    inputs.property "version", version //because ${version} is used as filter in application.properties
     expand(project.properties)
 }
 
