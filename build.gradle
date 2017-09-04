@@ -1,5 +1,6 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+import com.garyclayburg.docker.DockerLayerPlugin
 import org.ajoberstar.grgit.operation.OpenOp
 
 import java.time.ZonedDateTime
@@ -10,7 +11,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
         classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
         classpath 'org.ajoberstar:grgit:1.1.0'
@@ -20,6 +20,7 @@ buildscript {
 plugins {
     id "com.gorylenko.gradle-git-properties" version "1.4.17"
     id "com.bmuschko.docker-remote-api" version "3.1.0"
+    id 'org.springframework.boot' version '1.5.6.RELEASE'
 }
 
 apply plugin: 'groovy'
@@ -28,6 +29,7 @@ apply plugin: 'application'
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'codenarc'
 apply plugin: 'org.kordamp.gradle.livereload'
+apply plugin: DockerLayerPlugin
 
 group = "${group}"
 
@@ -116,26 +118,11 @@ build {
     dependsOn asciidoctor
 }
 
-final dockerBuildDir = "${project.buildDir.absolutePath}/docker"
-
-task createDependenciesLayer(type: Copy, dependsOn: bootRepackage) {
-    from zipTree(jar.archivePath)
-    into "${dockerBuildDir}/dependenciesLayer"
-    exclude "/BOOT-INF/classes/**"
-    exclude "/META-INF/**"
+dockerlayer {
+    dockerBuildDirectory "${project.buildDir}/docker"
+    dockerSrcDirectory "${project.rootDir}/src/main/docker"
 }
 
-task createClassesLayer(type: Copy, dependsOn: bootRepackage) {
-    from zipTree(jar.archivePath)
-    into "${dockerBuildDir}/classesLayer"
-    include "/BOOT-INF/classes/**"
-    include "/META-INF/**"
-}
-
-task copyDockerResources(type: Copy, dependsOn: bootRepackage) {
-    from "${project.rootDir}/src/main/docker"
-    into dockerBuildDir
-}
 springBoot {
     buildInfo {
         additionalProperties = [
@@ -147,9 +134,9 @@ springBoot {
     }
 }
 
-task buildImage(type: DockerBuildImage, dependsOn: ['copyDockerResources','createClassesLayer','createDependenciesLayer']) {
+task buildImage(type: DockerBuildImage, dependsOn: 'dockerPrepare') {
     description = "build and tag a Docker Image"
-    inputDir = project.file(dockerBuildDir)
+    inputDir = project.file(project.dockerlayer.dockerBuildDirectory)
     tags = [dockerimage + ':' + version, dockerimage + ':latest']
 
     if (project.hasProperty('dockerhubimage')) {
@@ -158,14 +145,19 @@ task buildImage(type: DockerBuildImage, dependsOn: ['copyDockerResources','creat
         tags.add(dockerhubimage + ':latest')
 
     }
-    println "boot " + bootBuildInfo.getProjectVersion()
-    buildArgs = ['VCS_REF'    : git.head().id,
-                 'VCS_URL'    : vcsurl,
-                 'BUILD_DATE' : build_date,
-                 'VERSION'    : version,
-                 'DESCRIPTION': "$gitchanges",
+    println "boot additional: " + bootBuildInfo.getAdditionalProperties()
+//    def additionalProperties = bootBuildInfo.getAdditionalProperties()
+//    buildArgs = additionalProperties
+    buildArgs = ['ORG_LABEL_SCHEMA_VCS_REF'    : git.head().id,
+                 'ORG_LABEL_SCHEMA_VCS_URL'    : vcsurl,
+                 'ORG_LABEL_SCHEMA_BUILD_DATE' : build_date,
+                 'ORG_LABEL_SCHEMA_VERSION'    : version,
+                 'ORG_LABEL_SCHEMA_DESCRIPTION': "$gitchanges",
+                 'MAINTAINER'                  : 'somedude',
     ]
-
+    doFirst {
+        println "buildargs used: $buildArgs"
+    }
 }
 
 private String getGitStatus() {

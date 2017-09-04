@@ -9,18 +9,19 @@ USER springboot
 ADD dependenciesLayer/ /home/springboot/app/
 ADD classesLayer/ /home/springboot/app/
 
-ARG VCS_REF
-ARG VCS_URL
-ARG BUILD_DATE
-ARG VERSION
-ARG DESCRIPTION
-LABEL maintainer="https://github.com/gclayburg" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.vcs-url=$VCS_URL \
-      org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.version=$VERSION \
+ARG ORG_LABEL_SCHEMA_VCS_REF
+ARG ORG_LABEL_SCHEMA_VCS_URL
+ARG ORG_LABEL_SCHEMA_BUILD_DATE
+ARG ORG_LABEL_SCHEMA_VERSION
+ARG ORG_LABEL_SCHEMA_DESCRIPTION
+ARG MAINTAINER
+LABEL maintainer=${MAINTAINER:-"https://github.com/gclayburg"} \
+      org.label-schema.vcs-ref=${ORG_LABEL_SCHEMA_VCS_REF} \
+      org.label-schema.vcs-url=${ORG_LABEL_SCHEMA_VCS_URL} \
+      org.label-schema.build-date=${ORG_LABEL_SCHEMA_BUILD_DATE} \
+      org.label-schema.version=${ORG_LABEL_SCHEMA_VERSION} \
       org.label-schema.schema-version="1.0" \
-      org.label-schema.description=$DESCRIPTION
+      org.label-schema.description=${ORG_LABEL_SCHEMA_DESCRIPTION}
 
 VOLUME /tmp
 EXPOSE 8080
