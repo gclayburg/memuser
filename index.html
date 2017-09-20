@@ -443,7 +443,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 	color: #ffffff;
 }
 </style>
-<script src="http://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.2.0/zepto.min.js"></script>
 <script type="text/javascript">
 function addBlockSwitches() {
 	$('.primary').each(function() {
@@ -611,14 +611,14 @@ Content-Type: application/scim+json;charset=UTF-8
 Content-Length: 417
 
 {
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicesmith",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d",
+    "location" : "http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.549-06:00",
-    "lastModified" : "2017-09-20T12:15:04.549-06:00"
+    "created" : "2017-09-20T12:56:23.215-06:00",
+    "lastModified" : "2017-09-20T12:56:23.215-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
@@ -635,21 +635,21 @@ Content-Length: 417
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' -i \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' -i \
     -H 'Accept: application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Httpie</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' \
     'Accept:application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e HTTP/1.1
 Accept: application/scim+json
 Host: localhost:10001</code></pre>
 </div>
@@ -661,14 +661,14 @@ Content-Type: application/scim+json;charset=UTF-8
 Content-Length: 417
 
 {
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicesmith",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d",
+    "location" : "http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.549-06:00",
-    "lastModified" : "2017-09-20T12:15:04.549-06:00"
+    "created" : "2017-09-20T12:56:23.215-06:00",
+    "lastModified" : "2017-09-20T12:56:23.215-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
@@ -749,11 +749,11 @@ Content-Length: 66
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' -i -X PUT \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' -i -X PUT \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '{
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicejones"
 }'</code></pre>
 </div>
@@ -762,9 +762,9 @@ Content-Length: 66
 <div class="title">Httpie</div>
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ echo '{
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicejones"
-}' | http PUT 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' \
+}' | http PUT 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -772,14 +772,14 @@ Content-Length: 66
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
 Host: localhost:10001
 Content-Length: 80
 
 {
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicejones"
 }</code></pre>
 </div>
@@ -788,16 +788,16 @@ Content-Length: 80
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 322
+Content-Length: 321
 
 {
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicejones",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d",
+    "location" : "http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.549-06:00",
-    "lastModified" : "2017-09-20T12:15:04.611-06:00"
+    "created" : "2017-09-20T12:56:23.215-06:00",
+    "lastModified" : "2017-09-20T12:56:23.29-06:00"
   }
 }</code></pre>
 </div>
@@ -820,12 +820,12 @@ Content-Length: 322
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' -i -X PUT \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' -i -X PUT \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
 {
-  "id": "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id": "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
@@ -837,11 +837,11 @@ Content-Length: 322
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ echo '
 {
-  "id": "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id": "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
-' | http PUT 'http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d' \
+' | http PUT 'http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -849,7 +849,7 @@ Content-Length: 322
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
 Host: localhost:10001
@@ -857,7 +857,7 @@ Content-Length: 114
 
 
 {
-  "id": "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id": "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }</code></pre>
@@ -870,13 +870,13 @@ Content-Type: application/scim+json;charset=UTF-8
 Content-Length: 357
 
 {
-  "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+  "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
   "userName" : "alicejones",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d",
+    "location" : "http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.549-06:00",
-    "lastModified" : "2017-09-20T12:15:04.622-06:00"
+    "created" : "2017-09-20T12:56:23.215-06:00",
+    "lastModified" : "2017-09-20T12:56:23.305-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
@@ -959,14 +959,14 @@ Content-Type: application/scim+json;charset=UTF-8
 Content-Length: 579
 
 {
-  "id" : "b6ca0942-ac1c-4684-aa44-2e2cede856a0",
+  "id" : "524b23e5-0f57-4cf2-a18e-0515ff29c6b2",
   "userName" : "tomjones",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/b6ca0942-ac1c-4684-aa44-2e2cede856a0",
+    "location" : "http://localhost:10001/api/v1/Users/524b23e5-0f57-4cf2-a18e-0515ff29c6b2",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.631-06:00",
-    "lastModified" : "2017-09-20T12:15:04.631-06:00"
+    "created" : "2017-09-20T12:56:23.313-06:00",
+    "lastModified" : "2017-09-20T12:56:23.313-06:00"
   },
   "name" : {
     "formatted" : "Dr. Tom J Jones",
@@ -1044,14 +1044,14 @@ Content-Type: application/scim+json;charset=UTF-8
 Content-Length: 471
 
 {
-  "id" : "fad0703a-1110-4d5a-b962-9076e7fba48f",
+  "id" : "ed9b10f0-6801-4983-8e84-cd8dc0c00711",
   "userName" : "harry",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/fad0703a-1110-4d5a-b962-9076e7fba48f",
+    "location" : "http://localhost:10001/api/v1/Users/ed9b10f0-6801-4983-8e84-cd8dc0c00711",
     "resourceType" : "User",
-    "created" : "2017-09-20T12:15:04.639-06:00",
-    "lastModified" : "2017-09-20T12:15:04.639-06:00"
+    "created" : "2017-09-20T12:56:23.325-06:00",
+    "lastModified" : "2017-09-20T12:56:23.325-06:00"
   },
   "displayName" : "Tom Jones",
   "mailcode" : "CHP",
@@ -1100,24 +1100,24 @@ Content-Length: 1611
   "schemas" : [ "urn:ietf:params:scim:api:messages:2.0:ListResponse" ],
   "totalResults" : 3,
   "Resources" : [ {
-    "id" : "495db6e8-f2db-4e03-a82a-722e0377152d",
+    "id" : "9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
     "userName" : "alicejones",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/495db6e8-f2db-4e03-a82a-722e0377152d",
+      "location" : "http://localhost:10001/api/v1/Users/9df0ab4a-a41f-4121-acbf-3e0ed7e0745e",
       "resourceType" : "User",
-      "created" : "2017-09-20T12:15:04.549-06:00",
-      "lastModified" : "2017-09-20T12:15:04.622-06:00"
+      "created" : "2017-09-20T12:56:23.215-06:00",
+      "lastModified" : "2017-09-20T12:56:23.305-06:00"
     },
     "displayName" : "Alice P Smith"
   }, {
-    "id" : "b6ca0942-ac1c-4684-aa44-2e2cede856a0",
+    "id" : "524b23e5-0f57-4cf2-a18e-0515ff29c6b2",
     "userName" : "tomjones",
     "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/b6ca0942-ac1c-4684-aa44-2e2cede856a0",
+      "location" : "http://localhost:10001/api/v1/Users/524b23e5-0f57-4cf2-a18e-0515ff29c6b2",
       "resourceType" : "User",
-      "created" : "2017-09-20T12:15:04.631-06:00",
-      "lastModified" : "2017-09-20T12:15:04.631-06:00"
+      "created" : "2017-09-20T12:56:23.313-06:00",
+      "lastModified" : "2017-09-20T12:56:23.313-06:00"
     },
     "name" : {
       "formatted" : "Dr. Tom J Jones",
@@ -1128,14 +1128,14 @@ Content-Length: 1611
     },
     "displayName" : "Tom Jones"
   }, {
-    "id" : "fad0703a-1110-4d5a-b962-9076e7fba48f",
+    "id" : "ed9b10f0-6801-4983-8e84-cd8dc0c00711",
     "userName" : "harry",
     "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/fad0703a-1110-4d5a-b962-9076e7fba48f",
+      "location" : "http://localhost:10001/api/v1/Users/ed9b10f0-6801-4983-8e84-cd8dc0c00711",
       "resourceType" : "User",
-      "created" : "2017-09-20T12:15:04.639-06:00",
-      "lastModified" : "2017-09-20T12:15:04.639-06:00"
+      "created" : "2017-09-20T12:56:23.325-06:00",
+      "lastModified" : "2017-09-20T12:56:23.325-06:00"
     },
     "displayName" : "Tom Jones",
     "mailcode" : "CHP",
