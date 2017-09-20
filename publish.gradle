@@ -1,0 +1,14 @@
+plugins {
+    id 'org.ajoberstar.git-publish' version '0.3.0'
+}
+
+gitPublish {
+    repoUri = 'git@github.com/gclayburg/memuser.git'
+    branch = 'gh-pages'
+
+    contents {
+        from 'build/asciidoc/html5'
+    }
+
+    commitMessage = 'publish generated docs'
+}
