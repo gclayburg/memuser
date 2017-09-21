@@ -86,7 +86,7 @@ asciidoctor {
     inputs.dir snippetsDir
     backends 'html5'
     dependencies {
-        asciidoctor 'io.spring.asciidoctor:spring-asciidoctor-extensions:0.1.0.RELEASE'
+        asciidoctor 'io.spring.asciidoctor:spring-asciidoctor-extensions:0.1.1.RELEASE'
     }
 
     attributes 'source-highlighter': 'prettify',
@@ -101,7 +101,7 @@ asciidoctor {
 }
 
 liveReload {
-    description = "run in a terminal window, view docs in browser http://localhost:35729/html5/api.html"
+    description = "run in a terminal window, view docs in browser http://localhost:35729/html5/index.html"
     docRoot asciidoctor.outputDir.canonicalPath
     dependsOn asciidoctor
 }
@@ -199,9 +199,11 @@ task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
 java -jar build/libs/memuser-0.5.0.jar
 
 This is simlar to bootRun, except that we are executing the jar file instead of the exploded build dir.
-This allows us to include static files like /docs/api.html
+This allows us to include static files like /docs/index.html
  */
 task bootJarRun(type: JavaExec) {
+    description 'Run the project from generated spring boot jar'
+    group 'application'
     dependsOn bootRepackage
     main = "-jar"
     args jar.archivePath.getPath()
@@ -219,9 +221,10 @@ codenarcTest {
 }
 
 task publish(type: GradleBuild) {
+    description "publish generated documentation to github pages"
     dependsOn asciidoctor
     buildFile = file('publish.gradle')
-    tasks = ['publishGhPages']
+    tasks = ['gitPublishPush']
 }
 
 ext['spring-restdocs.version'] = '1.2.1.RELEASE'
@@ -229,15 +232,19 @@ ext['spring-restdocs.version'] = '1.2.1.RELEASE'
 /*
 gradle continuous build in one terminal:
 $ cd dev/memuser
-$ gradle asciidoctor -t
+$ ./gradlew asciidoctor -t
 
 enable livereload in another terminal:
 $ cd dev/memuser
-$ gradle liveReload
+$ ./gradlew liveReload
 
-in the browser open url http://localhost:35729/html5/api.html
+in the browser open url http://localhost:35729/html5/index.html
 -enable livereload browser plugin
 
-maven resources plugin makes content available at:
-http://localhost:8080/docs/api.html
+
+when running from spring boot jar or docker, content available at:
+http://localhost:8080/docs/index.html
+
+to view version published on github:
+https://gclayburg.github.io/memuser/index.html
  */

@@ -11,13 +11,13 @@ To build and run memuser, use the embedded gradle:
 $ ./gradlew bootJarRun
 ```
 
-Or you can run a pre-built docker image:
+This project is also published as a docker image on docker hub.  To run it:
 
 ```bash
-$ docker run -d -p10001:10001 gclayburg/memuser:latest
+$ docker run -d -p8080:8080 gclayburg/memuser:latest
 ```
 
-Memuser should be running and listening on port 10001.
+Memuser should be running and listening on port 8080.
 
 ### Add a user
 
@@ -34,6 +34,6 @@ $ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
 '
 ```
 
-More examples can be found in the guide.
+More examples can be found in the [guide](https://gclayburg.github.io/memuser/).
 
 
