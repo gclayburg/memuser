@@ -15,7 +15,7 @@ Memuser is a simple tool for storing and retrieving user information.  All data 
 Why: Memuser was created to help with testing some security integration scenarios without having to deal with the overhead of persisting user information.  After you have done this kind of testing for a while, it can get tedious to provision databases, start them up, tear them down.  We want to be able to test out User data integration scenarios and not worry so much about the normal data lifecycle issues.  Of course, in production you will need to deal with these issues, but we don't want them to hinder our ability to model the lifecycle of user information when we are building out our user security model.
 
 
-If you have a tool that can speak SCIM, you can use Memuser
+If you have a tool that can speak SCIM, you can use it to manage users in Memuser.
 
 [[create-user]]
 == Create

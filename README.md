@@ -23,7 +23,7 @@ Memuser should be running and listening on port 8080.
 
 Add a minimal user
 ```bash
-$ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
+$ curl 'http://localhost:8080/api/v1/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '

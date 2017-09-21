@@ -8,8 +8,9 @@ import org.springframework.restdocs.JUnitRestDocumentation
 import org.springframework.test.web.servlet.MockMvc
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.web.context.WebApplicationContext
-import spock.lang.*
-import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.*
+import spock.lang.Specification
+
+import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.documentationConfiguration
 
 /**
  * <br><br>
@@ -32,6 +33,6 @@ class BaseDocsSpec extends Specification {
     def "setup"() {
         log.info('setup spec')
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.context)
-                .apply(documentationConfiguration(this.restDocumentation).uris().withPort(10001)).build()
+                .apply(documentationConfiguration(this.restDocumentation).uris().withPort(8080)).build()
     }
 }
