@@ -38,7 +38,7 @@ class UpBanner {
     private BuildProperties buildProperties
 
     void printVersion() {
-        String banner = '\n------------------------------------------------------------------------------------\n'
+        String banner = '\n------------------------------------------------------------------------------------------------\n'
         String c1r1 = String.format('%s:%s is UP!', getEnvProperty('spring.application.name'), getEnvProperty('info.app.version'))
         String c1r2 = String.format('Local:     http://localhost:%s', getEnvProperty('server.port'))
         String c1r3 = String.format('External:  http://%s:%s ', InetAddress.localHost.hostAddress, getEnvProperty('server.port'))
@@ -50,7 +50,7 @@ class UpBanner {
         banner += String.format('\t%-45s %s\n', c1r2, c2r2)
         banner += String.format('\t%-45s %s\n', c1r3, c2r3)
         banner += String.format('\t%-45s %s\n', '', c2r4)
-        banner += '------------------------------------------------------------------------------------'
+        banner += '------------------------------------------------------------------------------------------------'
         log.info(banner)
     }
 
