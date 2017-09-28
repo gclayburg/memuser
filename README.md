@@ -1,7 +1,7 @@
 [![](https://images.microbadger.com/badges/version/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own version badge on microbadger.com") [![](https://images.microbadger.com/badges/image/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own image badge on microbadger.com")
 
 # memuser
-In-memory storage of User data
+In-memory storage of User data using the [SCIM](http://www.simplecloud.info/) protocol
 
 ## quickstart
 
@@ -23,7 +23,7 @@ Memuser should be running and listening on port 8080.
 
 Add a minimal user
 ```bash
-$ curl 'http://localhost:8080/api/v1/Users' -i -X POST \
+$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '

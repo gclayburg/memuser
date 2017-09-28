@@ -66,7 +66,7 @@ class UpBanner {
 
 @Slf4j
 @RestController
-@RequestMapping('/api/v1')
+@RequestMapping('/api/v2')
 class UserController {
 
     Map<String, MemUser> userMap = [:]

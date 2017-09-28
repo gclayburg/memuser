@@ -65,7 +65,7 @@ ext {
     git = openOp.call()
     revision = git.head().id
     gitchanges = getGitStatus()
-    build_date = ZonedDateTime.now().toString()
+    build_date = project.hasProperty('builddate') ? project.getProperty('builddate') : ZonedDateTime.now().toString()
 }
 
 processResources {
@@ -151,6 +151,10 @@ task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
     ]
     doFirst {
         println "buildargs used: $buildArgs"
+        copy{
+            from jar
+            into project.dockerprepare.dockerBuildDirectory
+        }
     }
 }
 
@@ -226,7 +230,7 @@ ext['spring-restdocs.version'] = '1.2.1.RELEASE'
 /*
 gradle continuous build in one terminal:
 $ cd dev/memuser
-$ ./gradlew asciidoctor -t
+$ ./gradlew --no-daemon -Pbuilddate=unchangeddate asciidoctor -t
 
 enable livereload in another terminal:
 $ cd dev/memuser

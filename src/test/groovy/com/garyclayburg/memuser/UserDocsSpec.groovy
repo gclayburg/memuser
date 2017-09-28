@@ -25,7 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserDocsSpec extends BaseDocsSpec {
 
     public static final String SCIM_JSON = 'application/scim+json'
-    public static final String USERS = '/api/v1/Users'
+    public static final String USERS = '/api/v2/Users'
     public static final String USERSD = USERS + '/'
     @Autowired
     ObjectMapper objectMapper
@@ -183,6 +183,22 @@ class UserDocsSpec extends BaseDocsSpec {
         then:
         resultActionsList.andExpect(status().isOk())
                 .andDo(document('getlist'))
+
+        when: 'create bill password'
+        createActions = mockMvc.perform(post(USERS)
+                .contentType(SCIM_JSON)
+                .content('''
+{
+  "userName": "billy",
+  "password": "qwerty1234",
+  "userpassword": "asdfghjkl"
+}
+''')
+                .accept(SCIM_JSON))
+
+        then:
+        createActions.andExpect(status().isCreated())
+                .andDo(document('createbill'))
 
     }
 
