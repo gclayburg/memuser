@@ -504,19 +504,73 @@ $(addBlockSwitches);
 <ul class="sectlevel0">
 <li><a href="#overview">Overview</a>
 <ul class="sectlevel1">
-<li><a href="#create-user">Create</a>
+<li><a href="#Startup">Starting</a>
 <ul class="sectlevel2">
-<li><a href="#get-user">GET user</a></li>
-<li><a href="#duplicate-username">Duplicate userName</a></li>
-<li><a href="#change-username">Change userName</a></li>
-<li><a href="#create-another-user">Create another user</a></li>
-<li><a href="#create-arbitrary-user">Create arbitrary user</a></li>
-<li><a href="#get-user-list">Get User List</a></li>
+<li><a href="#from-a-docker-image">From a docker image</a></li>
+<li><a href="#from-source">From source</a></li>
 </ul>
 </li>
+<li><a href="#create-user">Create Minimal User</a>
+<ul class="sectlevel2">
+<li><a href="#response">response</a></li>
+</ul>
+</li>
+<li><a href="#get-user">GET User</a>
+<ul class="sectlevel2">
+<li><a href="#response-2">response</a></li>
+</ul>
+</li>
+<li><a href="#duplicate-username">Duplicate userName</a>
+<ul class="sectlevel2">
+<li><a href="#response-3">response</a></li>
+</ul>
+</li>
+<li><a href="#faq">FAQ</a>
+<ul class="sectlevel2">
+<li><a href="#why-is-there-both-a-code-username-code-and-code-id-code">Why is there both a <code>userName</code> and <code>id</code>?</a></li>
+<li><a href="#does-the-client-or-server-have-the-most-accurate-code-username-code">Does the client or server have the most accurate <code>userName</code>?</a></li>
+</ul>
+</li>
+<li><a href="#change-username">Change userName</a>
+<ul class="sectlevel2">
+<li><a href="#response-4">response</a></li>
+</ul>
+</li>
+<li><a href="#replace-entire-user">Replace entire User</a>
+<ul class="sectlevel2">
+<li><a href="#response-5">response</a></li>
+</ul>
+</li>
+<li><a href="#create-user-with-full-name">Create user with full name</a>
+<ul class="sectlevel2">
+<li><a href="#response-6">response</a></li>
+</ul>
+</li>
+<li><a href="#create-arbitrary-user">Create arbitrary User</a>
+<ul class="sectlevel2">
+<li><a href="#response-7">response</a></li>
+</ul>
+</li>
+<li><a href="#get-user-list">Get User List</a>
+<ul class="sectlevel2">
+<li><a href="#response-8">response</a></li>
+</ul>
+</li>
+<li><a href="#rigid-user-fields">Rigid User Fields</a></li>
 <li><a href="#overview-http-verbs">HTTP verbs</a></li>
 <li><a href="#overview-http-status-codes">HTTP status codes</a></li>
 <li><a href="#overview-errors">Errors</a></li>
+<li><a href="#security">Security</a>
+<ul class="sectlevel2">
+<li><a href="#password">password</a>
+<ul class="sectlevel3">
+<li><a href="#response-9">response</a></li>
+</ul>
+</li>
+<li><a href="#tls-https-support">TLS/HTTPS support</a></li>
+<li><a href="#authentication">Authentication</a></li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -527,18 +581,59 @@ $(addBlockSwitches);
 <div class="openblock partintro">
 <div class="content">
 <div class="paragraph">
-<p>Memuser is a simple tool for storing and retrieving user information.  All data is stored in memory, nothing is persisted.  The API used is based loosely on the SCIM protocol, which is essentially JSON with some standardized semantics.</p>
+<p>Memuser is a simple tool for storing and retrieving user information.  All data is stored in memory, nothing is persisted.  The API used is based loosely on the <a href="http://www.simplecloud.info">SCIM protocol</a>, which is essentially JSON with some standardized semantics.</p>
 </div>
 <div class="paragraph">
-<p>Why: Memuser was created to help with testing some security integration scenarios without having to deal with the overhead of persisting user information.  After you have done this kind of testing for a while, it can get tedious to provision databases, start them up, tear them down.  We want to be able to test out User data integration scenarios and not worry so much about the normal data lifecycle issues.  Of course, in production you will need to deal with these issues, but we don&#8217;t want them to hinder our ability to model the lifecycle of user information when we are building out our user security model.</p>
+<p><strong>Why?</strong> Memuser was created to help with testing some security integration scenarios without having to deal with the overhead of persisting user information.  We want to be able to test out User data integration scenarios and not worry so much about the normal data lifecycle issues.  Of course, real systems will need to deal with these issues, but we don&#8217;t want to hinder our ability to model the lifecycle of user information when we are building out our user security model.</p>
 </div>
 <div class="paragraph">
-<p>If you have a tool that can speak SCIM, you can use Memuser</p>
+<p>If you have a tool that can provision SCIM users, you can probably use it to manage users in Memuser.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="create-user"><a class="link" href="#create-user">Create</a></h2>
+<h2 id="Startup"><a class="link" href="#Startup">Starting</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="from-a-docker-image"><a class="link" href="#from-a-docker-image">From a docker image</a></h3>
+<div class="paragraph">
+<p>The easiest way to start memuser is with <a href="https://www.docker.com/">docker</a>:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code>$ docker run --rm  -d -p9080:8080 --name memuser gclayburg/memuser</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When finished, stop it with:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code>$ docker stop memuser</code></pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="from-source"><a class="link" href="#from-source">From source</a></h3>
+<div class="paragraph">
+<p>You could also run the application as a standalone jar file once you build it yourself:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight"><code>$ git clone git@github.com:gclayburg/memuser.git
+$ cd memuser
+$ ./gradlew build
+$ java -jar build/libs/memuser*.jar</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Stop it with Ctrl-c</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="create-user"><a class="link" href="#create-user">Create Minimal User</a></h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>Lets jump into creating a user.  When Memuser is started, there are no users loaded.  Lets create one:</p>
@@ -546,7 +641,7 @@ $(addBlockSwitches);
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
@@ -565,7 +660,7 @@ $(addBlockSwitches);
   "userName": "alicesmith",
   "displayName": "Alice P Smith"
 }
-' | http POST 'http://localhost:10001/api/v1/Users' \
+' | http POST 'http://localhost:8080/api/v2/Users' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -573,10 +668,10 @@ $(addBlockSwitches);
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/Users HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v2/Users HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 66
 
 
@@ -598,92 +693,100 @@ We show 3 different ways to generate a JSON request - the ubiquitous <a href="ht
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>This is a minimal user.  Only the <code>userName</code> field is required.</p>
-</div>
-<div class="paragraph">
-<p>You should get this response:</p>
-</div>
+<div class="sect2">
+<h3 id="response"><a class="link" href="#response">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 417
+Content-Length: 416
 
 {
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicesmith",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+    "location" : "http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.717-06:00",
-    "lastModified" : "2017-09-20T17:27:49.717-06:00"
+    "created" : "2017-09-28T17:05:14.903-06:00",
+    "lastModified" : "2017-09-28T17:05:14.903-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
 </div>
 </div>
 <div class="paragraph">
-<p>The returned JSON response includes the exact user that the Memuser server created. The server generated the extra fields as per the SCIM spec.</p>
+<p>This is a minimal user.  Only the <code>userName</code> field is required.</p>
 </div>
-<div class="sect2">
-<h3 id="get-user"><a class="link" href="#get-user">GET user</a></h3>
 <div class="paragraph">
-<p>Take a look at the <code>id</code> field.  This was generated by Memuser and is guaranteed to be unique and never changing among all users that it knows about.  <code>id</code> is also part of <code>meta.location</code>.  We use this field to retrieve our generated user:</p>
+<p>The returned JSON response includes the exact user that the Memuser server created. The extra fields are per the <a href="https://tools.ietf.org/html/rfc7643#section-8.1">SCIM spec</a>.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="get-user"><a class="link" href="#get-user">GET User</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Take a look at the <code>id</code> field.  This was generated by Memuser and is guaranteed to be unique and never changing among all users that it knows about.  <code>id</code> is also part of <code>meta.location</code>.  We can use this field to retrieve our generated user:</p>
 </div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' -i \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' -i \
     -H 'Accept: application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Httpie</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' \
     'Accept:application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6 HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d HTTP/1.1
 Accept: application/scim+json
-Host: localhost:10001</code></pre>
+Host: localhost:8080</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-2"><a class="link" href="#response-2">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 417
+Content-Length: 416
 
 {
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicesmith",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+    "location" : "http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.717-06:00",
-    "lastModified" : "2017-09-20T17:27:49.717-06:00"
+    "created" : "2017-09-28T17:05:14.903-06:00",
+    "lastModified" : "2017-09-28T17:05:14.903-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="duplicate-username"><a class="link" href="#duplicate-username">Duplicate userName</a></h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="duplicate-username"><a class="link" href="#duplicate-username">Duplicate userName</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Lets try creating alice again:</p>
 </div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
@@ -702,7 +805,7 @@ Content-Length: 417
   "userName": "alicesmith",
   "displayName": "Alice P Smith"
 }
-' | http POST 'http://localhost:10001/api/v1/Users' \
+' | http POST 'http://localhost:8080/api/v2/Users' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -710,10 +813,10 @@ Content-Length: 417
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/Users HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v2/Users HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 66
 
 
@@ -723,6 +826,8 @@ Content-Length: 66
 }</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-3"><a class="link" href="#response-3">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 409 Conflict</code></pre>
@@ -732,28 +837,39 @@ Content-Length: 66
 <p><code>userName</code> must be unique.</p>
 </div>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="faq"><a class="link" href="#faq">FAQ</a></h2>
+<div class="sectionbody">
 <div class="sect2">
-<h3 id="change-username"><a class="link" href="#change-username">Change userName</a></h3>
+<h3 id="why-is-there-both-a-code-username-code-and-code-id-code"><a class="link" href="#why-is-there-both-a-code-username-code-and-code-id-code">Why is there both a <code>userName</code> and <code>id</code>?</a></h3>
 <div class="paragraph">
-<p>Why is there both a <code>userName</code> and <code>id</code>?</p>
+<p>One reason is that this allows users to change their userName in Memuser without necessarily notifying clients.  For example, lets say Alice gets married to Tom Jones.  She changes her last name from Smith to Jones.  Alice is happy.  She comes in to work on Monday and updates her HR records to change her last name to Smith.  She would like to log on to her computer with alicejones and not alicesmith.  It sounds like a simple request, but it can cause headaches when we are dealing with many interconnected IT systems that require user identity.  There may be multiiple places that need to get updated.  If they aren&#8217;t all updated, Alice would at best see strange errors.</p>
 </div>
 <div class="paragraph">
-<p>One reason is that this allows users to change their userName.  For example, lets say Alice gets married to Tom Jones.  She changes her last name from Smith to Jones.  Alice is happy.  She comes in to work on Monday and updates her HR records to change her last name to Smith.  She would like to log on to her computer with alicejones and not alicesmith.  It sounds like a simple request, but it can cause headaches when we are dealing with many interconnected IT systems that require user identity.  There may be muliple places that need to get updated.  If they aren&#8217;t all updated, alice would at best see strange errors.</p>
+<p>So instead, we store the initial userName in Memuser when we first create the user on behalf of the client.  Our client stores a reference to it using the unique <code>id</code>.  The client may also keep track of the <code>userName</code>, but it realizes this <code>userName</code> stored in Memuser could change at any point.  Since the client knows Alice by her <code>id</code> and not <code>userName</code>, it may not even need to be updated when the <code>userName</code> changes in Memuser.</p>
 </div>
+</div>
+<div class="sect2">
+<h3 id="does-the-client-or-server-have-the-most-accurate-code-username-code"><a class="link" href="#does-the-client-or-server-have-the-most-accurate-code-username-code">Does the client or server have the most accurate <code>userName</code>?</a></h3>
 <div class="paragraph">
-<p>So instead, we store the initial userName in Memuser when we first create the user.  Our client that created this user stores a reference it using <code>id</code>.  Later on, the userName for Alice can be updated by any client.  It doesn&#8217;t really matter where the update comes from.  We only care about the opaque <code>id</code> of alice.</p>
+<p>There is nothing in the SCIM protocol itself to determine this.  It is up to you to determine a convention that works for your workflow.  You will need to decide where the authoritative sources are for each user attribute.  The SCIM protocol really shines in simplifying and standardizing how independent but related user domains can reason about user relationships.</p>
 </div>
-<div class="paragraph">
-<p>Here is how we change the userName for Alice:</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="change-username"><a class="link" href="#change-username">Change userName</a></h2>
+<div class="sectionbody">
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' -i -X PUT \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' -i -X PUT \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '{
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicejones"
 }'</code></pre>
 </div>
@@ -762,9 +878,9 @@ Content-Length: 66
 <div class="title">Httpie</div>
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ echo '{
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicejones"
-}' | http PUT 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' \
+}' | http PUT 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -772,32 +888,34 @@ Content-Length: 66
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6 HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 80
 
 {
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicejones"
 }</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-4"><a class="link" href="#response-4">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 322
+Content-Length: 321
 
 {
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicejones",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+    "location" : "http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.717-06:00",
-    "lastModified" : "2017-09-20T17:27:49.787-06:00"
+    "created" : "2017-09-28T17:05:14.903-06:00",
+    "lastModified" : "2017-09-28T17:05:14.971-06:00"
   }
 }</code></pre>
 </div>
@@ -812,20 +930,29 @@ Content-Length: 322
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-<code>displayName</code> no longer exists for Alice.  We changed the existing Alice with a PUT request.  Memuser will replace the entire user with what was sent in the request.  If instead we wanted Memuser to retain this during a userName change, we need to send a full PUT request like this:
+Notice <code>displayName</code> no longer exists for Alice.  We changed the existing Alice with a PUT request.  Memuser will replace the entire user with what was sent in the request.
 </td>
 </tr>
 </table>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="replace-entire-user"><a class="link" href="#replace-entire-user">Replace entire User</a></h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>If we want Memuser to retain all user fields during a userName change, we need to send a full PUT request like this:</p>
+</div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' -i -X PUT \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' -i -X PUT \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
 {
-  "id": "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id": "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
@@ -837,11 +964,11 @@ Content-Length: 322
 <div class="content">
 <pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ echo '
 {
-  "id": "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id": "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
-' | http PUT 'http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6' \
+' | http PUT 'http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -849,49 +976,54 @@ Content-Length: 322
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6 HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">PUT /api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 114
 
 
 {
-  "id": "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id": "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-5"><a class="link" href="#response-5">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 357
+Content-Length: 355
 
 {
-  "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+  "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
   "userName" : "alicejones",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+    "location" : "http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.717-06:00",
-    "lastModified" : "2017-09-20T17:27:49.796-06:00"
+    "created" : "2017-09-28T17:05:14.903-06:00",
+    "lastModified" : "2017-09-28T17:05:14.98-06:00"
   },
   "displayName" : "Alice P Smith"
 }</code></pre>
 </div>
 </div>
 </div>
-<div class="sect2">
-<h3 id="create-another-user"><a class="link" href="#create-another-user">Create another user</a></h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="create-user-with-full-name"><a class="link" href="#create-user-with-full-name">Create user with full name</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Lets create a user with a few more fields:</p>
 </div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
@@ -924,7 +1056,7 @@ Content-Length: 357
   },
   "displayName": "Tom Jones"
 }
-' | http POST 'http://localhost:10001/api/v1/Users' \
+' | http POST 'http://localhost:8080/api/v2/Users' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -932,10 +1064,10 @@ Content-Length: 357
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/Users HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v2/Users HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 222
 
 
@@ -952,21 +1084,23 @@ Content-Length: 222
 }</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-6"><a class="link" href="#response-6">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 579
+Content-Length: 578
 
 {
-  "id" : "cffb8640-69aa-4a43-b043-494136fc3ca2",
+  "id" : "f7bdeb37-2010-4330-a7df-4dbcd88edc77",
   "userName" : "tomjones",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/cffb8640-69aa-4a43-b043-494136fc3ca2",
+    "location" : "http://localhost:8080/api/v2/Users/f7bdeb37-2010-4330-a7df-4dbcd88edc77",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.804-06:00",
-    "lastModified" : "2017-09-20T17:27:49.804-06:00"
+    "created" : "2017-09-28T17:05:14.988-06:00",
+    "lastModified" : "2017-09-28T17:05:14.988-06:00"
   },
   "name" : {
     "formatted" : "Dr. Tom J Jones",
@@ -980,18 +1114,21 @@ Content-Length: 579
 </div>
 </div>
 <div class="paragraph">
-<p>The fields included here are optional fields documented in the <a href="https://tools.ietf.org/html/rfc7643#section-8.1">SCIM spec</a>.</p>
+<p>The fields included here are optional <code>name</code> fields documented in the <a href="https://tools.ietf.org/html/rfc7643#section-8.1">SCIM spec</a>.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="create-arbitrary-user"><a class="link" href="#create-arbitrary-user">Create arbitrary user</a></h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="create-arbitrary-user"><a class="link" href="#create-arbitrary-user">Create arbitrary User</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
-<p>We can also create a user with fields that aren&#8217;t necessarily SCIM defined fields:</p>
+<p>We can also create a Memuser user with fields that aren&#8217;t necessarily <a href="https://tools.ietf.org/html/rfc7643#section-4.1">SCIM defined User resource fields</a>:</p>
 </div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users' -i -X POST \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
     -H 'Content-Type: application/scim+json' \
     -H 'Accept: application/scim+json' \
     -d '
@@ -1014,7 +1151,7 @@ Content-Length: 579
   "mailcode": "CHP",
   "emailaddress": "tomjones@gmail.com"
 }
-' | http POST 'http://localhost:10001/api/v1/Users' \
+' | http POST 'http://localhost:8080/api/v2/Users' \
     'Content-Type:application/scim+json' \
     'Accept:application/scim+json'</code></pre>
 </div>
@@ -1022,10 +1159,10 @@ Content-Length: 579
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v1/Users HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v2/Users HTTP/1.1
 Content-Type: application/scim+json
 Accept: application/scim+json
-Host: localhost:10001
+Host: localhost:8080
 Content-Length: 118
 
 
@@ -1037,21 +1174,23 @@ Content-Length: 118
 }</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-7"><a class="link" href="#response-7">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 471
+Content-Length: 470
 
 {
-  "id" : "610f3d13-36d9-400c-a002-e72f4e0feac8",
+  "id" : "b11fa498-e831-484d-9ab9-219bd8ccb634",
   "userName" : "harry",
   "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
   "meta" : {
-    "location" : "http://localhost:10001/api/v1/Users/610f3d13-36d9-400c-a002-e72f4e0feac8",
+    "location" : "http://localhost:8080/api/v2/Users/b11fa498-e831-484d-9ab9-219bd8ccb634",
     "resourceType" : "User",
-    "created" : "2017-09-20T17:27:49.811-06:00",
-    "lastModified" : "2017-09-20T17:27:49.811-06:00"
+    "created" : "2017-09-28T17:05:14.995-06:00",
+    "lastModified" : "2017-09-28T17:05:14.995-06:00"
   },
   "displayName" : "Tom Jones",
   "mailcode" : "CHP",
@@ -1060,64 +1199,69 @@ Content-Length: 471
 </div>
 </div>
 <div class="paragraph">
-<p>Here, we are using Memuser to model an application that expects users to have a <code>mailcode</code> and <code>emailaddress</code> top-level fields.</p>
+<p>Here, we are using Memuser to model an application that expects users to have a <code>mailcode</code> and <code>emailaddress</code> top-level field.  Notice we did not define <code>mailcode</code> or <code>emailaddress</code> anywhere.  Memuser is dynamic.  It does not know ahead of time if these fields should be stored as an integer, string or some other datatype.  It doesn&#8217;t even have a notion of data validation.  This is by design.  Other than fields like <code>id</code> and <code>userName</code>, <a href="#rigid-user-fields">Memuser does not enforce a rigid definition of what fields are required or allowed for users</a>.  JSON is flexible and so is Memuser.  Data validation is left up to the client.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="get-user-list"><a class="link" href="#get-user-list">Get User List</a></h3>
+</div>
+</div>
+<div class="sect1">
+<h2 id="get-user-list"><a class="link" href="#get-user-list">Get User List</a></h2>
+<div class="sectionbody">
 <div class="paragraph">
 <p>Here is a standard SCIM style request to retrieve a list of our users:</p>
 </div>
 <div class="listingblock primary">
 <div class="title">Curl</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:10001/api/v1/Users/' -i \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users/' -i \
     -H 'Accept: application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Httpie</div>
 <div class="content">
-<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:10001/api/v1/Users/' \
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ http GET 'http://localhost:8080/api/v2/Users/' \
     'Accept:application/scim+json'</code></pre>
 </div>
 </div>
 <div class="listingblock secondary">
 <div class="title">Http</div>
 <div class="content">
-<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v1/Users/ HTTP/1.1
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">GET /api/v2/Users/ HTTP/1.1
 Accept: application/scim+json
-Host: localhost:10001</code></pre>
+Host: localhost:8080</code></pre>
 </div>
 </div>
+<div class="sect2">
+<h3 id="response-8"><a class="link" href="#response-8">response</a></h3>
 <div class="listingblock">
 <div class="content">
 <pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 200 OK
 Content-Type: application/scim+json;charset=UTF-8
-Content-Length: 1611
+Content-Length: 1607
 
 {
   "schemas" : [ "urn:ietf:params:scim:api:messages:2.0:ListResponse" ],
   "totalResults" : 3,
   "Resources" : [ {
-    "id" : "df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+    "id" : "6f266f80-2fc5-4779-be30-6fe985bd147d",
     "userName" : "alicejones",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/df9544b6-7e55-4b12-b0b9-02607a17b8f6",
+      "location" : "http://localhost:8080/api/v2/Users/6f266f80-2fc5-4779-be30-6fe985bd147d",
       "resourceType" : "User",
-      "created" : "2017-09-20T17:27:49.717-06:00",
-      "lastModified" : "2017-09-20T17:27:49.796-06:00"
+      "created" : "2017-09-28T17:05:14.903-06:00",
+      "lastModified" : "2017-09-28T17:05:14.98-06:00"
     },
     "displayName" : "Alice P Smith"
   }, {
-    "id" : "cffb8640-69aa-4a43-b043-494136fc3ca2",
+    "id" : "f7bdeb37-2010-4330-a7df-4dbcd88edc77",
     "userName" : "tomjones",
     "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/cffb8640-69aa-4a43-b043-494136fc3ca2",
+      "location" : "http://localhost:8080/api/v2/Users/f7bdeb37-2010-4330-a7df-4dbcd88edc77",
       "resourceType" : "User",
-      "created" : "2017-09-20T17:27:49.804-06:00",
-      "lastModified" : "2017-09-20T17:27:49.804-06:00"
+      "created" : "2017-09-28T17:05:14.988-06:00",
+      "lastModified" : "2017-09-28T17:05:14.988-06:00"
     },
     "name" : {
       "formatted" : "Dr. Tom J Jones",
@@ -1128,14 +1272,14 @@ Content-Length: 1611
     },
     "displayName" : "Tom Jones"
   }, {
-    "id" : "610f3d13-36d9-400c-a002-e72f4e0feac8",
+    "id" : "b11fa498-e831-484d-9ab9-219bd8ccb634",
     "userName" : "harry",
     "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
     "meta" : {
-      "location" : "http://localhost:10001/api/v1/Users/610f3d13-36d9-400c-a002-e72f4e0feac8",
+      "location" : "http://localhost:8080/api/v2/Users/b11fa498-e831-484d-9ab9-219bd8ccb634",
       "resourceType" : "User",
-      "created" : "2017-09-20T17:27:49.811-06:00",
-      "lastModified" : "2017-09-20T17:27:49.811-06:00"
+      "created" : "2017-09-28T17:05:14.995-06:00",
+      "lastModified" : "2017-09-28T17:05:14.995-06:00"
     },
     "displayName" : "Tom Jones",
     "mailcode" : "CHP",
@@ -1144,7 +1288,41 @@ Content-Length: 1611
 }</code></pre>
 </div>
 </div>
+<div class="paragraph">
+<p>The list is formatted according to the <a href="https://tools.ietf.org/html/rfc7644#section-3.4.2">SCIM ListResponse</a></p>
 </div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="rigid-user-fields"><a class="link" href="#rigid-user-fields">Rigid User Fields</a></h2>
+<div class="sectionbody">
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Field</th>
+<th class="tableblock halign-left valign-top">Special Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>userName</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">required for every user; must be unique among all users</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>id</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unique identifier generated by Memuser for each new user</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>password</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">ignored</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 <div class="sect1">
@@ -1238,10 +1416,102 @@ use of HTTP status codes.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="security"><a class="link" href="#security">Security</a></h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="password"><a class="link" href="#password">password</a></h3>
+<div class="paragraph">
+<p>The <code>password</code> field can be specified in a user create request or a change request, but per the SCIM spec, the value is never returned in clear text.  Memuser goes one step further and does not even store <code>password</code>.  However, this is only true for the password field named exactly <code>password</code>.</p>
+</div>
+<div class="listingblock primary">
+<div class="title">Curl</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
+    -H 'Content-Type: application/scim+json' \
+    -H 'Accept: application/scim+json' \
+    -d '
+{
+  "userName": "billy",
+  "password": "qwerty1234",
+  "userpassword": "asdfghjkl"
+}
+'</code></pre>
+</div>
+</div>
+<div class="listingblock secondary">
+<div class="title">Httpie</div>
+<div class="content">
+<pre class="prettyprint highlight"><code class="language-bash" data-lang="bash">$ echo '
+{
+  "userName": "billy",
+  "password": "qwerty1234",
+  "userpassword": "asdfghjkl"
+}
+' | http POST 'http://localhost:8080/api/v2/Users' \
+    'Content-Type:application/scim+json' \
+    'Accept:application/scim+json'</code></pre>
+</div>
+</div>
+<div class="listingblock secondary">
+<div class="title">Http</div>
+<div class="content">
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">POST /api/v2/Users HTTP/1.1
+Content-Type: application/scim+json
+Accept: application/scim+json
+Host: localhost:8080
+Content-Length: 86
+
+
+{
+  "userName": "billy",
+  "password": "qwerty1234",
+  "userpassword": "asdfghjkl"
+}</code></pre>
+</div>
+</div>
+<div class="sect3">
+<h4 id="response-9"><a class="link" href="#response-9">response</a></h4>
+<div class="listingblock">
+<div class="content">
+<pre class="prettyprint highlight nowrap"><code class="language-http" data-lang="http">HTTP/1.1 201 Created
+Content-Type: application/scim+json;charset=UTF-8
+Content-Length: 408
+
+{
+  "id" : "b08c4743-b734-43b5-9be4-a9032155af15",
+  "userName" : "billy",
+  "schemas" : "urn:ietf:params:scim:schemas:core:2.0:User",
+  "meta" : {
+    "location" : "http://localhost:8080/api/v2/Users/b08c4743-b734-43b5-9be4-a9032155af15",
+    "resourceType" : "User",
+    "created" : "2017-09-28T17:05:15.014-06:00",
+    "lastModified" : "2017-09-28T17:05:15.014-06:00"
+  },
+  "userpassword" : "asdfghjkl"
+}</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="tls-https-support"><a class="link" href="#tls-https-support">TLS/HTTPS support</a></h3>
+<div class="paragraph">
+<p>None yet.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="authentication"><a class="link" href="#authentication">Authentication</a></h3>
+<div class="paragraph">
+<p>Coming.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2017-08-24 16:14:32 -06:00
+Last updated 2017-09-28 16:51:44 -06:00
 </div>
 </div>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prettify/r298/prettify.min.css">
