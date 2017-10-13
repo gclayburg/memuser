@@ -3,7 +3,7 @@
 # memuser
 In-memory storage of User data using the [SCIM](http://www.simplecloud.info/) protocol
 
-## quickstart
+## build and run
 
 To build and run memuser, use the embedded gradle:
 
@@ -11,7 +11,9 @@ To build and run memuser, use the embedded gradle:
 $ ./gradlew bootJarRun
 ```
 
-This project is also published as a docker image on docker hub.  To run it:
+## run from docker image
+
+This project is also published as a docker image on docker hub.  To run a pre-built docker image:
 
 ```bash
 $ docker run -d -p8080:8080 gclayburg/memuser:latest
@@ -33,6 +35,13 @@ $ curl 'http://localhost:8080/api/v2/Users' -i -X POST \
 }
 '
 ```
+
+### Get user list
+
+```bash
+$ curl 'http://localhost:8080/api/v2/Users/' -i \
+    -H 'Accept: application/scim+json'
+```    
 
 More examples can be found in the [guide](https://gclayburg.github.io/memuser/).
 

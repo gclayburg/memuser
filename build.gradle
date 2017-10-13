@@ -7,19 +7,20 @@ import java.time.ZonedDateTime
 buildscript {
     repositories {
         jcenter()
-        mavenCentral()
+//        mavenCentral()
     }
     dependencies {
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
         classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
         classpath 'org.ajoberstar:grgit:1.1.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.0'
     }
 }
 
 plugins {
-    id 'com.garyclayburg.dockerprepare' version '0.9.2'
+    id 'com.garyclayburg.dockerprepare' version '1.0.1'
     id 'com.gorylenko.gradle-git-properties' version '1.4.17'
-    id 'com.bmuschko.docker-remote-api' version '3.1.0'
+//    id 'com.bmuschko.docker-remote-api' version '3.2.0'
     id 'org.springframework.boot' version '1.5.6.RELEASE'
 }
 
@@ -29,6 +30,7 @@ apply plugin: 'application'
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'codenarc'
 apply plugin: 'org.kordamp.gradle.livereload'
+apply plugin: 'com.bmuschko.docker-remote-api'
 
 group = "${group}"
 
