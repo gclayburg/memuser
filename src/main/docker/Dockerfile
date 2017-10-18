@@ -6,8 +6,9 @@ RUN chmod 755 /home/springboot/bootrunner.sh && chown springboot:springboot /hom
 WORKDIR /home/springboot
 USER springboot
 
-ADD dependenciesLayer/ /home/springboot/app/
-ADD classesLayer/ /home/springboot/app/
+ADD commonServiceDependenciesLayer1 /home/springboot/app/
+ADD dependenciesLayer2/ /home/springboot/app/
+ADD classesLayer3/ /home/springboot/app/
 
 ARG ORG_LABEL_SCHEMA_VCS_REF
 ARG ORG_LABEL_SCHEMA_VCS_URL
