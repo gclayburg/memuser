@@ -1,4 +1,6 @@
 [![](https://images.microbadger.com/badges/version/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own version badge on microbadger.com") [![](https://images.microbadger.com/badges/image/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own image badge on microbadger.com")
+[![Build Status](https://travis-ci.org/gclayburg/memuser.svg?branch=master)](https://travis-ci.org/gclayburg/memuser)
+
 
 # memuser
 In-memory storage of User data using the [SCIM](http://www.simplecloud.info/) protocol
