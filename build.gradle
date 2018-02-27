@@ -17,10 +17,10 @@ buildscript {
 }
 
 plugins {
-    id 'com.garyclayburg.dockerprepare' version '1.1.0'
+    id 'com.garyclayburg.dockerprepare' version '1.2.1'
     id 'com.gorylenko.gradle-git-properties' version '1.4.17'
 //    id 'com.bmuschko.docker-remote-api' version '3.2.0'
-    id 'org.springframework.boot' version '1.5.7.RELEASE'
+    id 'org.springframework.boot' version '1.5.10.RELEASE'
 }
 
 apply plugin: 'groovy'
@@ -32,7 +32,7 @@ apply plugin: 'org.kordamp.gradle.livereload'
 apply plugin: 'com.bmuschko.docker-remote-api'
 
 dockerprepare {
-    commonService = ['org.springframework.boot:spring-boot-starter-web','org.codehaus.groovy:groovy-all']
+    commonService = ['org.springframework.boot:spring-boot-starter-web']
 }
 group = "${group}"
 
