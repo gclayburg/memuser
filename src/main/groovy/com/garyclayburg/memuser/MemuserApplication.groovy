@@ -120,7 +120,8 @@ class UserController {
 
 @Canonical
 class MemUser {
-    String id, userName, schemas
+    String id, userName
+    String[] schemas
     Meta meta
     protected Map<String, Object> data = [:]
 
