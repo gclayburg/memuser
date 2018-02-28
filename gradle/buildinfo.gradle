@@ -26,8 +26,7 @@ ext {
             'org.label-schema.description': gitchanges,
             'org.label-schema.build-date' : build_date,
             'org.label-schema.version'    : '1.0',
-            'maintainer'                  : 'justsomedude',
-            'ORG_COME_AT_ME_BRO'          : 'okdoit'
+            'maintainer'                  : '@garyclayburg'
     ]
 //name of docker ARG cannot have . or - characters
     bootArgMap = bootmap.collectEntries { key, value ->

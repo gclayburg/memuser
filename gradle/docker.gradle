@@ -1,0 +1,57 @@
+import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
+import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
+
+buildscript {
+    repositories {
+        jcenter()
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+
+    }
+
+    dependencies {
+        classpath 'com.bmuschko:gradle-docker-plugin:3.2.0'
+        classpath 'gradle.plugin.com.garyclayburg:dockerPreparePlugin:1.2.1'
+
+    }
+}
+
+
+apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
+
+apply plugin: com.garyclayburg.docker.DockerPreparePlugin
+dockerprepare {
+    commonService = ['org.springframework.boot:spring-boot-starter-web']
+}
+springBoot.executable = false
+
+task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
+    description = "Package application as Docker image"
+    group = "Docker"
+    inputDir = project.file(dockerprepare.dockerBuildDirectory)
+
+    tags = [dockerimage + ':' + version, dockerimage + ':latest']
+
+    if (project.hasProperty('dockerhubimage')) {
+        println('configure dockerhub images')
+        tags.add(dockerhubimage + ':' + version)
+        tags.add(dockerhubimage + ':latest')
+
+    }
+    buildArgs = bootArgMap
+
+//    tags = ["${project.name}:latest".toString(), "${project.name}:${project.version}".toString()]
+
+}
+
+task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
+    description = "docker push <imageName>:<version>"
+    imageName = dockerimage + ":" + version
+}
+
+task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
+    description = "docker push <imageName>:latest"
+    imageName = dockerimage + ":latest"
+}
+
