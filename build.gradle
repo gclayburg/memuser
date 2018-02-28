@@ -1,8 +1,5 @@
 import com.bmuschko.gradle.docker.tasks.image.DockerBuildImage
 import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
-import org.ajoberstar.grgit.operation.OpenOp
-
-import java.time.ZonedDateTime
 
 buildscript {
     repositories {
@@ -65,12 +62,9 @@ dependencies {
 
 ext {
     snippetsDir = file('target/generated-snippets')
-    def openOp = new OpenOp(dir: project.rootDir)
-    git = openOp.call()
-    revision = git.head().id
-    gitchanges = getGitStatus()
-    build_date = project.hasProperty('builddate') ? project.getProperty('builddate') : ZonedDateTime.now().toString()
 }
+
+apply from: 'gradle/buildinfo.gradle'
 
 processResources {
     inputs.property 'version', version //because ${version} is used as filter in application.properties
@@ -123,12 +117,7 @@ build {
 
 springBoot {
     buildInfo {
-        additionalProperties = [
-                'org.label-schema.vcs-ref'    : git.head().id,
-                'org.label-schema.vcs-url'    : vcsurl,
-                'org.label-schema.description': gitchanges,
-                'org.label-schema.build-date' : build_date,
-        ]
+        additionalProperties = bootmap
     }
 }
 
@@ -144,15 +133,7 @@ task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
 
     }
     println "boot additional: " + bootBuildInfo.getAdditionalProperties()
-//    def additionalProperties = bootBuildInfo.getAdditionalProperties()
-//    buildArgs = additionalProperties
-    buildArgs = ['ORG_LABEL_SCHEMA_VCS_REF'    : git.head().id,
-                 'ORG_LABEL_SCHEMA_VCS_URL'    : vcsurl,
-                 'ORG_LABEL_SCHEMA_BUILD_DATE' : build_date,
-                 'ORG_LABEL_SCHEMA_VERSION'    : version,
-                 'ORG_LABEL_SCHEMA_DESCRIPTION': "$gitchanges",
-                 'MAINTAINER'                  : 'somedude',
-    ]
+    buildArgs = bootArgMap
     doFirst {
         println "buildargs used: $buildArgs"
         copy{
@@ -160,31 +141,6 @@ task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
             into project.dockerprepare.dockerBuildDirectory
         }
     }
-}
-
-private String getGitStatus() {
-    String gitchanges = ''
-    def gitChangeList = []
-    if (git.status().isClean()) {
-        gitchanges = '[git: clean]'
-    } else {
-        if (git.status().staged.added.size() > 0)
-            gitChangeList.add("${git.status().staged.added.size()} staged added")
-        if (git.status().staged.modified.size() > 0)
-            gitChangeList.add("${git.status().staged.modified.size()} staged modified")
-        if (git.status().staged.removed.size() > 0)
-            gitChangeList.add("${git.status().staged.removed.size()} staged removed")
-        if (git.status().unstaged.added.size() > 0)
-            gitChangeList.add("$gitchanges ${git.status().unstaged.added.size()} unstaged added")
-        if (git.status().unstaged.modified.size() > 0)
-            gitChangeList.add("$gitchanges ${git.status().unstaged.modified.size()} unstaged modified")
-        if (git.status().unstaged.removed.size() > 0)
-            gitChangeList.add("$gitchanges ${git.status().unstaged.removed.size()} unstaged removed")
-        def join = gitChangeList.join(',')
-        gitchanges = '[git: ' + join + ']'
-    }
-    gitchanges += ' ' + project.property('description')
-    gitchanges
 }
 
 task pushVersion(type: DockerPushImage, dependsOn: buildImage) {

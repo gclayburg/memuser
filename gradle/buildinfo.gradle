@@ -1,0 +1,69 @@
+import org.ajoberstar.grgit.operation.OpenOp
+
+import java.time.ZonedDateTime
+buildscript {
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath 'org.ajoberstar:grgit:1.1.0'
+    }
+}
+
+ext {
+    def openOp = new OpenOp(dir: project.rootDir)
+    git = openOp.call()
+    revision = git.head().id
+    gitchanges = getGitStatus()
+    build_date = project.hasProperty('builddate') ? project.getProperty('builddate') : ZonedDateTime.now().toString()
+    println "buildinfo build date: ${build_date}"
+    println "git changes ${gitchanges}"
+    bootmapinfo = [        'org.label-schema.build-date' : build_date
+    ]
+    bootmap = [
+            'org.label-schema.vcs-ref'    : git.head().id,
+            'org.label-schema.vcs-url'    : vcsurl,
+            'org.label-schema.description': gitchanges,
+            'org.label-schema.build-date' : build_date,
+            'org.label-schema.version'    : '1.0',
+            'maintainer'                  : 'justsomedude',
+            'ORG_COME_AT_ME_BRO'          : 'okdoit'
+    ]
+//name of docker ARG cannot have . or - characters
+    bootArgMap = bootmap.collectEntries { key, value ->
+        def newkey = key.toUpperCase()
+
+        newkey = newkey.replace('.','_')
+        newkey = newkey.replace('-','_')
+        [(newkey) : value]
+    }
+
+}
+
+
+
+private String getGitStatus() {
+    String gitchanges = ''
+    def gitChangeList = []
+    if (git.status().isClean()) {
+        gitchanges = '[git: clean]'
+    } else {
+        if (git.status().staged.added.size() > 0)
+            gitChangeList.add("${git.status().staged.added.size()} staged added")
+        if (git.status().staged.modified.size() > 0)
+            gitChangeList.add("${git.status().staged.modified.size()} staged modified")
+        if (git.status().staged.removed.size() > 0)
+            gitChangeList.add("${git.status().staged.removed.size()} staged removed")
+        if (git.status().unstaged.added.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.added.size()} unstaged added")
+        if (git.status().unstaged.modified.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.modified.size()} unstaged modified")
+        if (git.status().unstaged.removed.size() > 0)
+            gitChangeList.add("$gitchanges ${git.status().unstaged.removed.size()} unstaged removed")
+        def join = gitChangeList.join(',')
+        gitchanges = '[git: ' + join + ']'
+    }
+    gitchanges += ' ' + project.property('description')
+    gitchanges
+}
+
