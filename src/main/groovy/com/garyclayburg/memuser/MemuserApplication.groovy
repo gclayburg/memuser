@@ -22,46 +22,8 @@ import java.time.ZonedDateTime
 @SpringBootApplication
 class MemuserApplication {
     static void main(String[] args) {
-        def context = SpringApplication.run(MemuserApplication, args)
-        def bean = context.getBean("upBanner")
-        bean.printVersion()
+        SpringApplication.run(MemuserApplication, args)
     }
-}
-
-@Slf4j
-@Component
-class UpBanner {
-    @Autowired
-    private Environment environment
-
-    @Autowired(required = false)
-    private BuildProperties buildProperties
-
-    void printVersion() {
-        String banner = '\n------------------------------------------------------------------------------------------------\n'
-        String c1r1 = String.format('%s:%s is UP!', getEnvProperty('spring.application.name'), getEnvProperty('info.app.version'))
-        String c1r2 = String.format('Local:     http://localhost:%s', getEnvProperty('server.port'))
-        String c1r3 = String.format('External:  http://%s:%s ', InetAddress.localHost.hostAddress, getEnvProperty('server.port'))
-        String c2r1 = String.format('build-date: %s', buildProperties?.get('org.label-schema.build-date') ?: 'unknown')
-        String c2r2 = String.format('vcs-ref: %s', buildProperties?.get('org.label-schema.vcs-ref') ?: 'unknown')
-        String c2r3 = String.format('vcs-url: %s', buildProperties?.get('org.label-schema.vcs-url') ?: 'unknown')
-        String c2r4 = String.format('description: %s', buildProperties?.get('org.label-schema.description') ?: 'unknown')
-        banner += String.format('\t%-45s %s\n', c1r1, c2r1)
-        banner += String.format('\t%-45s %s\n', c1r2, c2r2)
-        banner += String.format('\t%-45s %s\n', c1r3, c2r3)
-        banner += String.format('\t%-45s %s\n', '', c2r4)
-        banner += '------------------------------------------------------------------------------------------------'
-        log.info(banner)
-    }
-
-    private String getEnvProperty(String key) {
-        try {
-            environment.getProperty(key)
-        } catch (IllegalArgumentException ignored) { //i.e. it may need to be filtered first through build.gradle
-            '<cannot parse>'
-        }
-    }
-
 }
 
 @Slf4j
