@@ -5,14 +5,10 @@ import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
-import org.springframework.boot.info.BuildProperties
-import org.springframework.core.env.Environment
 import org.springframework.http.HttpStatus
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
 
 import javax.servlet.http.HttpServletRequest
