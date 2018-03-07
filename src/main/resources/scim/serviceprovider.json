@@ -1,0 +1,41 @@
+{
+  "schemas":
+  ["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
+  "documentationUri": "https://github.com/gclayburg/memuser",
+  "patch": {
+    "supported":false
+  },
+  "bulk": {
+    "supported":false,
+    "maxOperations":1000,
+    "maxPayloadSize":1048576
+  },
+  "filter": {
+    "supported":false,
+    "maxResults": 200
+  },
+  "changePassword": {
+    "supported":false
+  },
+  "sort": {
+    "supported":false
+  },
+  "etag": {
+    "supported":false
+  },
+  "authenticationSchemes": [
+    {
+      "name": "HTTP Basic",
+      "description":
+      "Authentication scheme using the HTTP Basic Standard",
+      "specUri": "http://www.rfc-editor.org/info/rfc2617",
+      "type": "httpbasic"
+    }
+  ],
+  "meta": {
+    "location": "https://example.com/v2/ServiceProviderConfig",
+    "resourceType": "ServiceProviderConfig",
+    "created": "2010-01-23T04:56:22Z",
+    "lastModified": "2011-05-13T04:42:34Z"
+  }
+}

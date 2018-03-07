@@ -8,6 +8,7 @@ import groovy.util.logging.Slf4j
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
@@ -30,6 +31,10 @@ class UserController {
     Map<String, MemUser> userMap = [:]
     Map<String, MemUser> userNameMap = [:]
 
+    @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
+    def getServiceProviderConfig(){
+        new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
+    }
     @GetMapping('/Users')
     def getUsers() {
         UserFragmentList userFragmentList = new UserFragmentList()
@@ -58,12 +63,13 @@ class UserController {
 
     @PutMapping('/Users/{id}')
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
-        if (userMap.get(memUser?.id) != null && memUser.id == id) {
-            def meta = userMap.get(memUser.id).meta
+        if (userMap.get(id) != null ) {
+            def meta = userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
-            userNameMap.remove(userMap.get(memUser.id).userName) //userName for id may have changed
-            userMap.put(memUser.id, memUser)
+            userNameMap.remove(userMap.get(id).userName) //userName for id may have changed
+            memUser.setId(id) //preserve original id
+            userMap.put(id, memUser)
             userNameMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
         }
@@ -73,6 +79,19 @@ class UserController {
     @GetMapping('/Users/{id}')
     def getUser(@PathVariable('id') String id) {
         userMap.get(id) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+    }
+
+    @DeleteMapping('/Users/{id}')
+    def deleteUser(@PathVariable('id') String id){
+        def user = userMap.get(id)
+        if (user != null){
+            log.info("delete: $id userName: ${user.getUserName()}")
+            userMap.remove(id)
+            userNameMap.remove(user.getUserName())
+            return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
+        } else{
+            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        }
     }
 }
 
