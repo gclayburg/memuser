@@ -54,5 +54,6 @@ LABEL maintainer=${MAINTAINER:-"https://github.com/gclayburg"} \
 
 VOLUME /tmp
 EXPOSE 8080
-ENV JAVA_OPTS=""
+ENV JAVA_OPTS="" \
+    SPRING_OUTPUT_ANSI_ENABLED=ALWAYS
 ENTRYPOINT ["./bootrunner.sh"]
