@@ -61,6 +61,13 @@ class UserController {
         return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
     }
 
+    @DeleteMapping('/Users')
+    def deleteAllUsers(){
+        userMap = [:]
+        userNameMap = [:]
+        return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
+    }
+
     @PutMapping('/Users/{id}')
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
         if (userMap.get(id) != null ) {
