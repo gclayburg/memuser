@@ -1,0 +1,10 @@
+{
+  "userName" : "jmadison",
+  "emails": [
+    {
+      "value": "james.madison@example.com",
+      "type": "work",
+      "primary": true
+    }
+  ]
+}

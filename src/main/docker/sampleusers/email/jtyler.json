@@ -1,0 +1,14 @@
+{
+  "userName" : "jtyler",
+  "emails": [
+    {
+      "value": "jtyler@example.com",
+      "type": "work",
+      "primary": true
+    },
+    {
+      "value": "john.tyler@gmail.com",
+      "type": "home"
+    }
+  ]
+}

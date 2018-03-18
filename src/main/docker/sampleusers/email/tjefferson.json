@@ -1,0 +1,14 @@
+{
+  "userName" : "tjefferson",
+  "emails": [
+    {
+      "value": "tjefferson@example.com",
+      "type": "work",
+      "primary": true
+    },
+    {
+      "value": "thomas@monticello.org",
+      "type": "home"
+    }
+  ]
+}
