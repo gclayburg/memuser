@@ -28,10 +28,27 @@ class MemuserSpec extends Specification {
 
         when:
         Object createdUser = userController.addUser(mockRequest, memUser)
-        UserFragmentList users = userController.users
+        UserFragmentList users = userController.getUsers(mockRequest)
 
         then:
         users.resources.contains(memUser)
-        userController.getUser(((MemUser) createdUser.getBody()).id) == memUser
+        def getUser = userController.getUser(mockRequest, ((MemUser) createdUser.getBody()).id)
+        getUser == memUser
+
+        when:
+        HttpServletRequest mockGet = Mock()
+        mockGet.requestURL >> new StringBuffer('http://localhost:1234/Users')
+        getUser = userController.getUser(mockGet, ((MemUser) createdUser.getBody()).id)
+
+        then:
+        getUser.meta.location == "http://localhost:1234/Users/${memUser.id}"
+
+        when:
+        HttpServletRequest mockGet2 = Mock()
+        mockGet2.requestURL >> new StringBuffer('http://nowherespecial:1234/Users')
+        def userList = userController.getUsers(mockGet2)
+
+        then:
+        userList.Resources[0].meta.location == "http://nowherespecial:1234/Users/${memUser.id}"
     }
 }

@@ -32,14 +32,14 @@ class UserController {
     Map<String, MemUser> userNameMap = [:]
 
     @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
-    def getServiceProviderConfig(){
+    def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
     }
+
     @GetMapping('/Users')
-    def getUsers() {
+    def getUsers(HttpServletRequest request) {
         UserFragmentList userFragmentList = new UserFragmentList()
-        List<MemUser> memUserList = new ArrayList<>(userMap.values())
-        userFragmentList.setResources(memUserList)
+        userFragmentList.resources = overideLocation(userMap.values(), request)
         return userFragmentList
     }
 
@@ -62,7 +62,7 @@ class UserController {
     }
 
     @DeleteMapping('/Users')
-    def deleteAllUsers(){
+    def deleteAllUsers() {
         userMap = [:]
         userNameMap = [:]
         return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
@@ -70,7 +70,7 @@ class UserController {
 
     @PutMapping('/Users/{id}')
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
-        if (userMap.get(id) != null ) {
+        if (userMap.get(id) != null) {
             def meta = userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
@@ -84,19 +84,34 @@ class UserController {
     }
 
     @GetMapping('/Users/{id}')
-    def getUser(@PathVariable('id') String id) {
-        userMap.get(id) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+    def getUser(HttpServletRequest request, @PathVariable('id') String id) {
+        overrideLocation(userMap.get(id), request) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+    }
+
+    def overideLocation(Collection<MemUser> memUsers, HttpServletRequest request) {
+        def locationFixedUsers = []
+        for (MemUser memUser1 : memUsers) {
+            locationFixedUsers += overrideLocation(memUser1, request)
+        }
+        locationFixedUsers
+    }
+
+    MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
+        if (memUser != null) {
+            memUser.meta.location = request.requestURL.append('/').append(memUser.id).toString()
+        }
+        memUser
     }
 
     @DeleteMapping('/Users/{id}')
-    def deleteUser(@PathVariable('id') String id){
+    def deleteUser(@PathVariable('id') String id) {
         def user = userMap.get(id)
-        if (user != null){
+        if (user != null) {
             log.info("delete: $id userName: ${user.getUserName()}")
             userMap.remove(id)
             userNameMap.remove(user.getUserName())
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
-        } else{
+        } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
         }
     }
@@ -137,7 +152,7 @@ class UserFragmentList {
     List<MemUser> Resources
 
     @JsonProperty('Resources')
-    void setResources(List<MemUser> resources) {
+    void setResources(resources) {
         Resources = resources
         totalResults = resources ? resources.size() : 0
     }
