@@ -19,8 +19,15 @@ apply plugin: 'application'
 apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'codenarc'
 apply plugin: 'org.kordamp.gradle.livereload'
-
+apply plugin: 'idea'
 group = "${group}"
+
+idea {
+    module {
+        downloadJavadoc = true
+        downloadSources = true
+    }
+}
 
 jar {
     dependsOn asciidoctor
