@@ -85,7 +85,14 @@ class UserController {
 
     @GetMapping('/Users/{id}')
     def getUser(HttpServletRequest request, @PathVariable('id') String id) {
-        overrideLocation(userMap.get(id), request) ?: new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        def memUser = userMap.get(id)
+        if (memUser != null) {
+            memUser.meta.location = request.requestURL
+            memUser
+        } else {
+            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        }
+
     }
 
     def overideLocation(Collection<MemUser> memUsers, HttpServletRequest request) {
@@ -98,7 +105,8 @@ class UserController {
 
     MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
         if (memUser != null) {
-            memUser.meta.location = request.requestURL.append('/').append(memUser.id).toString()
+            def string = request.requestURL.append('/').append(memUser.id).toString()
+            memUser.meta.location = string.replaceFirst('Users//', 'Users/')
         }
         memUser
     }

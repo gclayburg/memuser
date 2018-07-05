@@ -116,13 +116,23 @@ class UserDocsSpec extends BaseDocsSpec {
         aliceModified.meta.created.isBefore(startput)
         aliceModified.data.get('displayName') != 'Alice P Smith'
 
+        when: 'get user by returned meta.location'
+        log.info("meta.location= " + aliceModified.meta.location)
+
+        ResultActions resultActionsAliceLocation = mockMvc.perform(get(aliceModified.meta.location.replace("http://localhost:8080", ""))
+                .accept(SCIM_JSON))
+        def alicelocation = unmarshall(resultActionsAliceLocation.andReturn())
+
+        then: 'same username is returned'
+        alicelocation.userName == aliceModified.userName
+
         when: 'change alice username with displayname'
         changeUserNameACtions = mockMvc.perform(put(USERSD + createdUser.id)
                 .accept(SCIM_JSON)
                 .contentType(SCIM_JSON)
                 .content('''
 {
-  "id": "''' + createdUser.id  + '''",
+  "id": "''' + createdUser.id + '''",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
@@ -183,6 +193,18 @@ class UserDocsSpec extends BaseDocsSpec {
         then:
         resultActionsList.andExpect(status().isOk())
                 .andDo(document('getlist'))
+        def userlist = unmarshaluserList(resultActionsList.andReturn())
+        userlist.resources.size() == 3
+        userlist.resources.size() == userlist.totalResults
+        println("location=" + userlist.resources[0].meta.location)
+
+        when: 'get first user by returned meta.location'
+        ResultActions resultActionsUser0 = mockMvc.perform(get(userlist.resources[0].meta.location.replace("http://localhost:8080", ""))
+                .accept(SCIM_JSON))
+        def user0location = unmarshall(resultActionsUser0.andReturn())
+
+        then: 'same username is returned'
+        alicelocation.userName == user0location.userName
 
         when: 'create bill password'
         createActions = mockMvc.perform(post(USERS)
@@ -200,6 +222,10 @@ class UserDocsSpec extends BaseDocsSpec {
         createActions.andExpect(status().isCreated())
                 .andDo(document('createbill'))
 
+    }
+
+    UserFragmentList unmarshaluserList(MvcResult mvcResult) {
+        objectMapper.reader().forType(UserFragmentList).readValue(mvcResult.response.contentAsString)
     }
 
     MemUser unmarshall(MvcResult mvcResult) {

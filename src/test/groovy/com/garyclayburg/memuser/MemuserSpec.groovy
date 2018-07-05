@@ -37,8 +37,9 @@ class MemuserSpec extends Specification {
 
         when:
         HttpServletRequest mockGet = Mock()
-        mockGet.requestURL >> new StringBuffer('http://localhost:1234/Users')
-        getUser = userController.getUser(mockGet, ((MemUser) createdUser.getBody()).id)
+        def mockgetid = ((MemUser) createdUser.getBody()).id
+        mockGet.requestURL >> new StringBuffer("http://localhost:1234/Users/${mockgetid}")
+        getUser = userController.getUser(mockGet, mockgetid)
 
         then:
         getUser.meta.location == "http://localhost:1234/Users/${memUser.id}"
