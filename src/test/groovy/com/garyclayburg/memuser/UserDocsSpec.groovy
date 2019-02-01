@@ -1,6 +1,7 @@
 package com.garyclayburg.memuser
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
@@ -75,6 +76,13 @@ class UserDocsSpec extends BaseDocsSpec {
                 .andDo(document('createalice'))
                 .andReturn()
         MemUser createdUser = unmarshall(mvcResult)
+
+        when: "also parse result as json"
+        def bodyString = mvcResult.getResponse().getContentAsString()
+        def bodyJson = new JsonSlurper().parseText(bodyString)
+
+        then: "meta.created is ISO 8601 format, not decimal timestamp"
+        !BigDecimal.isCase(bodyJson.meta.created) //!instanceof
 
         when:
         ResultActions resultActionsAlice = mockMvc.perform(get(USERSD + createdUser.id)

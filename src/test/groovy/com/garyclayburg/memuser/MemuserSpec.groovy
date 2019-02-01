@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.SpringBootTest
 import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
+import java.time.ZonedDateTime
 
 /**
  * <br><br>
@@ -25,6 +26,7 @@ class MemuserSpec extends Specification {
         UserController userController = new UserController()
         HttpServletRequest mockRequest = Mock()
         mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
+        ZonedDateTime testStart = ZonedDateTime.now()
 
         when:
         Object createdUser = userController.addUser(mockRequest, memUser)
@@ -43,6 +45,7 @@ class MemuserSpec extends Specification {
 
         then:
         getUser.meta.location == "http://localhost:1234/Users/${memUser.id}"
+        testStart.isBefore(getUser.meta.created)
 
         when:
         HttpServletRequest mockGet2 = Mock()

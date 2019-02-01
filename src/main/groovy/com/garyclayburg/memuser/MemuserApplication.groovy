@@ -3,16 +3,25 @@ package com.garyclayburg.memuser
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
 
 import javax.servlet.http.HttpServletRequest
+import java.time.LocalDate
 import java.time.ZonedDateTime
 
 @Slf4j
@@ -21,6 +30,26 @@ class MemuserApplication {
     static void main(String[] args) {
         SpringApplication.run(MemuserApplication, args)
     }
+
+}
+
+@Configuration
+class ConfigMe {
+    @Bean
+    @Primary
+    public ObjectMapper serializingObjectMapper() {
+        println "config me!"
+        ObjectMapper objectMapper = new ObjectMapper()
+        JavaTimeModule javaTimeModule = new JavaTimeModule()
+        javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer())
+        javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer())
+        objectMapper.registerModule(javaTimeModule)
+        objectMapper.configure(SerializationFeature.
+                WRITE_DATES_AS_TIMESTAMPS, false)
+
+        return objectMapper
+    }
+
 }
 
 @Slf4j
@@ -165,3 +194,4 @@ class UserFragmentList {
         totalResults = resources ? resources.size() : 0
     }
 }
+
