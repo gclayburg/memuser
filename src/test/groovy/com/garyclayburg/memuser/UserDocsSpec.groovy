@@ -75,7 +75,7 @@ class UserDocsSpec extends BaseDocsSpec {
         def mvcResult = createActions.andExpect(status().isCreated())
                 .andDo(document('createalice'))
                 .andReturn()
-        MemUser createdUser = unmarshall(mvcResult)
+        MemUser createdAliceSmith = unmarshall(mvcResult)
 
         when: "also parse result as json"
         def bodyString = mvcResult.getResponse().getContentAsString()
@@ -84,14 +84,15 @@ class UserDocsSpec extends BaseDocsSpec {
         then: "meta.created is ISO 8601 format, not decimal timestamp"
         !BigDecimal.isCase(bodyJson.meta.created) //!instanceof
 
-        when:
-        ResultActions resultActionsAlice = mockMvc.perform(get(USERSD + createdUser.id)
+        when: "lookup created alice"
+        ResultActions resultActionsAlice = mockMvc.perform(get(USERSD + createdAliceSmith.id)
                 .accept(SCIM_JSON))
 
         then:
         resultActionsAlice.andExpect(status().isOk())
                 .andDo(document('getalice'))
-        when:
+
+        when: "add a new user with same userName"
         ResultActions dupCreateActions = mockMvc.perform(post(USERS)
                 .contentType(SCIM_JSON)
                 .content('{\n' +
@@ -103,14 +104,37 @@ class UserDocsSpec extends BaseDocsSpec {
         dupCreateActions.andExpect(status().is4xxClientError())
                 .andDo(document('duplicatealicesmith'))
 
+        when: "add a new user with different userName"
+        ResultActions bellCreateActions = mockMvc.perform(post(USERS)
+                .contentType(SCIM_JSON)
+                .content('{\n' +
+                '  "userName": "alicebell"\n' +
+                '}')
+                .accept(SCIM_JSON))
+
+        then:
+        def bellMvcResult = bellCreateActions.andExpect(status().isCreated())
+                .andDo(document('createdalicebell')).andReturn()
+
+        when: "changeusername of alicebell to alicesmith"
+        def memUserBell = unmarshall(bellMvcResult)
+        ResultActions changeUserNameBell = mockMvc.perform(put(USERSD + memUserBell.id)
+                .accept(SCIM_JSON)
+                .contentType(SCIM_JSON)
+                .content('{\n' +
+                '  "userName": "alicesmith"\n' +  //dup
+                '}'))
+        then: "should be 409 conflict"
+        changeUserNameBell.andExpect(status().is4xxClientError())
+
         when: 'change username'
-        createdUser.setUserName('alicejones')
-        createdUser.setSchemas(null)
-        createdUser.meta = null
-        createdUser.data.remove('displayName')
-        String strAlice = objectMapper.writeValueAsString(createdUser)
+        createdAliceSmith.setUserName('alicejones')
+        createdAliceSmith.setSchemas(null)
+        createdAliceSmith.meta = null
+        createdAliceSmith.data.remove('displayName')
+        String strAlice = objectMapper.writeValueAsString(createdAliceSmith)
         def startput = ZonedDateTime.now()
-        ResultActions changeUserNameACtions = mockMvc.perform(put(USERSD + createdUser.id)
+        ResultActions changeUserNameACtions = mockMvc.perform(put(USERSD + createdAliceSmith.id)
                 .accept(SCIM_JSON)
                 .contentType(SCIM_JSON)
                 .content(strAlice))
@@ -135,12 +159,12 @@ class UserDocsSpec extends BaseDocsSpec {
         alicelocation.userName == aliceModified.userName
 
         when: 'change alice username with displayname'
-        changeUserNameACtions = mockMvc.perform(put(USERSD + createdUser.id)
+        changeUserNameACtions = mockMvc.perform(put(USERSD + createdAliceSmith.id)
                 .accept(SCIM_JSON)
                 .contentType(SCIM_JSON)
                 .content('''
 {
-  "id": "''' + createdUser.id + '''",
+  "id": "''' + createdAliceSmith.id + '''",
   "userName": "alicejones",
   "displayName": "Alice P Smith"
 }
@@ -202,7 +226,7 @@ class UserDocsSpec extends BaseDocsSpec {
         resultActionsList.andExpect(status().isOk())
                 .andDo(document('getlist'))
         def userlist = unmarshaluserList(resultActionsList.andReturn())
-        userlist.resources.size() == 3
+        userlist.resources.size() == 4
         userlist.resources.size() == userlist.totalResults
         println("location=" + userlist.resources[0].meta.location)
 

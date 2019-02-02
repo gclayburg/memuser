@@ -99,7 +99,11 @@ class UserController {
 
     @PutMapping('/Users/{id}')
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
-        if (userMap.get(id) != null) {
+        if (userMap.get(id) != null && memUser.userName != null) {
+            def existingUserUsername = userNameMap.get(memUser.userName)
+            if (existingUserUsername != null && existingUserUsername.id != id) {
+                return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT) //tried to duplicate userName
+            }
             def meta = userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
