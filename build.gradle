@@ -10,7 +10,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.gorylenko.gradle-git-properties' version '1.4.17'
+    id 'com.gorylenko.gradle-git-properties' version '2.0.0'
     id 'org.springframework.boot' version '1.5.19.RELEASE'
 }
 
@@ -47,7 +47,7 @@ repositories {
 }
 
 dependencies {
-    compile group: 'com.garyclayburg', name:'upbanner', version: '1.0.1'
+    compile group: 'com.garyclayburg', name:'upbanner', version: '2.0.5'
     compile 'org.springframework.boot:spring-boot-devtools'
     compile 'org.codehaus.groovy:groovy-all'
     compile 'org.springframework.boot:spring-boot-starter-web'
