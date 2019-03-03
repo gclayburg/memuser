@@ -30,7 +30,6 @@ class MemuserApplication {
     static void main(String[] args) {
         SpringApplication.run(MemuserApplication, args)
     }
-
 }
 
 @Configuration
@@ -38,7 +37,6 @@ class ConfigMe {
     @Bean
     @Primary
     public ObjectMapper serializingObjectMapper() {
-        println "config me!"
         ObjectMapper objectMapper = new ObjectMapper()
         JavaTimeModule javaTimeModule = new JavaTimeModule()
         javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer())
@@ -46,17 +44,14 @@ class ConfigMe {
         objectMapper.registerModule(javaTimeModule)
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)
-
         return objectMapper
     }
-
 }
 
 @Slf4j
 @RestController
 @RequestMapping('/api/v2')
 class UserController {
-
     Map<String, MemUser> userMap = [:]
     Map<String, MemUser> userNameMap = [:]
 
@@ -125,7 +120,6 @@ class UserController {
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
         }
-
     }
 
     def overideLocation(Collection<MemUser> memUsers, HttpServletRequest request) {
@@ -175,7 +169,7 @@ class MemUser {
         data.put(name, value)
     }
 
-    void setPassword(String password) {}
+    void setPassword(String password) {}  //well, its secure anyway
 }
 
 @Canonical
@@ -198,4 +192,3 @@ class UserFragmentList {
         totalResults = resources ? resources.size() : 0
     }
 }
-
