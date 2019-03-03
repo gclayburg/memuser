@@ -9,23 +9,13 @@ FROM openjdk:8u151-jre-alpine
 #    docker registry before.
 
 RUN adduser -D -s /bin/sh springboot
-COPY ./*.sh /home/springboot/
-RUN chmod 755 /home/springboot/*.sh && chown springboot:springboot /home/springboot/*.sh
+COPY ./bootrunner.sh /home/springboot/bootrunner.sh
+RUN chmod 755 /home/springboot/bootrunner.sh && chown springboot:springboot /home/springboot/bootrunner.sh
 WORKDIR /home/springboot
-
-RUN apk add --update curl && \
-    rm -rf /var/cache/apk/*
-
 USER springboot
-RUN curl -L http://bit.ly/universaldotfiles > universal.sh && \
-   chmod 755 universal.sh && \
-   ./universal.sh && rm universal.sh
 # We add a special springboot user for running our application.
 # Java applications do not need to be run as root
 
-RUN ls /home/springboot/
-ADD sampleusers/ /home/springboot/sampleusers/
-RUN ls /home/springboot/
 ADD commonServiceDependenciesLayer1 /home/springboot/app/
 # This layer is composed of all transitive dependencies of a
 # commonService, e.g in your build.gradle:
@@ -48,6 +38,19 @@ ADD classesLayer3/ /home/springboot/app/
 # This layer contains your application classes.  It will
 # likely change on each docker image build so we expect a docker cache miss.
 # This layer is computed automatically from your spring boot application
+
+USER root
+COPY ./*.sh /home/springboot/
+RUN chmod 755 /home/springboot/*.sh && chown springboot:springboot /home/springboot/*.sh && \
+    apk add --update curl && \
+    rm -rf /var/cache/apk/*
+
+USER springboot
+
+RUN curl -L http://bit.ly/universaldotfiles > universal.sh && \
+   chmod 755 universal.sh && \
+   ./universal.sh && rm universal.sh
+ADD sampleusers/ /home/springboot/sampleusers/
 
 ARG ORG_LABEL_SCHEMA_VCS_REF
 ARG ORG_LABEL_SCHEMA_VCS_URL
