@@ -26,8 +26,14 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
         whereami()
 
         stage "build/test"
-        sh "./gradlew --no-daemon clean build buildImage pushVersion pushLatest"
-        step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
+        try {
+            sh "./gradlew --no-daemon clean build buildImage pushVersion pushLatest"
+        } catch(err) {
+            throw err
+        } finally {
+            step([$class: 'JUnitResultArchiver', testResults: 'build/**/TEST-*.xml'])
+            step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
+        }
 
         stage "docker"
         sh "pwd && ls "
