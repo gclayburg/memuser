@@ -1,7 +1,6 @@
 package com.garyclayburg.memuser
 
 import groovy.util.logging.Slf4j
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Profile
@@ -22,14 +21,14 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
 @Configuration
 @EnableWebSecurity
 @Profile("secure")
-class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter{
+class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
 
     @Override
-    protected void configure(HttpSecurity http) throws Exception{
+    protected void configure(HttpSecurity http) throws Exception {
         http.httpBasic().and().authorizeRequests()
                 .antMatchers("/api/**").hasRole("USER")
                 .antMatchers("/**").hasRole("USER").and()
-        .csrf().disable().headers().frameOptions().disable()
+                .csrf().disable().headers().frameOptions().disable()
 
 //        http.authorizeRequests().antMatchers("/api")
 //        .permitAll().anyRequest().authenticated()
@@ -37,7 +36,7 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter{
 
     @Bean
     @Override
-    public UserDetailsService userDetailsService(){
+    UserDetailsService userDetailsService() {
         UserDetails user = User.withUsername("user").password("password").roles("USER").build()
         List<UserDetails> userList = [user]
         return new InMemoryUserDetailsManager(userList)
@@ -48,7 +47,7 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter{
 @Slf4j
 @Configuration
 @Profile("insecure")
-class Insecure extends WebSecurityConfigurerAdapter{
+class Insecure extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
