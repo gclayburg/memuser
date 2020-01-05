@@ -56,11 +56,13 @@ class UserController {
     Map<String, MemUser> userNameMap = [:]
 
     @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = "*")
     def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
     }
 
     @GetMapping('/Users')
+    @CrossOrigin(origins = "*")
     def getUsers(HttpServletRequest request) {
         UserFragmentList userFragmentList = new UserFragmentList()
         userFragmentList.resources = overideLocation(userMap.values(), request)
@@ -68,6 +70,7 @@ class UserController {
     }
 
     @PostMapping('/Users')
+    @CrossOrigin(origins = "*")
     def addUser(HttpServletRequest request, @RequestBody MemUser memUser) {
         if (!userNameMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
@@ -86,6 +89,7 @@ class UserController {
     }
 
     @DeleteMapping('/Users')
+    @CrossOrigin(origins = "*")
     def deleteAllUsers() {
         userMap = [:]
         userNameMap = [:]
@@ -93,6 +97,7 @@ class UserController {
     }
 
     @PutMapping('/Users/{id}')
+    @CrossOrigin(origins = "*")
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
         if (userMap.get(id) != null && memUser.userName != null) {
             def existingUserUsername = userNameMap.get(memUser.userName)
@@ -112,6 +117,7 @@ class UserController {
     }
 
     @GetMapping('/Users/{id}')
+    @CrossOrigin(origins = "*")
     def getUser(HttpServletRequest request, @PathVariable('id') String id) {
         def memUser = userMap.get(id)
         if (memUser != null) {
@@ -139,6 +145,7 @@ class UserController {
     }
 
     @DeleteMapping('/Users/{id}')
+    @CrossOrigin(origins = "*")
     def deleteUser(@PathVariable('id') String id) {
         def user = userMap.get(id)
         if (user != null) {
