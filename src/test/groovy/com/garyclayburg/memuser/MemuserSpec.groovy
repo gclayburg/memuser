@@ -34,7 +34,7 @@ class MemuserSpec extends Specification {
 
         when: "add user"
         Object createdUser = userController.addUser(mockRequest, memUser)
-        UserFragmentList users = userController.getUsers(mockRequest,pageable)
+        UserFragmentList users = userController.getUsers(mockRequest,pageable).getBody()
 
         then: "returned user matches added user"
         users.resources.contains(memUser)
@@ -54,7 +54,7 @@ class MemuserSpec extends Specification {
         when: "get list of all users"
         HttpServletRequest mockGet2 = Mock()
         mockGet2.requestURL >> new StringBuffer('http://nowherespecial:1234/Users')
-        def userList = userController.getUsers(mockGet2,pageable)
+        def userList = userController.getUsers(mockGet2,pageable).getBody()
 
         then: "first user in list has meta.location"
         userList.Resources[0].meta.location == "http://nowherespecial:1234/Users/${memUser.id}"
@@ -66,7 +66,7 @@ class MemuserSpec extends Specification {
         when: "add a user"
         MemUser memUser2 = new MemUser(userName: 'justanewguy')
         userController.addUser(mockRequest, memUser2)
-        UserFragmentList userList2 = userController.getUsers(mockRequest,pageable)
+        UserFragmentList userList2 = userController.getUsers(mockRequest,pageable).getBody()
 
         then: "2 users fit on bigger page"
         userList2.totalResults == 2
@@ -75,7 +75,7 @@ class MemuserSpec extends Specification {
         userList2.startIndex == 1
 
         when: "request page of 1"
-        UserFragmentList page1of2 = userController.getUsers(mockRequest, new PageRequest(0, 1))
+        UserFragmentList page1of2 = userController.getUsers(mockRequest, new PageRequest(0, 1)).getBody()
 
         then: "1 user on first page"
         page1of2.totalResults == 2
@@ -85,7 +85,7 @@ class MemuserSpec extends Specification {
         page1of2.resources.size() ==1
 
         when: "request page 2"
-        UserFragmentList page2of2 = userController.getUsers(mockRequest, new PageRequest(1, 1))
+        UserFragmentList page2of2 = userController.getUsers(mockRequest, new PageRequest(1, 1)).getBody()
 
         then: "last user on this page"
         page2of2.totalResults ==2
@@ -95,7 +95,7 @@ class MemuserSpec extends Specification {
         page2of2.resources[0].userName == 'justanewguy'
 
         when: "request page out of bounds"
-        UserFragmentList pageInvalid = userController.getUsers(mockRequest, new PageRequest(2, 1))
+        UserFragmentList pageInvalid = userController.getUsers(mockRequest, new PageRequest(2, 1)).getBody()
 
         then: "return empty list"
         pageInvalid.totalResults == 0

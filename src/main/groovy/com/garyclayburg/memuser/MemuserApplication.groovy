@@ -15,7 +15,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
@@ -24,6 +26,7 @@ import org.springframework.data.domain.Pageable
 import javax.servlet.http.HttpServletRequest
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @Slf4j
 @SpringBootApplication
@@ -74,14 +77,15 @@ class UserController {
         } catch (NumberFormatException ignored) {
             log.warn("invalid SCIM page parameters {}",request.getQueryString() )
         }
-        return pageable;
+        return pageable
     }
 
     @GetMapping('/Users')
-    @CrossOrigin(origins = "*")
-    def getUsers(HttpServletRequest request, Pageable pageable) {
+    @CrossOrigin(origins = "*",  exposedHeaders = ["Link","x-total-count"])
+    ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable) {
         pageable = overrideScimPageable(request,pageable)
         def startIndex = (pageable.pageNumber ) * pageable.pageSize
+        UserFragmentList userFragmentList
         if (startIndex < id_userMap.size()) {
             def endIndex = startIndex + pageable.pageSize
             def adjustedPageSize = pageable.pageSize
@@ -90,20 +94,26 @@ class UserController {
                 adjustedPageSize = endIndex - startIndex
             }
             def listPage = id_userMap.values().toList().subList(startIndex, endIndex)
-            UserFragmentList userFragmentList = new UserFragmentList(
+            userFragmentList = new UserFragmentList(
                     totalResults: id_userMap.size(),
                     itemsPerPage: adjustedPageSize,
                     startIndex: startIndex +1)
             userFragmentList.resources = overideLocation(listPage, request)
-            return userFragmentList
+            generatePage(listPage, pageable, userFragmentList)
         } else {
-            UserFragmentList userFragmentList = new UserFragmentList(
+            userFragmentList = new UserFragmentList(
                     totalResults: 0,
                     itemsPerPage: 0,
                     startIndex: 0,
                     resources: [])
-            return userFragmentList
+            generatePage([], pageable, userFragmentList)
         }
+    }
+
+    private ResponseEntity<UserFragmentList> generatePage(List<MemUser> listPage, Pageable pageable, UserFragmentList userFragmentList) {
+        def pageImpl = new PageImpl<>(listPage, pageable, id_userMap.size())
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
+        ResponseEntity.ok().headers(headers).body(userFragmentList)
     }
 
     @PostMapping('/Users')
