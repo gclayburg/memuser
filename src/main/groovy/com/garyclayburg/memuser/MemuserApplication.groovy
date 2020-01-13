@@ -15,11 +15,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
+import org.springframework.data.domain.PageRequest
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.web.bind.annotation.*
-
+import org.springframework.data.domain.Pageable
 import javax.servlet.http.HttpServletRequest
 import java.time.LocalDate
 import java.time.ZonedDateTime
@@ -52,8 +53,8 @@ class ConfigMe {
 @RestController
 @RequestMapping('/api/v2')
 class UserController {
-    Map<String, MemUser> userMap = [:]
-    Map<String, MemUser> userNameMap = [:]
+    Map<String, MemUser> id_userMap = [:]
+    Map<String, MemUser> userName_userMap = [:]
 
     @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = "*")
@@ -61,18 +62,54 @@ class UserController {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
     }
 
+    private static Pageable overrideScimPageable(HttpServletRequest request, Pageable pageable) {
+        try {
+            Map<String, String[]> parameterMap = request.getParameterMap()
+            if (parameterMap != null && parameterMap.get("startIndex") != null && parameterMap.get("count") != null) {
+                int startIndex = Integer.parseInt(parameterMap.get("startIndex")[0]) -1 //SCIM RFC7644 uses 1 based pages, while spring data uses 0 based
+                int itemsPerPage = Integer.parseInt(parameterMap.get("count")[0])
+                int pageNumber = startIndex / itemsPerPage
+                pageable = new PageRequest(pageNumber, itemsPerPage)
+            }
+        } catch (NumberFormatException ignored) {
+            log.warn("invalid SCIM page parameters {}",request.getQueryString() )
+        }
+        return pageable;
+    }
+
     @GetMapping('/Users')
     @CrossOrigin(origins = "*")
-    def getUsers(HttpServletRequest request) {
-        UserFragmentList userFragmentList = new UserFragmentList()
-        userFragmentList.resources = overideLocation(userMap.values(), request)
-        return userFragmentList
+    def getUsers(HttpServletRequest request, Pageable pageable) {
+        pageable = overrideScimPageable(request,pageable)
+        def startIndex = (pageable.pageNumber ) * pageable.pageSize
+        if (startIndex < id_userMap.size()) {
+            def endIndex = startIndex + pageable.pageSize
+            def adjustedPageSize = pageable.pageSize
+            if (endIndex >= id_userMap.size() ) {
+                endIndex = id_userMap.size()
+                adjustedPageSize = endIndex - startIndex
+            }
+            def listPage = id_userMap.values().toList().subList(startIndex, endIndex)
+            UserFragmentList userFragmentList = new UserFragmentList(
+                    totalResults: id_userMap.size(),
+                    itemsPerPage: adjustedPageSize,
+                    startIndex: startIndex +1)
+            userFragmentList.resources = overideLocation(listPage, request)
+            return userFragmentList
+        } else {
+            UserFragmentList userFragmentList = new UserFragmentList(
+                    totalResults: 0,
+                    itemsPerPage: 0,
+                    startIndex: 0,
+                    resources: [])
+            return userFragmentList
+        }
     }
 
     @PostMapping('/Users')
     @CrossOrigin(origins = "*")
     def addUser(HttpServletRequest request, @RequestBody MemUser memUser) {
-        if (!userNameMap.get(memUser.userName)) {
+        if (!userName_userMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
@@ -81,8 +118,8 @@ class UserController {
                             lastModified: now,
                             resourceType: 'User',))
             memUser.schemas ?: memUser.setSchemas('urn:ietf:params:scim:schemas:core:2.0:User')
-            userMap.put(memUser.id, memUser)
-            userNameMap.put(memUser.userName, memUser)
+            id_userMap.put(memUser.id, memUser)
+            userName_userMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
         }
         return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
@@ -91,26 +128,26 @@ class UserController {
     @DeleteMapping('/Users')
     @CrossOrigin(origins = "*")
     def deleteAllUsers() {
-        userMap = [:]
-        userNameMap = [:]
+        id_userMap = [:]
+        userName_userMap = [:]
         return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
     }
 
     @PutMapping('/Users/{id}')
     @CrossOrigin(origins = "*")
     def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
-        if (userMap.get(id) != null && memUser.userName != null) {
-            def existingUserUsername = userNameMap.get(memUser.userName)
+        if (id_userMap.get(id) != null && memUser.userName != null) {
+            def existingUserUsername = userName_userMap.get(memUser.userName)
             if (existingUserUsername != null && existingUserUsername.id != id) {
                 return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT) //tried to duplicate userName
             }
-            def meta = userMap.get(id).meta
+            def meta = id_userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
-            userNameMap.remove(userMap.get(id).userName) //userName for id may have changed
+            userName_userMap.remove(id_userMap.get(id).userName) //userName for id may have changed
             memUser.setId(id) //preserve original id
-            userMap.put(id, memUser)
-            userNameMap.put(memUser.userName, memUser)
+            id_userMap.put(id, memUser)
+            userName_userMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
         }
         return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
@@ -119,7 +156,7 @@ class UserController {
     @GetMapping('/Users/{id}')
     @CrossOrigin(origins = "*")
     def getUser(HttpServletRequest request, @PathVariable('id') String id) {
-        def memUser = userMap.get(id)
+        def memUser = id_userMap.get(id)
         if (memUser != null) {
             memUser.meta.location = request.requestURL
             memUser
@@ -147,11 +184,11 @@ class UserController {
     @DeleteMapping('/Users/{id}')
     @CrossOrigin(origins = "*")
     def deleteUser(@PathVariable('id') String id) {
-        def user = userMap.get(id)
+        def user = id_userMap.get(id)
         if (user != null) {
             log.info("delete: $id userName: ${user.getUserName()}")
-            userMap.remove(id)
-            userNameMap.remove(user.getUserName())
+            id_userMap.remove(id)
+            userName_userMap.remove(user.getUserName())
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
@@ -189,6 +226,8 @@ class Meta {
 class UserFragmentList {
     List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
     int totalResults
+    int itemsPerPage
+    int startIndex
 
     @JsonProperty('Resources')
     List<MemUser> Resources
@@ -196,6 +235,5 @@ class UserFragmentList {
     @JsonProperty('Resources')
     void setResources(resources) {
         Resources = resources
-        totalResults = resources ? resources.size() : 0
     }
 }
