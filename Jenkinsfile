@@ -33,6 +33,7 @@ node('coreosnode') {  //this node label must match jenkins slave with nodejs ins
         } finally {
             step([$class: 'JUnitResultArchiver', testResults: 'build/**/TEST-*.xml'])
             step([$class: 'WarningsPublisher', canComputeNew: false, canResolveRelativePaths: false, categoriesPattern: '', consoleParsers: [[parserName: 'asciidoctor-warning']], defaultEncoding: '', excludePattern: '', failedTotalAll: '1', healthy: '', includePattern: '', messagesPattern: '', unHealthy: '', unstableTotalAll: '0'])
+            archive('build/libs/**/*.jar')
         }
 
         stage "docker"
