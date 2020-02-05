@@ -143,7 +143,7 @@ class UserController {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
-                    new Meta(location: request.requestURL.append('/').append(memUser.id).toString(),
+                    new Meta(location: filterProxiedURL(request,request.requestURL.append('/').append(memUser.id).toString()),
                             created: now,
                             lastModified: now,
                             resourceType: 'User',))
@@ -175,6 +175,7 @@ class UserController {
             def meta = id_userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
+            memUser.meta.location = filterProxiedURL(request,request.requestURL.toString())
             userName_userMap.remove(id_userMap.get(id).userName) //userName for id may have changed
             memUser.setId(id) //preserve original id
             id_userMap.put(id, memUser)
@@ -190,7 +191,7 @@ class UserController {
         showHeaders(request)
         def memUser = id_userMap.get(id)
         if (memUser != null) {
-            memUser.meta.location = request.requestURL
+            memUser.meta.location = filterProxiedURL(request,request.requestURL.toString())
             memUser
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
@@ -208,15 +209,23 @@ class UserController {
     MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
         showHeaders(request)
         if (memUser != null) {
-            def location
-            if (isForwardedRequest(request)) { //todo validate the headers from proxy? or just trust them?
-                location = request.getHeader(XForwardedProto) + '://' + request.getHeader(XForwardedHost) + '/api/V2/Users/'
-            } else {
-                location = request.requestURL.append('/').append(memUser.id).toString().replaceFirst('Users//', 'Users/')
-            }
-            memUser.meta.location = location
+            def location = request.requestURL.append('/').append(memUser.id).toString().replaceFirst('Users//', 'Users/')
+            memUser.meta.location = filterProxiedURL(request, location)
         }
         memUser
+    }
+
+    static String filterProxiedURL(HttpServletRequest request, String locationRaw) {
+        String location = locationRaw
+        if (isForwardedRequest(request)) {
+            location = request.getHeader(XForwardedProto) + "://" +
+                    request.getHeader(XForwardedHost) + extractURI(locationRaw)
+        }
+        return location
+    }
+
+    static String extractURI(String locationRaw) {
+        return locationRaw.replaceFirst("^http.*//[^/]*","")
     }
 
     private void showHeaders(HttpServletRequest request) {

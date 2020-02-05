@@ -22,13 +22,72 @@ class MemuserSpec extends Specification {
         true
     }
 
-    def "adduser"() {
+    def "adduser with simulated proxy"() {
         given: "setup one user"
         MemUser memUser = new MemUser(userName: 'hi')
         UserController userController = new UserController(new MemuserSettings())
+
+        HttpServletRequest mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users',
+                'https',
+                'www.examplesecure.com:443')
+        Pageable pageable = new PageRequest(0, 8)
+
+
+        when: "add user"
+        Object createdUser = userController.addUser(mockGetProxy, memUser)
+
+        then: "meta.location is correct for proxy"
+        createdUser.getBody().meta.location == 'https://www.examplesecure.com:443/Users/' + createdUser.getBody().id
+        when: "get the user we just added"
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users/'+ createdUser.getBody().id,
+                'https',
+                'www.examplesecure.com:443')
+        def getUser = userController.getUser(mockGetProxy, ((MemUser) createdUser.getBody()).id)
+
+        then: "returned user matches added user"
+        getUser == memUser
+        getUser.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+
+        when: "get the user list via simulated proxy"
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users',
+                'https',
+                'www.examplesecure.com:443')
+        UserFragmentList users = userController.getUsers(mockGetProxy,pageable).getBody()
+        then:
+        users.resources.contains(memUser)
+        users.resources[0].meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+
+        when: "get user again"
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users/' +getUser.id,
+                'https',
+                'www.examplesecure.com:443')
+        getUser = userController.getUser(mockGetProxy, ((MemUser) createdUser.getBody()).id)
+        then:
+        getUser == memUser
+        getUser.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+    }
+
+    private HttpServletRequest setupProxiedMockRequest(String requestURL,String proto, String forwardedHost) {
+        HttpServletRequest mockGetProxy = Mock()
+        mockGetProxy.getHeader(UserController.XForwardedProto) >> proto
+        mockGetProxy.getHeader(UserController.XForwardedHost) >> forwardedHost
+        mockGetProxy.requestURL >> new StringBuffer(requestURL)
+        mockGetProxy
+    }
+
+    def "adduser"() {
+        given: "setup one user"
+        ZonedDateTime testStart = ZonedDateTime.now()
+        Thread.sleep(1L) // yes this is needed. the test can run so fast that now() will be the same millisecond throughout the test method
+        MemUser memUser = new MemUser(userName: 'hi')
+        UserController userController = new UserController(new MemuserSettings())
+
         HttpServletRequest mockRequest = Mock()
         mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
-        ZonedDateTime testStart = ZonedDateTime.now()
         Pageable pageable = new PageRequest(0, 8)
 
 
@@ -50,6 +109,33 @@ class MemuserSpec extends Specification {
         then: "returned user has correct meta.location"
         getUser.meta.location == "http://localhost:1234/Users/${memUser.id}"
         testStart.isBefore(getUser.meta.created)
+
+        when: "request user from proxyurl"
+        def mockgetidProxy = ((MemUser) createdUser.getBody()).id
+        HttpServletRequest mockGetProxy = setupProxiedMockRequest(
+                "http://localhost:1234/Users/${mockgetidProxy}",
+                'https',
+                'www.example44.com:443')
+
+        getUser = userController.getUser(mockGetProxy, mockgetidProxy)
+
+        then: "returned user has correct meta.location"
+        getUser.meta.location == "https://www.example44.com:443/Users/${memUser.id}"
+        testStart.isBefore(getUser.meta.created)
+
+        when: "put modified user"
+        MemUser mUser = (getUser as MemUser)
+        mUser.setData('extrastuff', "somenewvalue")
+
+        mockGetProxy = setupProxiedMockRequest(
+                "http://localhost:1234/Users/${mockgetidProxy}",
+                'https',
+                'www.example2.com:443')
+        def returnedUser = userController.putUser(mockGetProxy, mUser, mUser.id).getBody()
+
+        then: "location header is created from proxy headers"
+        true
+        returnedUser.meta.location == "https://www.example2.com:443/Users/${memUser.id}"
 
         when: "get list of all users"
         HttpServletRequest mockGet2 = Mock()
