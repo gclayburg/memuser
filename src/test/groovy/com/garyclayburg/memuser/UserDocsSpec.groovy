@@ -59,7 +59,34 @@ class UserDocsSpec extends BaseDocsSpec {
                 .andDo(document('emptyusers'))
     }
 
+    def "x-forwarded headers"() {
+        given: 'create bob'
+        mockMvc.perform(post(USERS)
+                .contentType(SCIM_JSON)
+                .content('''
+{
+  "userName": "bobbysmith",
+  "displayName": "Bob Smith"
+}
+''')
+                .accept(SCIM_JSON))
+
+        when:
+        ResultActions resultActionsAll = mockMvc.perform(get(USERSD)
+                .header("Host","somewherebehindaproxy")
+                .header("X-Forwarded-Proto","https")
+                .header("X-Forwarded-Host", "thehttpshost:443")
+                .header("X-Forwarded-For", "10.2.3.4")
+                .accept(SCIM_JSON))
+        def userlist = unmarshaluserList(resultActionsAll.andReturn())
+        then:
+        userlist.resources[0].meta.location.startsWith('https://thehttpshost:443/api')
+    }
+
     def "create list"() {
+        given: "clear out any other test data"
+        mockMvc.perform(delete(USERSD).accept(SCIM_JSON))
+
         when: 'create alice'
         ResultActions createActions = mockMvc.perform(post(USERS)
                 .contentType(SCIM_JSON)

@@ -25,7 +25,7 @@ class MemuserSpec extends Specification {
     def "adduser"() {
         given: "setup one user"
         MemUser memUser = new MemUser(userName: 'hi')
-        UserController userController = new UserController()
+        UserController userController = new UserController(new MemuserSettings())
         HttpServletRequest mockRequest = Mock()
         mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
         ZonedDateTime testStart = ZonedDateTime.now()

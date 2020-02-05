@@ -10,8 +10,10 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.ConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -21,6 +23,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
 import org.springframework.data.domain.Pageable
 import javax.servlet.http.HttpServletRequest
@@ -36,11 +39,17 @@ class MemuserApplication {
     }
 }
 
+@Component
+@ConfigurationProperties(prefix = 'memuser')
+class MemuserSettings {
+    boolean showHeaders = false
+}
+
 @Configuration
 class ConfigMe {
     @Bean
     @Primary
-    public ObjectMapper serializingObjectMapper() {
+    ObjectMapper serializingObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper()
         JavaTimeModule javaTimeModule = new JavaTimeModule()
         javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer())
@@ -56,8 +65,17 @@ class ConfigMe {
 @RestController
 @RequestMapping('/api/v2')
 class UserController {
+    public static final String XForwardedProto = 'X-Forwarded-Proto'
+    public static final String XForwardedHost = 'X-Forwarded-Host'
     Map<String, MemUser> id_userMap = [:]
     Map<String, MemUser> userName_userMap = [:]
+
+    MemuserSettings memuserSettings
+
+    @Autowired
+    UserController(MemuserSettings memuserSettings) {
+        this.memuserSettings = memuserSettings
+    }
 
     @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = "*")
@@ -83,6 +101,7 @@ class UserController {
     @GetMapping('/Users')
     @CrossOrigin(origins = "*",  exposedHeaders = ["Link","x-total-count"])
     ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable) {
+        showHeaders(request)
         pageable = overrideScimPageable(request,pageable)
         def startIndex = (pageable.pageNumber ) * pageable.pageSize
         UserFragmentList userFragmentList
@@ -119,6 +138,7 @@ class UserController {
     @PostMapping('/Users')
     @CrossOrigin(origins = "*")
     def addUser(HttpServletRequest request, @RequestBody MemUser memUser) {
+        showHeaders(request)
         if (!userName_userMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
@@ -145,7 +165,8 @@ class UserController {
 
     @PutMapping('/Users/{id}')
     @CrossOrigin(origins = "*")
-    def putUser(@RequestBody MemUser memUser, @PathVariable('id') String id) {
+    def putUser(HttpServletRequest request, @RequestBody MemUser memUser, @PathVariable('id') String id) {
+        showHeaders(request)
         if (id_userMap.get(id) != null && memUser.userName != null) {
             def existingUserUsername = userName_userMap.get(memUser.userName)
             if (existingUserUsername != null && existingUserUsername.id != id) {
@@ -166,6 +187,7 @@ class UserController {
     @GetMapping('/Users/{id}')
     @CrossOrigin(origins = "*")
     def getUser(HttpServletRequest request, @PathVariable('id') String id) {
+        showHeaders(request)
         def memUser = id_userMap.get(id)
         if (memUser != null) {
             memUser.meta.location = request.requestURL
@@ -184,11 +206,28 @@ class UserController {
     }
 
     MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
+        showHeaders(request)
         if (memUser != null) {
-            def string = request.requestURL.append('/').append(memUser.id).toString()
-            memUser.meta.location = string.replaceFirst('Users//', 'Users/')
+            def location
+            if (isForwardedRequest(request)) { //todo validate the headers from proxy? or just trust them?
+                location = request.getHeader(XForwardedProto) + '://' + request.getHeader(XForwardedHost) + '/api/V2/Users/'
+            } else {
+                location = request.requestURL.append('/').append(memUser.id).toString().replaceFirst('Users//', 'Users/')
+            }
+            memUser.meta.location = location
         }
         memUser
+    }
+
+    private void showHeaders(HttpServletRequest request) {
+        if (memuserSettings.showHeaders) {
+            Enumeration<String> headerNames = request.getHeaderNames()
+            log.info(request.getMethod() + " " + request.getRequestURL() + "   headers:")
+            while (headerNames != null && headerNames.hasMoreElements()) {
+                String headerName = headerNames.nextElement()
+                log.info(headerName + ": " + request.getHeader(headerName))
+            }
+        }
     }
 
     @DeleteMapping('/Users/{id}')
@@ -203,6 +242,10 @@ class UserController {
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
         }
+    }
+
+    static boolean isForwardedRequest(HttpServletRequest request) {
+        request.getHeader(XForwardedProto) != null && request.getHeader(XForwardedHost) != null
     }
 }
 
