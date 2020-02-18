@@ -33,7 +33,6 @@ class MemuserSpec extends Specification {
                 'www.examplesecure.com:443')
         Pageable pageable = new PageRequest(0, 8)
 
-
         when: "add user"
         Object createdUser = userController.addUser(mockGetProxy, memUser)
 

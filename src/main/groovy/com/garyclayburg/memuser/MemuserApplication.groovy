@@ -19,17 +19,18 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
-import org.springframework.data.domain.Pageable
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder
+
 import javax.servlet.http.HttpServletRequest
 import java.time.LocalDate
 import java.time.ZonedDateTime
-import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
 @Slf4j
 @SpringBootApplication
@@ -87,28 +88,29 @@ class UserController {
         try {
             Map<String, String[]> parameterMap = request.getParameterMap()
             if (parameterMap != null && parameterMap.get("startIndex") != null && parameterMap.get("count") != null) {
-                int startIndex = Integer.parseInt(parameterMap.get("startIndex")[0]) -1 //SCIM RFC7644 uses 1 based pages, while spring data uses 0 based
+                int startIndex = Integer.parseInt(parameterMap.get("startIndex")[0]) - 1
+                //SCIM RFC7644 uses 1 based pages, while spring data uses 0 based
                 int itemsPerPage = Integer.parseInt(parameterMap.get("count")[0])
-                int pageNumber = startIndex / itemsPerPage
+                int pageNumber = (int) (startIndex / itemsPerPage)
                 pageable = new PageRequest(pageNumber, itemsPerPage)
             }
         } catch (NumberFormatException ignored) {
-            log.warn("invalid SCIM page parameters {}",request.getQueryString() )
+            log.warn("invalid SCIM page parameters {}", request.getQueryString())
         }
         return pageable
     }
 
     @GetMapping('/Users')
-    @CrossOrigin(origins = "*",  exposedHeaders = ["Link","x-total-count"])
+    @CrossOrigin(origins = "*", exposedHeaders = ["Link", "x-total-count"])
     ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable) {
         showHeaders(request)
-        pageable = overrideScimPageable(request,pageable)
-        def startIndex = (pageable.pageNumber ) * pageable.pageSize
+        pageable = overrideScimPageable(request, pageable)
+        def startIndex = (pageable.pageNumber) * pageable.pageSize
         UserFragmentList userFragmentList
         if (startIndex < id_userMap.size()) {
             def endIndex = startIndex + pageable.pageSize
             def adjustedPageSize = pageable.pageSize
-            if (endIndex >= id_userMap.size() ) {
+            if (endIndex >= id_userMap.size()) {
                 endIndex = id_userMap.size()
                 adjustedPageSize = endIndex - startIndex
             }
@@ -116,7 +118,7 @@ class UserController {
             userFragmentList = new UserFragmentList(
                     totalResults: id_userMap.size(),
                     itemsPerPage: adjustedPageSize,
-                    startIndex: startIndex +1)
+                    startIndex: startIndex + 1)
             userFragmentList.resources = overideLocation(listPage, request)
             generatePage(listPage, pageable, userFragmentList)
         } else {
@@ -143,7 +145,7 @@ class UserController {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
-                    new Meta(location: filterProxiedURL(request,request.requestURL.append('/').append(memUser.id).toString()),
+                    new Meta(location: filterProxiedURL(request, request.requestURL.append('/').append(memUser.id).toString()),
                             created: now,
                             lastModified: now,
                             resourceType: 'User',))
@@ -175,7 +177,7 @@ class UserController {
             def meta = id_userMap.get(id).meta
             meta.lastModified = ZonedDateTime.now()
             memUser.meta = meta
-            memUser.meta.location = filterProxiedURL(request,request.requestURL.toString())
+            memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
             userName_userMap.remove(id_userMap.get(id).userName) //userName for id may have changed
             memUser.setId(id) //preserve original id
             id_userMap.put(id, memUser)
@@ -191,7 +193,7 @@ class UserController {
         showHeaders(request)
         def memUser = id_userMap.get(id)
         if (memUser != null) {
-            memUser.meta.location = filterProxiedURL(request,request.requestURL.toString())
+            memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
             memUser
         } else {
             return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
@@ -225,7 +227,7 @@ class UserController {
     }
 
     static String extractURI(String locationRaw) {
-        return locationRaw.replaceFirst("^http.*//[^/]*","")
+        return locationRaw.replaceFirst("^http.*//[^/]*", "")
     }
 
     private void showHeaders(HttpServletRequest request) {
