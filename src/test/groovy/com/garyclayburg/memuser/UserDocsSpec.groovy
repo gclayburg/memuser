@@ -73,18 +73,18 @@ class UserDocsSpec extends BaseDocsSpec {
 
         when:
         ResultActions resultActionsAll = mockMvc.perform(get(USERSD)
-                .header("Host","somewherebehindaproxy")
-                .header("X-Forwarded-Proto","https")
-                .header("X-Forwarded-Host", "thehttpshost:443")
-                .header("X-Forwarded-For", "10.2.3.4")
+                .header('Host', 'somewherebehindaproxy')
+                .header('X-Forwarded-Proto', 'https')
+                .header('X-Forwarded-Host', 'thehttpshost:443')
+                .header('X-Forwarded-For', '10.2.3.4')
                 .accept(SCIM_JSON))
         def userlist = unmarshaluserList(resultActionsAll.andReturn())
         then:
         userlist.resources[0].meta.location.startsWith('https://thehttpshost:443/api')
     }
 
-    def "create list"() {
-        given: "clear out any other test data"
+    def "user create list"() {
+        given: 'clear out any other test data'
         mockMvc.perform(delete(USERSD).accept(SCIM_JSON))
 
         when: 'create alice'
@@ -104,14 +104,14 @@ class UserDocsSpec extends BaseDocsSpec {
                 .andReturn()
         MemUser createdAliceSmith = unmarshall(mvcResult)
 
-        when: "also parse result as json"
-        def bodyString = mvcResult.getResponse().getContentAsString()
+        when: 'also parse result as json'
+        def bodyString = mvcResult.response.contentAsString
         def bodyJson = new JsonSlurper().parseText(bodyString)
 
-        then: "meta.created is ISO 8601 format, not decimal timestamp"
+        then: 'meta.created is ISO 8601 format, not decimal timestamp'
         !BigDecimal.isCase(bodyJson.meta.created) //!instanceof
 
-        when: "lookup created alice"
+        when: 'lookup created alice'
         ResultActions resultActionsAlice = mockMvc.perform(get(USERSD + createdAliceSmith.id)
                 .accept(SCIM_JSON))
 
@@ -119,39 +119,45 @@ class UserDocsSpec extends BaseDocsSpec {
         resultActionsAlice.andExpect(status().isOk())
                 .andDo(document('getalice'))
 
-        when: "add a new user with same userName"
+        when: 'add a new user with same userName'
         ResultActions dupCreateActions = mockMvc.perform(post(USERS)
                 .contentType(SCIM_JSON)
-                .content('{\n' +
-                '  "userName": "alicesmith"\n' +
-                '}')
+                .content('''
+{
+  "userName": "alicesmith"
+}
+''')
                 .accept(SCIM_JSON))
 
         then: 'no duplicate username allowed'
         dupCreateActions.andExpect(status().is4xxClientError())
                 .andDo(document('duplicatealicesmith'))
 
-        when: "add a new user with different userName"
+        when: 'add a new user with different userName'
         ResultActions bellCreateActions = mockMvc.perform(post(USERS)
                 .contentType(SCIM_JSON)
-                .content('{\n' +
-                '  "userName": "alicebell"\n' +
-                '}')
+                .content('''
+{
+  "userName": "alicebell"
+}
+''')
                 .accept(SCIM_JSON))
 
         then:
         def bellMvcResult = bellCreateActions.andExpect(status().isCreated())
                 .andDo(document('createdalicebell')).andReturn()
 
-        when: "changeusername of alicebell to alicesmith"
+        when: 'changeusername of alicebell to alicesmith'
         def memUserBell = unmarshall(bellMvcResult)
         ResultActions changeUserNameBell = mockMvc.perform(put(USERSD + memUserBell.id)
                 .accept(SCIM_JSON)
                 .contentType(SCIM_JSON)
-                .content('{\n' +
-                '  "userName": "alicesmith"\n' +  //dup
-                '}'))
-        then: "should be 409 conflict"
+                .content('''
+{
+  "userName": "alicesmith"
+}
+'''))
+        then: 'should be 409 conflict'
         changeUserNameBell.andExpect(status().is4xxClientError())
 
         when: 'change username'
@@ -176,9 +182,9 @@ class UserDocsSpec extends BaseDocsSpec {
         aliceModified.data.get('displayName') != 'Alice P Smith'
 
         when: 'get user by returned meta.location'
-        log.info("meta.location= " + aliceModified.meta.location)
+        log.info('meta.location= ' + aliceModified.meta.location)
 
-        ResultActions resultActionsAliceLocation = mockMvc.perform(get(aliceModified.meta.location.replace("http://localhost:8080", ""))
+        ResultActions resultActionsAliceLocation = mockMvc.perform(get(aliceModified.meta.location.replace('http://localhost:8080', ''))
                 .accept(SCIM_JSON))
         def alicelocation = unmarshall(resultActionsAliceLocation.andReturn())
 
@@ -255,10 +261,9 @@ class UserDocsSpec extends BaseDocsSpec {
         def userlist = unmarshaluserList(resultActionsList.andReturn())
         userlist.resources.size() == 4
         userlist.resources.size() == userlist.totalResults
-        println("location=" + userlist.resources[0].meta.location)
 
         when: 'get first user by returned meta.location'
-        ResultActions resultActionsUser0 = mockMvc.perform(get(userlist.resources[0].meta.location.replace("http://localhost:8080", ""))
+        ResultActions resultActionsUser0 = mockMvc.perform(get(userlist.resources[0].meta.location.replace('http://localhost:8080', ''))
                 .accept(SCIM_JSON))
         def user0location = unmarshall(resultActionsUser0.andReturn())
 

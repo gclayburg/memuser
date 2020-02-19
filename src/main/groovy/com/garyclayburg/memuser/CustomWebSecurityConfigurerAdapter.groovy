@@ -20,16 +20,18 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
  */
 @Configuration
 @EnableWebSecurity
-@Profile("secure")
+@Profile('secure')
 class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
+
+    public static final String USER = 'USER'
 
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
                 .cors().and()
                 .httpBasic().and().authorizeRequests()
-                .antMatchers("/api/**").hasRole("USER")
-                .antMatchers("/**").hasRole("USER").and()
+                .antMatchers('/api/**').hasRole(USER)
+                .antMatchers('/**').hasRole(USER).and()
                 .csrf().disable().headers().frameOptions().disable()
 
 //        http.authorizeRequests().antMatchers("/api")
@@ -39,20 +41,19 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Bean
     @Override
     UserDetailsService userDetailsService() {
-        UserDetails user = User.withUsername("user").password("password").roles("USER").build()
+        UserDetails user = User.withUsername('user').password('password').roles(USER).build()
         List<UserDetails> userList = [user]
         return new InMemoryUserDetailsManager(userList)
     }
-
 }
 
 @Slf4j
 @Configuration
-@Profile("insecure")
+@Profile('insecure')
 class Insecure extends WebSecurityConfigurerAdapter {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.csrf().disable()
-        log.info("insecure profile: security disabled")
+        log.info('insecure profile: security disabled')
     }
 }

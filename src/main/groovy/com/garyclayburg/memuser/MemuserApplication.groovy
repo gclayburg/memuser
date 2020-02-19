@@ -53,12 +53,12 @@ class ConfigMe {
     ObjectMapper serializingObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper()
         JavaTimeModule javaTimeModule = new JavaTimeModule()
-        javaTimeModule.addSerializer(LocalDate.class, new LocalDateSerializer())
-        javaTimeModule.addDeserializer(LocalDate.class, new LocalDateDeserializer())
+        javaTimeModule.addSerializer(LocalDate, new LocalDateSerializer())
+        javaTimeModule.addDeserializer(LocalDate, new LocalDateDeserializer())
         objectMapper.registerModule(javaTimeModule)
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)
-        return objectMapper
+        objectMapper
     }
 }
 
@@ -66,8 +66,10 @@ class ConfigMe {
 @RestController
 @RequestMapping('/api/v2')
 class UserController {
-    public static final String XForwardedProto = 'X-Forwarded-Proto'
-    public static final String XForwardedHost = 'X-Forwarded-Host'
+    public static final String X_FORWARDED_PROTO = 'X-Forwarded-Proto'
+    public static final String X_FORWARDED_HOST = 'X-Forwarded-Host'
+    public static final String START_INDEX = 'startIndex'
+    public static final String COUNT = 'count'
     Map<String, MemUser> id_userMap = [:]
     Map<String, MemUser> userName_userMap = [:]
 
@@ -79,37 +81,38 @@ class UserController {
     }
 
     @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
     }
 
     private static Pageable overrideScimPageable(HttpServletRequest request, Pageable pageable) {
+        Pageable modifiedPageable = pageable
         try {
-            Map<String, String[]> parameterMap = request.getParameterMap()
-            if (parameterMap != null && parameterMap.get("startIndex") != null && parameterMap.get("count") != null) {
-                int startIndex = Integer.parseInt(parameterMap.get("startIndex")[0]) - 1
+            Map<String, String[]> parameterMap = request.parameterMap
+            if (parameterMap != null && parameterMap.get(START_INDEX) != null && parameterMap.get(COUNT) != null) {
+                int startIndex = Integer.parseInt(parameterMap.get(START_INDEX)[0]) - 1
                 //SCIM RFC7644 uses 1 based pages, while spring data uses 0 based
-                int itemsPerPage = Integer.parseInt(parameterMap.get("count")[0])
+                int itemsPerPage = Integer.parseInt(parameterMap.get(COUNT)[0])
                 int pageNumber = (int) (startIndex / itemsPerPage)
-                pageable = new PageRequest(pageNumber, itemsPerPage)
+                modifiedPageable = new PageRequest(pageNumber, itemsPerPage)
             }
         } catch (NumberFormatException ignored) {
-            log.warn("invalid SCIM page parameters {}", request.getQueryString())
+            log.warn('invalid SCIM page parameters {}', request.queryString)
         }
-        return pageable
+        modifiedPageable
     }
 
     @GetMapping('/Users')
-    @CrossOrigin(origins = "*", exposedHeaders = ["Link", "x-total-count"])
+    @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
     ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable) {
         showHeaders(request)
-        pageable = overrideScimPageable(request, pageable)
-        def startIndex = (pageable.pageNumber) * pageable.pageSize
+        Pageable overriddenPageable = overrideScimPageable(request, pageable)
+        def startIndex = (overriddenPageable.pageNumber) * overriddenPageable.pageSize
         UserFragmentList userFragmentList
         if (startIndex < id_userMap.size()) {
-            def endIndex = startIndex + pageable.pageSize
-            def adjustedPageSize = pageable.pageSize
+            def endIndex = startIndex + overriddenPageable.pageSize
+            def adjustedPageSize = overriddenPageable.pageSize
             if (endIndex >= id_userMap.size()) {
                 endIndex = id_userMap.size()
                 adjustedPageSize = endIndex - startIndex
@@ -120,32 +123,36 @@ class UserController {
                     itemsPerPage: adjustedPageSize,
                     startIndex: startIndex + 1)
             userFragmentList.resources = overideLocation(listPage, request)
-            generatePage(listPage, pageable, userFragmentList)
+            generatePage(listPage, overriddenPageable, userFragmentList)
         } else {
             userFragmentList = new UserFragmentList(
                     totalResults: 0,
                     itemsPerPage: 0,
                     startIndex: 0,
                     resources: [])
-            generatePage([], pageable, userFragmentList)
+            generatePage([], overriddenPageable, userFragmentList)
         }
     }
 
-    private ResponseEntity<UserFragmentList> generatePage(List<MemUser> listPage, Pageable pageable, UserFragmentList userFragmentList) {
+    private ResponseEntity<UserFragmentList> generatePage(List<MemUser> listPage,
+                                                          Pageable pageable,
+                                                          UserFragmentList userFragmentList) {
         def pageImpl = new PageImpl<>(listPage, pageable, id_userMap.size())
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
+                ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
         ResponseEntity.ok().headers(headers).body(userFragmentList)
     }
 
     @PostMapping('/Users')
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def addUser(HttpServletRequest request, @RequestBody MemUser memUser) {
         showHeaders(request)
         if (!userName_userMap.get(memUser.userName)) {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
-                    new Meta(location: filterProxiedURL(request, request.requestURL.append('/').append(memUser.id).toString()),
+                    new Meta(location: filterProxiedURL(request, request.requestURL.append('/')
+                            .append(memUser.id).toString()),
                             created: now,
                             lastModified: now,
                             resourceType: 'User',))
@@ -158,15 +165,15 @@ class UserController {
     }
 
     @DeleteMapping('/Users')
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def deleteAllUsers() {
         id_userMap = [:]
         userName_userMap = [:]
-        return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
+        new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
     }
 
     @PutMapping('/Users/{id}')
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def putUser(HttpServletRequest request, @RequestBody MemUser memUser, @PathVariable('id') String id) {
         showHeaders(request)
         if (id_userMap.get(id) != null && memUser.userName != null) {
@@ -184,11 +191,11 @@ class UserController {
             userName_userMap.put(memUser.userName, memUser)
             return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+        new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
     }
 
     @GetMapping('/Users/{id}')
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def getUser(HttpServletRequest request, @PathVariable('id') String id) {
         showHeaders(request)
         def memUser = id_userMap.get(id)
@@ -211,7 +218,9 @@ class UserController {
     MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
         showHeaders(request)
         if (memUser != null) {
-            def location = request.requestURL.append('/').append(memUser.id).toString().replaceFirst('Users//', 'Users/')
+            def location = request.requestURL.append('/')
+                    .append(memUser.id).toString()
+                    .replaceFirst('Users//', 'Users/')
             memUser.meta.location = filterProxiedURL(request, location)
         }
         memUser
@@ -220,43 +229,42 @@ class UserController {
     static String filterProxiedURL(HttpServletRequest request, String locationRaw) {
         String location = locationRaw
         if (isForwardedRequest(request)) {
-            location = request.getHeader(XForwardedProto) + "://" +
-                    request.getHeader(XForwardedHost) + extractURI(locationRaw)
+            location = request.getHeader(X_FORWARDED_PROTO) + '://' +
+                    request.getHeader(X_FORWARDED_HOST) + extractURI(locationRaw)
         }
-        return location
+        location
     }
 
     static String extractURI(String locationRaw) {
-        return locationRaw.replaceFirst("^http.*//[^/]*", "")
+        locationRaw.replaceFirst('^http.*//[^/]*', '')
     }
 
     private void showHeaders(HttpServletRequest request) {
         if (memuserSettings.showHeaders) {
-            Enumeration<String> headerNames = request.getHeaderNames()
-            log.info(request.getMethod() + " " + request.getRequestURL() + "   headers:")
-            while (headerNames != null && headerNames.hasMoreElements()) {
+            Enumeration<String> headerNames = request.headerNames
+            log.info(request.method + ' ' + request.requestURL + '   headers:')
+            while (headerNames?.hasMoreElements()) {
                 String headerName = headerNames.nextElement()
-                log.info(headerName + ": " + request.getHeader(headerName))
+                log.info(headerName + ': ' + request.getHeader(headerName))
             }
         }
     }
 
     @DeleteMapping('/Users/{id}')
-    @CrossOrigin(origins = "*")
+    @CrossOrigin(origins = '*')
     def deleteUser(@PathVariable('id') String id) {
         def user = id_userMap.get(id)
         if (user != null) {
-            log.info("delete: $id userName: ${user.getUserName()}")
+            log.info("delete: $id userName: ${user.userName}")
             id_userMap.remove(id)
-            userName_userMap.remove(user.getUserName())
+            userName_userMap.remove(user.userName)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
-        } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
         }
+        return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
     }
 
     static boolean isForwardedRequest(HttpServletRequest request) {
-        request.getHeader(XForwardedProto) != null && request.getHeader(XForwardedHost) != null
+        request.getHeader(X_FORWARDED_PROTO) != null && request.getHeader(X_FORWARDED_HOST) != null
     }
 }
 
@@ -269,7 +277,7 @@ class MemUser {
 
     @JsonAnyGetter
     Map<String, Object> getData() {
-        return data
+        data
     }
 
     @JsonAnySetter
@@ -277,7 +285,7 @@ class MemUser {
         data.put(name, value)
     }
 
-    void setPassword(String password) {}  //well, its secure anyway
+    void setPassword(String password) { }  //well, its secure anyway
 }
 
 @Canonical

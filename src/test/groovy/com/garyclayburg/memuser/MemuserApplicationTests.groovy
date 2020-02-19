@@ -22,8 +22,8 @@ class MemuserApplicationTests {
 
     @Test
     void testSerialization() throws IOException {
-        String expectedJson = "{\"parseDate\":\"2018-12-04T18:47:38.927Z\"}"
-        MyPojo pojo = new MyPojo(ZonedDateTime.parse("2018-12-04T18:47:38.927Z"))
+        String expectedJson = '{"parseDate":"2018-12-04T18:47:38.927Z"}'
+        MyPojo pojo = new MyPojo(ZonedDateTime.parse('2018-12-04T18:47:38.927Z'))
         ObjectMapper objectMapper = new ObjectMapper()
         objectMapper.registerModule(new JavaTimeModule())
         objectMapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
