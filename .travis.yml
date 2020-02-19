@@ -2,3 +2,11 @@ language: java
 jdk:
   - openjdk8
 
+addons:
+  sonarcloud:
+    organization: "gclayburg"
+    token:
+      secure: "vUXm3HqvJL6Rip5kxpTKbx1aUpjInRaXiG+GxGvbNiqaPW9wDb86LPcJut/THs8mUXbhso1LFTmylmAD9cqYmL69cJYXinE/58P6qqhYgiS7oL99ZDwXBv/zLKdfPdYeWyJZin5vmIcaofQVH8zlrsTWScAV7wHoB83nD0HuAqyTFZaXSvMx2kFXpMN7Rv3pWLVZbLFhSb8nIDYUPSfjCkXObEQUcwlaflYOFngWZHG7x9/ssb3yBHqp2YWMeLWFL2eDNHhUj8XgilnjJ1a4h/y1kU+RR18lrJsBedlgsx7s0xOgMbO9o067b0TwFAUSgS5TMnu7hq9Rn2ef4Xvc07T5K7fKpSDS2+9dYI0hWd2aRrviqSTOGiSQh/wLXgtthyyKamUc6MjOFJ5g6mGmITwCY8aL/9rFWENkXNVZWQP3rWYRU+u3m+AZ2iQhd6j+qUuM0cVkPr7wpa9igZudwFQ8UVe18zCYwZtEFbP9gJAQAVC1JjNmfsSWtjorwQWZAFBkcpS0sW/aDTzLTuqhUFaiGhdfZ9XYgMP9DRAzZN4KZtIJ3EYaAJkIWsTTTeJnj2a3/nd3U15pOABYRdcxjRiwJWNfATjCClg5v6uZ6nKGgJYGWVDMxe9qm9ZEjKBgeUwnB07oqCjGlZGNCuSisBTO54ceiY/HhvV6ueUBA9w="
+
+script:
+  - ./gradlew sonarqube

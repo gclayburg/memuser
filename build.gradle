@@ -12,8 +12,8 @@ buildscript {
 plugins {
     id 'com.gorylenko.gradle-git-properties' version '2.0.0'
     id 'org.springframework.boot' version '1.5.21.RELEASE'
+    id "org.sonarqube" version "2.8"
 }
-
 apply plugin: 'groovy'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
@@ -23,6 +23,12 @@ apply plugin: 'org.kordamp.gradle.livereload'
 apply plugin: 'idea'
 apply plugin: 'org.owasp.dependencycheck'
 group = "${group}"
+
+sonarqube {
+    properties {
+        property "sonar.projectKey", "gclayburg_memuser"
+    }
+}
 
 idea {
     module {

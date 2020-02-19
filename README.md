@@ -1,6 +1,6 @@
 [![](https://images.microbadger.com/badges/version/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own version badge on microbadger.com") [![](https://images.microbadger.com/badges/image/gclayburg/memuser.svg)](https://microbadger.com/images/gclayburg/memuser "Get your own image badge on microbadger.com")
 [![Build Status](https://travis-ci.org/gclayburg/memuser.svg?branch=master)](https://travis-ci.org/gclayburg/memuser)
-
+![Docker Pulls](https://img.shields.io/docker/pulls/gclayburg/memuser)
 
 # memuser
 In-memory storage of User data using the [SCIM](http://www.simplecloud.info/) protocol
@@ -58,3 +58,6 @@ version 0.7.0
 
 version 0.7.1
 - requests now honor X-Forwarded-Proto and X-Forwarded-Host headers for use behind a proxy
+
+version 0.7.2
+- fixed bug related to X-Forwarded* headers
