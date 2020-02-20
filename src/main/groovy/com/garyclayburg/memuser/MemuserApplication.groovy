@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
+import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -31,6 +32,7 @@ import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 import javax.servlet.http.HttpServletRequest
 import java.time.LocalDate
 import java.time.ZonedDateTime
+import java.time.format.DateTimeFormatter
 
 @Slf4j
 @SpringBootApplication
@@ -53,8 +55,8 @@ class ConfigMe {
     ObjectMapper serializingObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper()
         JavaTimeModule javaTimeModule = new JavaTimeModule()
-        javaTimeModule.addSerializer(LocalDate, new LocalDateSerializer())
-        javaTimeModule.addDeserializer(LocalDate, new LocalDateDeserializer())
+        javaTimeModule.addSerializer(ZonedDateTime.class,
+                new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
         objectMapper.registerModule(javaTimeModule)
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)

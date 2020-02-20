@@ -83,6 +83,38 @@ class UserDocsSpec extends BaseDocsSpec {
         userlist.resources[0].meta.location.startsWith('https://thehttpshost:443/api')
     }
 
+    def "java time birthday parse does not truncate milliseconds of timestamps"() {
+        given: 'clear out any other test data'
+        mockMvc.perform(delete(USERSD).accept(SCIM_JSON))
+
+        when: 'create bob'
+        def listOfBobs = []
+        for (int i = 0; i < 100; i++) {
+
+            ResultActions createdBob = mockMvc.perform(post(USERS)
+                    .contentType(SCIM_JSON)
+                    .content("""
+{
+  "userName": "bobbysmith${Math.random()}",
+  "displayName": "Bob Smith",
+  "birthday": "2018-08-09T08:18:34.100-06:00"
+}
+""")
+                    .accept(SCIM_JSON))
+            listOfBobs.add(createdBob)
+        }
+
+        then: 'all bobs have formatted dates with millisecond precision'
+        for (createdBob in listOfBobs) {
+            def createdBobReturned = createdBob.andExpect(status().isCreated()).andReturn()
+            def matcher = createdBobReturned.response.contentAsString =~ /\.\d\d\d/
+            log.info("content is: " + createdBobReturned.response.contentAsString)
+
+            assert matcher.find()
+            assert matcher.size() == 4 //userName, created, lastModified, birthday
+        }
+    }
+
     def "user create list"() {
         given: 'clear out any other test data'
         mockMvc.perform(delete(USERSD).accept(SCIM_JSON))

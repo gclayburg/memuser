@@ -6,6 +6,8 @@ import org.springframework.data.domain.Pageable
 import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZonedDateTime
 
 /**
@@ -83,6 +85,8 @@ class MemuserSpec extends Specification {
         ZonedDateTime testStart = ZonedDateTime.now()
         Thread.sleep(1L) // yes this is needed. the test can run so fast that now() will be the same millisecond throughout the test method
         MemUser memUser = new MemUser(userName: 'hi')
+        def millis100 = 100 * 1000 * 1000
+        memUser.setData("birthday", LocalDateTime.of(2018, 8, 9, 8, 18, 34, millis100).atZone(ZoneId.of("US/Mountain")))
         UserController userController = new UserController(new MemuserSettings())
 
         HttpServletRequest mockRequest = Mock()
