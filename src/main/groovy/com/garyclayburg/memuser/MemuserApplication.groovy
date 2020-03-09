@@ -6,8 +6,6 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateDeserializer
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateSerializer
 import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
@@ -29,8 +27,8 @@ import org.springframework.stereotype.Component
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
+import javax.annotation.PostConstruct
 import javax.servlet.http.HttpServletRequest
-import java.time.LocalDate
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
@@ -46,6 +44,7 @@ class MemuserApplication {
 @ConfigurationProperties(prefix = 'memuser')
 class MemuserSettings {
     boolean showHeaders = false
+    int userCount = 0
 }
 
 @Configuration
@@ -56,11 +55,39 @@ class ConfigMe {
         ObjectMapper objectMapper = new ObjectMapper()
         JavaTimeModule javaTimeModule = new JavaTimeModule()
         javaTimeModule.addSerializer(ZonedDateTime.class,
-                new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")));
+                new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")))
         objectMapper.registerModule(javaTimeModule)
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)
         objectMapper
+    }
+}
+
+@Component
+@Slf4j
+class PreloadUsers {
+
+    MemuserSettings memuserSettings
+    UserController userController
+
+    @Autowired
+    PreloadUsers(MemuserSettings memuserSettings, UserController userController) {
+        this.memuserSettings = memuserSettings
+        this.userController = userController
+    }
+
+    @PostConstruct
+    void load() {
+        if (memuserSettings.userCount != 0) {
+            log.info("loading users: $memuserSettings.userCount")
+            for (int i = 0; i < memuserSettings.userCount; i++) {
+                def newuser = new MemUser(userName: 'george' + (i+1))
+                newuser.setData('firstname', 'George')
+                newuser.setData('lastname', 'Washington')
+                userController.addUser(null, newuser)
+            }
+            log.info("loading users: $memuserSettings.userCount DONE")
+        }
     }
 }
 
@@ -153,8 +180,8 @@ class UserController {
             memUser.setId(UUID.randomUUID().toString())
             def now = ZonedDateTime.now()
             memUser.setMeta(
-                    new Meta(location: filterProxiedURL(request, request.requestURL.append('/')
-                            .append(memUser.id).toString()),
+                    new Meta(location: request != null ? filterProxiedURL(request, request.requestURL.append('/')
+                            .append(memUser.id).toString()) : 'http://example.com/Users/' + memUser.id,
                             created: now,
                             lastModified: now,
                             resourceType: 'User',))
@@ -287,7 +314,7 @@ class MemUser {
         data.put(name, value)
     }
 
-    void setPassword(String password) { }  //well, its secure anyway
+    void setPassword(String password) {}  //well, its secure anyway
 }
 
 @Canonical
