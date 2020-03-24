@@ -45,8 +45,36 @@ $ curl 'http://localhost:8080/api/v2/Users/' -i \
     -H 'Accept: application/scim+json'
 ```    
 
+# Multi-domains
+New in version 0.8.0 is the ability to add users to an arbitrary, independent domain.  For example, add a user to 'fakehr':
+
+### Add a user to fakehr
+
+Add a minimal user
+```bash
+$ curl 'http://localhost:8080/api/multiv2/fakehr/Users' -i -X POST \
+    -H 'Content-Type: application/scim+json' \
+    -H 'Accept: application/scim+json' \
+    -d '
+{
+  "userName": "alicesmith",
+  "displayName": "Alice P Smith"
+}
+'
+```
+
+As you can see, there is no setup of fakehr required - just add users to it.
+### Get user list from fakehr
+
+```bash
+$ curl 'http://localhost:8080/api/multiv2/fakehr/Users/' -i \
+    -H 'Accept: application/scim+json'
+```    
+
+
 More examples can be found in the [guide](https://gclayburg.github.io/memuser/).
 
+# Version history
 
 version 0.6.5
 
@@ -61,3 +89,7 @@ version 0.7.1
 
 version 0.7.2
 - fixed bug related to X-Forwarded* headers
+
+version 0.8.0
+- new option to add unlimited number of test users on startup
+- new ability for multiple domains of Users where each domain is stored completely independent from each other
