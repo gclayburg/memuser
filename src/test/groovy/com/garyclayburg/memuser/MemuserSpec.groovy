@@ -27,7 +27,9 @@ class MemuserSpec extends Specification {
     def "adduser with simulated proxy"() {
         given: 'setup one user'
         MemUser memUser = new MemUser(userName: 'hi')
-        UserController userController = new UserController(new MemuserSettings())
+        MemuserSettings memuserSettings = new MemuserSettings()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
+        UserController userController = new UserController(memuserSettings,multiDomainUserController)
 
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
                 'http://www.example.com/Users',
@@ -87,7 +89,9 @@ class MemuserSpec extends Specification {
         MemUser memUser = new MemUser(userName: 'hi')
         def millis100 = 100 * 1000 * 1000
         memUser.setData("birthday", LocalDateTime.of(2018, 8, 9, 8, 18, 34, millis100).atZone(ZoneId.of("US/Mountain")))
-        UserController userController = new UserController(new MemuserSettings())
+        MemuserSettings memuserSettings = new MemuserSettings()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
+        UserController userController = new UserController(memuserSettings,multiDomainUserController)
 
         HttpServletRequest mockRequest = Mock()
         mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
@@ -128,7 +132,7 @@ class MemuserSpec extends Specification {
         when: 'put modified user'
         MemUser mUser = (getUser as MemUser)
         mUser.setData('extrastuff', 'somenewvalue')
-
+        mUser.setUserName('girlgotmarried')
         mockGetProxy = setupProxiedMockRequest(
                 "http://localhost:1234/Users/${mockgetidProxy}",
                 'https',
@@ -138,6 +142,8 @@ class MemuserSpec extends Specification {
         then: 'location header is created from proxy headers'
         true
         returnedUser.meta.location == "https://www.example2.com:443/Users/${memUser.id}"
+        returnedUser.getData().'extrastuff' == 'somenewvalue'
+
 
         when: 'get list of all users'
         HttpServletRequest mockGet2 = Mock()
@@ -169,7 +175,7 @@ class MemuserSpec extends Specification {
         page1of2.totalResults == 2
         page1of2.startIndex == 1
         page1of2.itemsPerPage == 1
-        page1of2.resources[0].userName == 'hi'
+        page1of2.resources[0].userName == 'girlgotmarried'
         page1of2.resources.size() == 1
 
         when: 'request page 2'
@@ -190,6 +196,59 @@ class MemuserSpec extends Specification {
         pageInvalid.startIndex == 0
         pageInvalid.itemsPerPage == 0
         pageInvalid.resources.size() == 0
+
+    }
+
+    def "change username"() {
+        given: 'setup one user'
+        MemUser memUser = new MemUser(userName: 'hi')
+        MemuserSettings memuserSettings = new MemuserSettings()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
+        UserController userController = new UserController(memuserSettings,multiDomainUserController)
+
+        HttpServletRequest mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users',
+                'https',
+                'www.examplesecure.com:443')
+        Pageable pageable = new PageRequest(0, 8)
+
+        when: 'add user'
+        Object createdUser = userController.addUser(mockGetProxy, memUser)
+
+        then: 'user created'
+        createdUser.body == memUser
+        createdUser.body.userName == 'hi'
+
+        when: 'change username'
+        // clone user so that implementation code doesn't interfere with memuser reference
+        MemUser hiTochangedusername = new MemUser(id: memUser.id,userName: memUser.userName)
+
+        hiTochangedusername.userName = 'changedusername'
+        def returnedUser = userController.putUser(mockGetProxy, hiTochangedusername, memUser.id).body
+        HttpServletRequest mockRequestHi = Mock()
+        mockRequestHi.requestURL >> new StringBuffer('http://www.example.com/Users')
+        UserFragmentList usersAll = userController.getUsers(mockRequestHi, pageable).body
+
+        then:
+        returnedUser.userName == 'changedusername'
+        usersAll.resources.size() == 1
+
+        when: 're-add old username'
+
+        MemUser hiUser = new MemUser(userName: 'hi')
+
+        mockRequestHi = Mock()
+        mockRequestHi.requestURL >> new StringBuffer('http://www.example.com/Users')
+        Object createdHiUser = userController.addUser(mockRequestHi, hiUser)
+        usersAll = userController.getUsers(mockRequestHi, pageable).body
+
+        then: 'returned user matches added user'
+        createdHiUser.body.userName == 'hi'
+        def getUserHi = userController.getUser(mockRequestHi, ((MemUser) createdHiUser.body).id)
+        getUserHi == hiUser
+        usersAll.resources.size() == 2
+        usersAll.resources.contains(hiUser)
+
 
     }
 }
