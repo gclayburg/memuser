@@ -32,3 +32,7 @@ nbdist/
 build/
 notes
 notes.txt
+
+# sometimes IntelliJ will add this file to CWD when running a test.
+# Please, IntelliJ, do not ask me to add this externally added file to git.  Thanks.
+.attach_pid*
