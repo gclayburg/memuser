@@ -25,6 +25,7 @@ node('any') {  //this node label must match jenkins slave with nodejs installed
         checkout scm
 //        whereami()
 
+
         stage "build/test"
         try {
             sh "./gradlew --no-daemon clean build buildImage pushVersion pushLatest"
