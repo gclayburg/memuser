@@ -20,14 +20,15 @@ ext {
     println "git changes ${gitchanges}"
     bootmapinfo = [        'org.label-schema.build-date' : build_date
     ]
-    bootmap = [
-            'org.label-schema.vcs-ref'    : git.head().id,
-            'org.label-schema.vcs-url'    : vcsurl,
-            'org.label-schema.description': gitchanges,
-            'org.label-schema.build-date' : build_date,
-            'org.label-schema.version'    : '1.0',
-            'maintainer'                  : '@garyclayburg'
-    ]
+//    bootmap = [
+//            'org.label-schema.vcs-ref'    : git.head().id,
+//            'org.label-schema.vcs-url'    : vcsurl,
+//            'org.label-schema.description': gitchanges,
+//            'org.label-schema.build-date' : build_date,
+//            'org.label-schema.version'    : '1.0',
+//            'maintainer'                  : '@garyclayburg'
+//    ]
+    bootmap =[:]
 //name of docker ARG cannot have . or - characters
     bootArgMap = bootmap.collectEntries { key, value ->
         def newkey = key.toUpperCase()

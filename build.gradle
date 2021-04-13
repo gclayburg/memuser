@@ -1,6 +1,10 @@
 buildscript {
     repositories {
         jcenter()
+        mavenCentral()
+        dependencies {
+            classpath(group: 'org.jfrog.buildinfo', name: 'build-info-extractor-gradle', version: '4.+')
+        }
     }
     dependencies {
         classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
@@ -22,6 +26,7 @@ apply plugin: 'codenarc'
 apply plugin: 'org.kordamp.gradle.livereload'
 apply plugin: 'idea'
 apply plugin: 'org.owasp.dependencycheck'
+apply plugin: 'com.jfrog.artifactory'
 group = "${group}"
 
 sonarqube {
@@ -45,6 +50,9 @@ jar {
 }
 
 repositories {
+    maven {
+        url "${artifactory_contexturl}/${artifactory_resolve_repo}"
+    }
     mavenCentral()
     mavenLocal()
     maven {
@@ -54,10 +62,16 @@ repositories {
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
 }
-
+configurations.all {
+    resolutionStrategy.cacheChangingModulesFor 4, 'minutes'  // I want to make sure to try to download the latest snapshot
+}
 
 dependencies {
-    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.1.1'
+    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.5-SNAPSHOT'
+//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.4'
+    compile group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
+    compile group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
+    compile group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'
     compile 'org.springframework.boot:spring-boot-devtools'
     compile 'org.codehaus.groovy:groovy-all'
     compile('org.springframework.boot:spring-boot-starter-web') {
