@@ -67,8 +67,8 @@ configurations.all {
 }
 
 dependencies {
-    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.5-SNAPSHOT'
-//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.4'
+//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.5-SNAPSHOT'
+    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.2.5'
     compile group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
     compile group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
     compile group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'
