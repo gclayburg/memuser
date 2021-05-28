@@ -206,22 +206,25 @@ class MultiDomainUserController {
     def addUser(HttpServletRequest request, @RequestBody MemUser memUser,
                 @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
+        if (memUser.userName != null) {
 
-        if (!domainUserStore.getByUserName(domain, memUser.userName)) {
-            memUser.setId(UUID.randomUUID().toString())
-            def now = ZonedDateTime.now()
-            memUser.setMeta(
-                    new Meta(location: request != null ? filterProxiedURL(request, request.requestURL.append('/')
-                            .append(memUser.id).toString()) : 'http://example.com/Users/' + memUser.id,
-                            created: now,
-                            lastModified: now,
-                            resourceType: 'User',))
-            memUser.schemas ?: memUser.setSchemas('urn:ietf:params:scim:schemas:core:2.0:User')
-            domainUserStore.putId(domain, memUser.id, memUser)
-            domainUserStore.putUserName(domain, memUser.userName, memUser)
-            return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
+            if (!domainUserStore.getByUserName(domain, memUser.userName)) {
+                memUser.setId(UUID.randomUUID().toString())
+                def now = ZonedDateTime.now()
+                memUser.setMeta(
+                        new Meta(location: request != null ? filterProxiedURL(request, request.requestURL.append('/')
+                                .append(memUser.id).toString()) : 'http://example.com/Users/' + memUser.id,
+                                created: now,
+                                lastModified: now,
+                                resourceType: 'User',))
+                memUser.schemas ?: memUser.setSchemas('urn:ietf:params:scim:schemas:core:2.0:User')
+                domainUserStore.putId(domain, memUser.id, memUser)
+                domainUserStore.putUserName(domain, memUser.userName, memUser)
+                return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
+            }
+            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+        return new ResponseEntity<>((MemUser) null, HttpStatus.BAD_REQUEST)
     }
 
     @DeleteMapping('/{domain}/Users')
@@ -236,23 +239,27 @@ class MultiDomainUserController {
     def putUser(HttpServletRequest request, @RequestBody MemUser memUser, @PathVariable('id') String id,
                 @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
-        if (domainUserStore.getById(domain, id) != null && memUser.userName != null) {
-            def existingUserUsername = domainUserStore.getByUserName(domain, memUser.userName)
-            if (existingUserUsername != null && existingUserUsername.id != id) {
-                return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT) //tried to duplicate userName
+        if (memUser.userName != null) {
+
+            if (domainUserStore.getById(domain, id) != null) {
+                def existingUserUsername = domainUserStore.getByUserName(domain, memUser.userName)
+                if (existingUserUsername != null && existingUserUsername.id != id) {
+                    return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT) //tried to duplicate userName
+                }
+                def meta = domainUserStore.getById(domain, id).meta
+                meta.lastModified = ZonedDateTime.now()
+                memUser.meta = meta
+                memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
+                domainUserStore.removeByUserName(domain, domainUserStore.getById(domain, id).userName)
+                //userName for id may have changed
+                memUser.setId(id) //preserve original id
+                domainUserStore.putId(domain, id, memUser)
+                domainUserStore.putUserName(domain, memUser.userName, memUser)
+                return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
             }
-            def meta = domainUserStore.getById(domain, id).meta
-            meta.lastModified = ZonedDateTime.now()
-            memUser.meta = meta
-            memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
-            domainUserStore.removeByUserName(domain, domainUserStore.getById(domain, id).userName)
-            //userName for id may have changed
-            memUser.setId(id) //preserve original id
-            domainUserStore.putId(domain, id, memUser)
-            domainUserStore.putUserName(domain, memUser.userName, memUser)
-            return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
+            new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
         }
-        new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+        return new ResponseEntity<>((MemUser) null, HttpStatus.BAD_REQUEST)
     }
 
     @GetMapping('/{domain}/Users/{id}')
@@ -312,7 +319,7 @@ class MultiDomainUserController {
         }
     }
 
-    @DeleteMapping('/Users/{id}')
+    @DeleteMapping('/{domain}/Users/{id}')
     @CrossOrigin(origins = '*')
     def deleteUser(@PathVariable('id') String id,
                    @PathVariable(value = 'domain', required = true) String domain) {

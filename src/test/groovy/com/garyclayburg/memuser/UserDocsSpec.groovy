@@ -115,6 +115,47 @@ class UserDocsSpec extends BaseDocsSpec {
         }
     }
 
+    def "username can be supplied case-insensitive"() {
+        given: 'clear out test data'
+        mockMvc.perform(delete(USERSD).accept(SCIM_JSON))
+        when: 'create microsoft friendly bob'
+        ResultActions weirdBob = mockMvc.perform(post(USERS)
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "UserName": "MSbob",
+  "displayName": "MS Bob"
+}
+""")
+                .accept(SCIM_JSON))
+
+        then: 'username attribute is returned only once'
+        def weirdBobCreateResult = weirdBob.andExpect(status().isCreated()).andReturn()
+        log.info("weird bob: " + weirdBobCreateResult.response.contentAsString)
+        def bobParsed = new JsonSlurper().parseText(weirdBobCreateResult.response.contentAsString)
+        bobParsed.userName == 'MSbob'
+        bobParsed.UserName == null // even though we sent UserName, the returned name is userName which is legal
+
+    }
+
+    def "username NOT supplied"() {
+        given: 'clear out test data'
+        mockMvc.perform(delete(USERSD).accept(SCIM_JSON))
+        when: 'create empty user'
+        ResultActions emptyBob = mockMvc.perform(post(USERS)
+                .contentType(SCIM_JSON)
+                .content("""
+{
+  "displayName": "ghost Bob"
+}
+""")
+                .accept(SCIM_JSON))
+
+        then: '400 returned'
+        emptyBob.andExpect(status().isBadRequest()).andReturn()
+    }
+
+
     def "user create list"() {
         given: 'clear out any other test data'
         mockMvc.perform(delete(USERSD).accept(SCIM_JSON))

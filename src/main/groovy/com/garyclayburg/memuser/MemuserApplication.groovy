@@ -3,6 +3,7 @@ package com.garyclayburg.memuser
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
@@ -20,7 +21,10 @@ import org.springframework.data.domain.Pageable
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Component
+import org.springframework.util.AntPathMatcher
 import org.springframework.web.bind.annotation.*
+import org.springframework.web.servlet.config.annotation.PathMatchConfigurer
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter
 
 import javax.annotation.PostConstruct
 import javax.servlet.http.HttpServletRequest
@@ -42,6 +46,17 @@ class MemuserSettings {
     int userCount = 0
 }
 
+// thank you microsoft for encouraging case-insensitive URI path matching
+@Configuration
+class WebConfig extends WebMvcConfigurerAdapter {
+    @Override
+    void configurePathMatch(PathMatchConfigurer configurer) {
+        AntPathMatcher matcher = new AntPathMatcher()
+        matcher.setCaseSensitive(false)
+        configurer.setPathMatcher(matcher)
+    }
+}
+
 @Configuration
 class ConfigMe {
     @Bean
@@ -54,6 +69,7 @@ class ConfigMe {
         objectMapper.registerModule(javaTimeModule)
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)
+        objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
         objectMapper
     }
 }
@@ -151,6 +167,7 @@ class MemUser {
     String id, userName
     String[] schemas
     Meta meta
+    boolean active
     protected Map<String, Object> data = [:]
 
     @JsonAnyGetter
