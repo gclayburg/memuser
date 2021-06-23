@@ -76,20 +76,4 @@ More examples can be found in the [guide](https://gclayburg.github.io/memuser/).
 
 # Version history
 
-version 0.6.5
-
-version 0.7.0
-- GET /api/v2/User is now pageable using 2 different clients
-  - responses are now pageable per SCIM RFC 7644.  pingidentity SCIM 2.0 client uses this page format
-  - responses are now pageable per RFC 5988. jhipster generated clients use this page format
-- added CORS support
-
-version 0.7.1
-- requests now honor X-Forwarded-Proto and X-Forwarded-Host headers for use behind a proxy
-
-version 0.7.2
-- fixed bug related to X-Forwarded* headers
-
-version 0.8.0
-- new option to add unlimited number of test users on startup
-- new ability for multiple domains of Users where each domain is stored completely independent from each other
+See [Changelog.md](CHANGELOG.md)
