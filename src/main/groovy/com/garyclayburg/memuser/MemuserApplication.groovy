@@ -39,12 +39,6 @@ class MemuserApplication {
     }
 }
 
-@Component
-@ConfigurationProperties(prefix = 'memuser')
-class MemuserSettings {
-    boolean showHeaders = false
-    int userCount = 0
-}
 
 // thank you microsoft for encouraging case-insensitive URI path matching
 @Configuration
