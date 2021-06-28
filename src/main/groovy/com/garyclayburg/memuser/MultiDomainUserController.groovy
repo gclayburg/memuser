@@ -9,6 +9,7 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
+import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
@@ -22,6 +23,7 @@ import java.time.ZonedDateTime
  * @author Gary Clayburg
  */
 
+@Service
 class DomainUserStore {
     Map<String, Map<String, MemUser>> domain_id_userMap = [:]
     Map<String, Map<String, MemUser>> domain_userName_userMap = [:]
@@ -128,11 +130,15 @@ class MultiDomainUserController {
 
     MemuserSettings memuserSettings
     DomainUserStore domainUserStore
+    DomainGroupStore domainGroupStore
 
     @Autowired
-    MultiDomainUserController(MemuserSettings memuserSettings) {
+    MultiDomainUserController(MemuserSettings memuserSettings,
+                              DomainUserStore domainUserStore,
+                              DomainGroupStore domainGroupStore) {
+        this.domainGroupStore = domainGroupStore
         this.memuserSettings = memuserSettings
-        this.domainUserStore = new DomainUserStore()
+        this.domainUserStore = domainUserStore
     }
 
     @GetMapping(value = '/{domain}/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
@@ -156,6 +162,37 @@ class MultiDomainUserController {
             log.warn('invalid SCIM page parameters {}', request.queryString)
         }
         modifiedPageable
+    }
+
+    @GetMapping('/{domain}/Groups')
+    @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
+    ResponseEntity<GroupFragmentList> getGroups(HttpServletRequest request, Pageable pageable,
+                                                @PathVariable(value = 'domain', required = true) String domain) {
+        Pageable overriddenPageable = overrideScimPageable(request, pageable)
+        def startIndex = (overriddenPageable.pageNumber) * overriddenPageable.pageSize
+        GroupFragmentList groupFragmentList
+        if (startIndex < domainGroupStore.size(domain)) {
+            def endIndex = startIndex + overriddenPageable.pageSize
+            def adjustedPageSize = overriddenPageable.pageSize
+            if (endIndex >= domainUserStore.size(domain)) {
+                endIndex = domainUserStore.size(domain)
+                adjustedPageSize = endIndex - startIndex
+            }
+            def listPage = domainGroupStore.getValues(domain).toList().subList(startIndex, endIndex)
+            groupFragmentList = new GroupFragmentList(
+                    totalResults: domainGroupStore.size(domain),
+                    itemsPerPage: adjustedPageSize,
+                    startIndex: startIndex + 1)
+            groupFragmentList.resources = overrideLocation(listPage, request)
+            generatePage(listPage, overriddenPageable, groupFragmentList, domain)
+        } else {
+            groupFragmentList = new GroupFragmentList(
+                    totalResults: 0,
+                    itemsPerPage: 0,
+                    startIndex: 0,
+                    resources: [])
+            generatePage([], overriddenPageable, groupFragmentList, domain)
+        }
     }
 
     @GetMapping('/{domain}/Users')
@@ -199,6 +236,33 @@ class MultiDomainUserController {
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
                 ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
         ResponseEntity.ok().headers(headers).body(userFragmentList)
+    }
+
+    private ResponseEntity<GroupFragmentList> generatePage(List<MemGroup> listPage,
+                                                           Pageable pageable,
+                                                           GroupFragmentList groupFragmentList,
+                                                           String domain) {
+        def pageImpl = new PageImpl<>(listPage, pageable, domainUserStore.size(domain))
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
+                ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
+        ResponseEntity.ok().headers(headers).body(groupFragmentList)
+    }
+
+    @PostMapping('/{domain}/Groups')
+    @CrossOrigin(origins = '*')
+    def addGroup(HttpServletRequest request, @RequestBody MemGroup memGroup,
+                 @PathVariable(value = 'domain', required = true) String domain) {
+        memGroup.setId(UUID.randomUUID().toString())
+        def now = ZonedDateTime.now()
+        memGroup.setMeta(
+                new Meta(location: request != null ? filterProxiedURL(request, request.requestURL.append('/')
+                        .append(memGroup.id).toString()) : 'http://example.com/Groups/' + memGroup.id,
+                        created: now,
+                        lastModified: now,
+                        resourceType: 'Group'))
+        memGroup.schemas ?: memGroup.setSchemas('urn:ietf:params:scim:schemas:core:2.0:Group')
+        domainGroupStore.put(domain, memGroup)
+        return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.CREATED)
     }
 
     @PostMapping('/{domain}/Users')
@@ -262,6 +326,25 @@ class MultiDomainUserController {
         return new ResponseEntity<>((MemUser) null, HttpStatus.BAD_REQUEST)
     }
 
+    @PutMapping('/{domain}/Groups/{id}')
+    @CrossOrigin(origins = '*')
+    def putGroup(HttpServletRequest request, @RequestBody MemGroup memGroup, @PathVariable('id') String id,
+                 @PathVariable(value = 'domain', required = true) String domain) {
+        showHeaders(request)
+        if (domainGroupStore.get(domain, id) != null) {
+            def meta = domainGroupStore.get(domain, id).meta
+            meta.lastModified = ZonedDateTime.now()
+            memGroup.meta = meta
+            memGroup.meta.location = filterProxiedURL(request, request.requestURL.toString())
+            domainGroupStore.removeById(domain, domainGroupStore.get(domain, id).id)
+
+            memGroup.setId(id) //preserve original id
+            domainGroupStore.put(domain, memGroup)
+            return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.OK)
+        }
+        new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+    }
+
     @GetMapping('/{domain}/Users/{id}')
     @CrossOrigin(origins = '*')
     def getUser(HttpServletRequest request, @PathVariable('id') String id,
@@ -276,10 +359,32 @@ class MultiDomainUserController {
         }
     }
 
+    @GetMapping('/{domain}/Groups/{id}')
+    @CrossOrigin(origins = '*')
+    def getGroup(HttpServletRequest request, @PathVariable('id') String id,
+                 @PathVariable(value = 'domain', required = true) String domain) {
+        showHeaders(request)
+        def memGroup = domainGroupStore.get(domain, id)
+        if (memGroup != null) {
+            memGroup.meta.location = filterProxiedURL(request, request.requestURL.toString())
+            memGroup
+        } else {
+            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        }
+    }
+
     def overideLocation(Collection<MemUser> memUsers, HttpServletRequest request) {
         def locationFixedUsers = []
         for (MemUser memUser1 : memUsers) {
             locationFixedUsers += overrideLocation(memUser1, request)
+        }
+        locationFixedUsers
+    }
+
+    def overrideLocation(Collection<MemGroup> memGroups, HttpServletRequest request) {
+        def locationFixedUsers = []
+        for (MemGroup memGroup : memGroups) {
+            locationFixedUsers += overrideLocation(memGroup, request)
         }
         locationFixedUsers
     }
@@ -293,6 +398,17 @@ class MultiDomainUserController {
             memUser.meta.location = filterProxiedURL(request, location)
         }
         memUser
+    }
+
+    MemGroup overrideLocation(MemGroup memGroup, HttpServletRequest request) {
+        showHeaders(request)
+        if (memGroup != null) {
+            def location = request.requestURL.append('/')
+                    .append(memGroup.id).toString()
+                    .replaceFirst('Groups//', 'Groups/')
+            memGroup.meta.location = filterProxiedURL(request, location)
+        }
+        memGroup
     }
 
     static String filterProxiedURL(HttpServletRequest request, String locationRaw) {
@@ -328,6 +444,19 @@ class MultiDomainUserController {
             log.info("delete: $id userName: ${user.userName}")
             domainUserStore.removeByUserName(domain, user.userName)
             domainUserStore.removeById(domain, id)
+            return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
+        }
+        return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+    }
+
+    @DeleteMapping('/{domain}/Groups/{id}')
+    @CrossOrigin(origins = '*')
+    def deleteGroup(@PathVariable('id') String id,
+                    @PathVariable(value = 'domain', required = true) String domain) {
+        def group = domainGroupStore.get(domain, id)
+        if (group != null) {
+            log.info("delete: $id userName: ${group.displayName}")
+            domainGroupStore.removeById(domain, id)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         }
         return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)

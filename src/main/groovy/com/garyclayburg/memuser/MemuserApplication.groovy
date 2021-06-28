@@ -197,3 +197,19 @@ class UserFragmentList {
         Resources = resources
     }
 }
+
+@Canonical
+class GroupFragmentList {
+    List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
+    int totalResults
+    int itemsPerPage
+    int startIndex
+
+    @JsonProperty('Resources')
+    List<MemGroup> Resources
+
+    @JsonProperty('Resources')
+    void setResources(resources) {
+        Resources = resources
+    }
+}

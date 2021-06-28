@@ -28,8 +28,10 @@ class MemuserSpec extends Specification {
         given: 'setup one user'
         MemUser memUser = new MemUser(userName: 'hi')
         MemuserSettings memuserSettings = new MemuserSettings()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
-        UserController userController = new UserController(memuserSettings,multiDomainUserController)
+
+        def domainUserStore = new DomainUserStore()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+        UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
                 'http://www.example.com/Users',
@@ -90,8 +92,10 @@ class MemuserSpec extends Specification {
         def millis100 = 100 * 1000 * 1000
         memUser.setData("birthday", LocalDateTime.of(2018, 8, 9, 8, 18, 34, millis100).atZone(ZoneId.of("US/Mountain")))
         MemuserSettings memuserSettings = new MemuserSettings()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
-        UserController userController = new UserController(memuserSettings,multiDomainUserController)
+        def domainUserStore = new DomainUserStore()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+
+        UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
         HttpServletRequest mockRequest = Mock()
         mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
@@ -203,8 +207,10 @@ class MemuserSpec extends Specification {
         given: 'setup one user'
         MemUser memUser = new MemUser(userName: 'hi')
         MemuserSettings memuserSettings = new MemuserSettings()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings)
-        UserController userController = new UserController(memuserSettings,multiDomainUserController)
+        def domainUserStore = new DomainUserStore()
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+
+        UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
                 'http://www.example.com/Users',
@@ -221,7 +227,7 @@ class MemuserSpec extends Specification {
 
         when: 'change username'
         // clone user so that implementation code doesn't interfere with memuser reference
-        MemUser hiTochangedusername = new MemUser(id: memUser.id,userName: memUser.userName)
+        MemUser hiTochangedusername = new MemUser(id: memUser.id, userName: memUser.userName)
 
         hiTochangedusername.userName = 'changedusername'
         def returnedUser = userController.putUser(mockGetProxy, hiTochangedusername, memUser.id).body
