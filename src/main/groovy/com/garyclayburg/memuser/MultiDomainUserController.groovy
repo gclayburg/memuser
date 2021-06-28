@@ -286,9 +286,9 @@ class MultiDomainUserController {
                 domainUserStore.putUserName(domain, memUser.userName, memUser)
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
             }
-            return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+            return createError("userName ${memUser.userName} already exists",HttpStatus.CONFLICT)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.BAD_REQUEST)
+        return createError("userName must be specified",HttpStatus.BAD_REQUEST)
     }
 
     @DeleteMapping('/{domain}/Users')
@@ -306,9 +306,9 @@ class MultiDomainUserController {
         if (memUser.userName != null) {
 
             if (domainUserStore.getById(domain, id) != null) {
-                def existingUserUsername = domainUserStore.getByUserName(domain, memUser.userName)
-                if (existingUserUsername != null && existingUserUsername.id != id) {
-                    return new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT) //tried to duplicate userName
+                def existingUserByUsername = domainUserStore.getByUserName(domain, memUser.userName)
+                if (existingUserByUsername != null && existingUserByUsername.id != id) {
+                    return createError("Cannot replace User with a userName that already exists with a different id (id=${existingUserByUsername.id})",HttpStatus.CONFLICT)
                 }
                 def meta = domainUserStore.getById(domain, id).meta
                 meta.lastModified = ZonedDateTime.now()
@@ -321,9 +321,9 @@ class MultiDomainUserController {
                 domainUserStore.putUserName(domain, memUser.userName, memUser)
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
             }
-            new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+            return createError("User cannot be replaced because id ${id} does not exist in domain {$domain}",HttpStatus.CONFLICT)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.BAD_REQUEST)
+        return createError("userName must be specified",HttpStatus.BAD_REQUEST)
     }
 
     @PutMapping('/{domain}/Groups/{id}')
@@ -342,7 +342,7 @@ class MultiDomainUserController {
             domainGroupStore.put(domain, memGroup)
             return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.OK)
         }
-        new ResponseEntity<>((MemUser) null, HttpStatus.CONFLICT)
+        return createError("Group with id ${id} does not exist in domain ${domain}", HttpStatus.CONFLICT)
     }
 
     @GetMapping('/{domain}/Users/{id}')
@@ -355,7 +355,7 @@ class MultiDomainUserController {
             memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
             memUser
         } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+            return createError("User with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
         }
     }
 
@@ -369,7 +369,7 @@ class MultiDomainUserController {
             memGroup.meta.location = filterProxiedURL(request, request.requestURL.toString())
             memGroup
         } else {
-            return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+            return createError("Group with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
         }
     }
 
@@ -446,7 +446,7 @@ class MultiDomainUserController {
             domainUserStore.removeById(domain, id)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        return createError("User with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
     }
 
     @DeleteMapping('/{domain}/Groups/{id}')
@@ -459,7 +459,13 @@ class MultiDomainUserController {
             domainGroupStore.removeById(domain, id)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         }
-        return new ResponseEntity<>((MemUser) null, HttpStatus.NOT_FOUND)
+        return createError("Group with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
+    }
+
+    private static ResponseEntity<ErrorResponse> createError(String detail, HttpStatus httpStatus) {
+        new ResponseEntity<>(new ErrorResponse(
+                detail: detail,
+                status: httpStatus.value().toString()), httpStatus)
     }
 
     static boolean isForwardedRequest(HttpServletRequest request) {
