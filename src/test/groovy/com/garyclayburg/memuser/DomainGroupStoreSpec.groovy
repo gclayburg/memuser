@@ -45,16 +45,16 @@ class DomainGroupStoreSpec extends Specification {
         DomainGroupStore domainGroupStore = new DomainGroupStore(domainUserStore)
         def testDomain = 'testDomain'
         def testname = 'testname'
-        def memUser = new MemUser(userName: testname)
+        def memUser = new MemUser(userName: testname,id: '1')
         expect:
         domainUserStore.size(testDomain) == 0
 
         when: 'add a user'
-        domainUserStore.putId(testDomain, '1', memUser)
+        domainUserStore.putId(testDomain, memUser.id, memUser)
         domainUserStore.putUserName(testDomain, testname, memUser)
         then:
         domainUserStore.size(testDomain) == 1
-        domainUserStore.getById(testDomain, '1') == memUser
+        domainUserStore.getById(testDomain, memUser.id) == memUser
         domainUserStore.getByUserName(testDomain, testname) == memUser
 
         when: 'create empty group (POST)'

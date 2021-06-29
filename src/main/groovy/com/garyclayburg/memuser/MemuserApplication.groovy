@@ -161,6 +161,7 @@ class MemUser {
     String[] schemas
     Meta meta
     boolean active
+    HashSet<UserGroup> groups
     protected Map<String, Object> data = [:]
 
     @JsonAnyGetter
@@ -174,6 +175,12 @@ class MemUser {
     }
 
     void setPassword(String password) {}  //well, its secure anyway
+    void addGroup(UserGroup userGroup) {
+        if (groups == null){
+            groups = []
+        }
+        groups.add(userGroup)
+    }
 }
 
 @Canonical

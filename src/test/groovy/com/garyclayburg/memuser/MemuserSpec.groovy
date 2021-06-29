@@ -52,8 +52,8 @@ class MemuserSpec extends Specification {
         def getUser = userController.getUser(mockGetProxy, ((MemUser) createdUser.body).id)
 
         then: 'returned user matches added user'
-        getUser == memUser
-        getUser.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+        getUser.body == memUser
+        getUser.body.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
 
         when: 'get the user list via simulated proxy'
         mockGetProxy = setupProxiedMockRequest(
@@ -63,17 +63,17 @@ class MemuserSpec extends Specification {
         UserFragmentList users = userController.getUsers(mockGetProxy, pageable).body
         then:
         users.resources.contains(memUser)
-        users.resources[0].meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+        users.resources[0].meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
 
         when: 'get user again'
         mockGetProxy = setupProxiedMockRequest(
-                'http://www.example.com/Users/' + getUser.id,
+                'http://www.example.com/Users/' + getUser.body.id,
                 'https',
                 'www.examplesecure.com:443')
         getUser = userController.getUser(mockGetProxy, ((MemUser) createdUser.body).id)
         then:
-        getUser == memUser
-        getUser.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.id
+        getUser.body == memUser
+        getUser.body.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
     }
 
     private HttpServletRequest setupProxiedMockRequest(String requestURL, String proto, String forwardedHost) {
@@ -108,7 +108,7 @@ class MemuserSpec extends Specification {
         then: 'returned user matches added user'
         users.resources.contains(memUser)
         def getUser = userController.getUser(mockRequest, ((MemUser) createdUser.body).id)
-        getUser == memUser
+        getUser.body == memUser
 
         when: 'request user from url'
         HttpServletRequest mockGet = Mock()
@@ -117,8 +117,8 @@ class MemuserSpec extends Specification {
         getUser = userController.getUser(mockGet, mockgetid)
 
         then: 'returned user has correct meta.location'
-        getUser.meta.location == "http://localhost:1234/Users/${memUser.id}"
-        testStart.isBefore(getUser.meta.created)
+        getUser.body.meta.location == "http://localhost:1234/Users/${memUser.id}"
+        testStart.isBefore(getUser.body.meta.created)
 
         when: 'request user from proxyurl'
         def mockgetidProxy = ((MemUser) createdUser.body).id
@@ -130,11 +130,11 @@ class MemuserSpec extends Specification {
         getUser = userController.getUser(mockGetProxy, mockgetidProxy)
 
         then: 'returned user has correct meta.location'
-        getUser.meta.location == "https://www.example44.com:443/Users/${memUser.id}"
-        testStart.isBefore(getUser.meta.created)
+        getUser.body.meta.location == "https://www.example44.com:443/Users/${memUser.id}"
+        testStart.isBefore(getUser.body.meta.created)
 
         when: 'put modified user'
-        MemUser mUser = (getUser as MemUser)
+        MemUser mUser = (getUser.body as MemUser)
         mUser.setData('extrastuff', 'somenewvalue')
         mUser.setUserName('girlgotmarried')
         mockGetProxy = setupProxiedMockRequest(
@@ -251,7 +251,7 @@ class MemuserSpec extends Specification {
         then: 'returned user matches added user'
         createdHiUser.body.userName == 'hi'
         def getUserHi = userController.getUser(mockRequestHi, ((MemUser) createdHiUser.body).id)
-        getUserHi == hiUser
+        getUserHi.body == hiUser
         usersAll.resources.size() == 2
         usersAll.resources.contains(hiUser)
 

@@ -22,103 +22,6 @@ import java.time.ZonedDateTime
  *
  * @author Gary Clayburg
  */
-
-@Service
-class DomainUserStore {
-    Map<String, Map<String, MemUser>> domain_id_userMap = [:]
-    Map<String, Map<String, MemUser>> domain_userName_userMap = [:]
-
-    int size(String domain) {
-        int size = 0
-        if (domain_id_userMap.get(domain)) {
-            size = domain_id_userMap.get(domain).size()
-        }
-        return size
-    }
-
-    MemUser putId(String domain, String id, MemUser memUser) {
-        def id_userMap = domain_id_userMap.get(domain)
-        MemUser previousMemuser = null
-        if (!id_userMap) {
-            domain_id_userMap.put(domain, [(id): memUser])
-        } else {
-            previousMemuser = id_userMap.put(id, memUser)
-            domain_id_userMap.put(domain, id_userMap)
-        }
-        return previousMemuser
-    }
-
-    MemUser putUserName(String domain, String userName, MemUser memUser) {
-        def userName_userMap = domain_userName_userMap.get(domain)
-        MemUser previousMemuser = null
-        if (!userName_userMap) {
-            domain_userName_userMap.put(domain, [(userName): memUser])
-        } else {
-            previousMemuser = userName_userMap.put(userName, memUser)
-            domain_userName_userMap.put(domain, userName_userMap)
-        }
-        return previousMemuser
-    }
-
-    MemUser getById(String domain, String id) {
-        MemUser foundMemUser = null
-        def id_userMap = domain_id_userMap.get(domain)
-        if (id_userMap) {
-            foundMemUser = id_userMap.get(id)
-        }
-        return foundMemUser
-    }
-
-    MemUser getByUserName(String domain, String userName) {
-        MemUser foundMemUser = null
-        def userName_userMap = domain_userName_userMap.get(domain)
-        if (userName_userMap) {
-            foundMemUser = userName_userMap.get(userName)
-        }
-        return foundMemUser
-    }
-
-    MemUser removeByUserName(String domain, String userName) {
-        MemUser previousMemuser = null
-        def userName_userMap = domain_userName_userMap.get(domain)
-        if (userName_userMap) {
-            previousMemuser = userName_userMap.remove(userName)
-        }
-        return previousMemuser
-    }
-
-    MemUser removeById(String domain, String id) {
-        MemUser previousMemuser = null
-        def id_userMap = domain_id_userMap.get(domain)
-        if (id_userMap) {
-            previousMemuser = id_userMap.remove(id)
-        }
-        return previousMemuser
-    }
-
-    void wipeClean(String domain) {
-        def id_userMap = domain_id_userMap.get(domain)
-        if (id_userMap) {
-            Map<String, MemUser> emptyMap = [:]
-            domain_id_userMap.put(domain, emptyMap)
-        }
-        def userName_userMap = domain_userName_userMap.get(domain)
-        if (userName_userMap) {
-            Map<String, MemUser> emptyMap = [:]
-            domain_userName_userMap.put(domain, emptyMap)
-        }
-    }
-
-    Collection<MemUser> getValues(String domain) {
-        Collection<MemUser> userCollection = []
-        def id_userMap = domain_id_userMap.get(domain)
-        if (id_userMap) {
-            userCollection = id_userMap.values()
-        }
-        return userCollection
-    }
-}
-
 @Slf4j
 @RestController
 @RequestMapping('/api/multiv2')
@@ -261,8 +164,12 @@ class MultiDomainUserController {
                         lastModified: now,
                         resourceType: 'Group'))
         memGroup.schemas ?: memGroup.setSchemas('urn:ietf:params:scim:schemas:core:2.0:Group')
-        domainGroupStore.put(domain, memGroup)
-        return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.CREATED)
+        try {
+            domainGroupStore.put(domain, memGroup)
+            return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.CREATED)
+        } catch (InvalidGroupChangeException invalidGroupChangeException) {
+            return createError(invalidGroupChangeException.message,HttpStatus.BAD_REQUEST)
+        }
     }
 
     @PostMapping('/{domain}/Users')
@@ -339,8 +246,12 @@ class MultiDomainUserController {
             domainGroupStore.removeById(domain, domainGroupStore.get(domain, id).id)
 
             memGroup.setId(id) //preserve original id
-            domainGroupStore.put(domain, memGroup)
-            return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.OK)
+            try {
+                domainGroupStore.put(domain, memGroup)
+                return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.OK)
+            } catch (InvalidGroupChangeException invalidGroupChangeException) {
+                return createError(invalidGroupChangeException.message, HttpStatus.BAD_REQUEST)
+            }
         }
         return createError("Group with id ${id} does not exist in domain ${domain}", HttpStatus.CONFLICT)
     }
@@ -353,7 +264,7 @@ class MultiDomainUserController {
         def memUser = domainUserStore.getById(domain, id)
         if (memUser != null) {
             memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
-            memUser
+            return new ResponseEntity<>((MemUser) memUser,HttpStatus.OK)
         } else {
             return createError("User with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
         }
