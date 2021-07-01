@@ -95,7 +95,7 @@ class DomainUserStore {
         }
     }
 
-    List<MemUser> getValues(String domain, UserFragmentList userFragmentList) {
+    List<MemUser> getValues(String domain, ResourcesList userFragmentList) {
         Collection<MemUser> userCollection = []
         def id_userMap = domain_id_userMap.get(domain)
         if (id_userMap) {

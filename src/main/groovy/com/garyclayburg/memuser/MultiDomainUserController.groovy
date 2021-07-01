@@ -9,7 +9,6 @@ import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.http.ResponseEntity
-import org.springframework.stereotype.Service
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder
 
@@ -69,11 +68,11 @@ class MultiDomainUserController {
 
     @GetMapping('/{domain}/Groups')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
-    ResponseEntity<GroupFragmentList> getGroups(HttpServletRequest request, Pageable pageable,
+    ResponseEntity<ResourcesList> getGroups(HttpServletRequest request, Pageable pageable,
                                                 @PathVariable(value = 'domain', required = true) String domain) {
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
         def startIndex = (overriddenPageable.pageNumber) * overriddenPageable.pageSize
-        GroupFragmentList groupFragmentList
+        ResourcesList groupFragmentList
         if (startIndex < domainGroupStore.size(domain)) {
             def endIndex = startIndex + overriddenPageable.pageSize
             def adjustedPageSize = overriddenPageable.pageSize
@@ -82,53 +81,43 @@ class MultiDomainUserController {
                 adjustedPageSize = endIndex - startIndex
             }
             def listPage = domainGroupStore.getValues(domain).toList().subList(startIndex, endIndex)
-            groupFragmentList = new GroupFragmentList(
+            groupFragmentList = new ResourcesList(
                     totalResults: domainGroupStore.size(domain),
                     itemsPerPage: adjustedPageSize,
                     startIndex: startIndex + 1)
             groupFragmentList.resources = overrideLocation(listPage, request)
-            generatePage(listPage, overriddenPageable, groupFragmentList, domain)
+            generatePage(listPage, overriddenPageable, groupFragmentList, domain, domainGroupStore.size(domain))
         } else {
-            groupFragmentList = new GroupFragmentList(
+            groupFragmentList = new ResourcesList(
                     totalResults: 0,
                     itemsPerPage: 0,
                     startIndex: 0,
                     resources: [])
-            generatePage([], overriddenPageable, groupFragmentList, domain)
+            generatePage([], overriddenPageable, groupFragmentList, domain, domainGroupStore.size(domain))
         }
     }
 
     @GetMapping('/{domain}/Users')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
-    ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable,
-                                              @PathVariable(value = 'domain', required = true) String domain) {
+    ResponseEntity<ResourcesList> getUsers(HttpServletRequest request, Pageable pageable,
+                                           @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
 
-        UserFragmentList userFragmentList = new UserFragmentList(overriddenPageable,domainUserStore.size(domain))
+        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
         def listPage = domainUserStore.getValues(domain,userFragmentList)
         userFragmentList.resources = overideLocation(listPage, request)
-        generatePage(listPage, overriddenPageable, userFragmentList, domain)
+        generatePage(listPage, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
     }
 
-    private ResponseEntity<UserFragmentList> generatePage(List<MemUser> listPage,
-                                                          Pageable pageable,
-                                                          UserFragmentList userFragmentList,
-                                                          String domain) {
-        def pageImpl = new PageImpl<>(listPage, pageable, domainUserStore.size(domain))
+    private ResponseEntity<ResourcesList> generatePage(List<MemScimResource> listPage,
+                                                       Pageable pageable,
+                                                       ResourcesList userFragmentList,
+                                                       String domain, int totalSize) {
+        def pageImpl = new PageImpl<>(listPage, pageable, totalSize)
         HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
                 ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
         ResponseEntity.ok().headers(headers).body(userFragmentList)
-    }
-
-    private ResponseEntity<GroupFragmentList> generatePage(List<MemGroup> listPage,
-                                                           Pageable pageable,
-                                                           GroupFragmentList groupFragmentList,
-                                                           String domain) {
-        def pageImpl = new PageImpl<>(listPage, pageable, domainUserStore.size(domain))
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
-                ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
-        ResponseEntity.ok().headers(headers).body(groupFragmentList)
     }
 
     @PostMapping('/{domain}/Groups')
@@ -269,7 +258,7 @@ class MultiDomainUserController {
         for (MemUser memUser1 : memUsers) {
             locationFixedUsers += overrideLocation(memUser1, request)
         }
-        locationFixedUsers
+        memUsers
     }
 
     def overrideLocation(Collection<MemGroup> memGroups, HttpServletRequest request) {

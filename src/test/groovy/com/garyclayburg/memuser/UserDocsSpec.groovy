@@ -361,8 +361,8 @@ class UserDocsSpec extends BaseDocsSpec {
 
     }
 
-    UserFragmentList unmarshaluserList(MvcResult mvcResult) {
-        objectMapper.reader().forType(UserFragmentList).readValue(mvcResult.response.contentAsString)
+    ResourcesList unmarshaluserList(MvcResult mvcResult) {
+        objectMapper.reader().forType(ResourcesList).readValue(mvcResult.response.contentAsString)
     }
 
     MemUser unmarshall(MvcResult mvcResult) {

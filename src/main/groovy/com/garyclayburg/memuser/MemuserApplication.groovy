@@ -121,7 +121,7 @@ class UserController {
 
     @GetMapping('/Users')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
-    ResponseEntity<UserFragmentList> getUsers(HttpServletRequest request, Pageable pageable) {
+    ResponseEntity<ResourcesList> getUsers(HttpServletRequest request, Pageable pageable) {
         return multiDomainUserController.getUsers(request, pageable, DEFAULT_DOMAIN1)
     }
 
@@ -191,7 +191,7 @@ class Meta {
 }
 
 @Canonical
-class UserFragmentList {
+class ResourcesList {
     List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
     int totalResults
     int itemsPerPage
@@ -202,10 +202,10 @@ class UserFragmentList {
     @JsonIgnore
     int endIndex
 
-    UserFragmentList() {
+    ResourcesList() {
     }
 
-    UserFragmentList(Pageable pageable, int totalResults) {
+    ResourcesList(Pageable pageable, int totalResults) {
         this.startIndex = (pageable.pageNumber) * pageable.pageSize
         this.totalResults = totalResults
         if (startIndex < totalResults) {
@@ -227,22 +227,6 @@ class UserFragmentList {
 
     @JsonProperty('Resources')
     List<MemScimResource> Resources
-
-    @JsonProperty('Resources')
-    void setResources(resources) {
-        Resources = resources
-    }
-}
-
-@Canonical
-class GroupFragmentList {
-    List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-    int totalResults
-    int itemsPerPage
-    int startIndex
-
-    @JsonProperty('Resources')
-    List<MemGroup> Resources
 
     @JsonProperty('Resources')
     void setResources(resources) {
