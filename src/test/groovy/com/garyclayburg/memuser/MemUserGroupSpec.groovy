@@ -4,8 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
 import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest

@@ -104,31 +104,11 @@ class MultiDomainUserController {
                                               @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
-        def startIndex = (overriddenPageable.pageNumber) * overriddenPageable.pageSize
-        UserFragmentList userFragmentList
-        domainUserStore.size(domain)
-        if (startIndex < domainUserStore.size(domain)) {
-            def endIndex = startIndex + overriddenPageable.pageSize
-            def adjustedPageSize = overriddenPageable.pageSize
-            if (endIndex >= domainUserStore.size(domain)) {
-                endIndex = domainUserStore.size(domain)
-                adjustedPageSize = endIndex - startIndex
-            }
-            def listPage = domainUserStore.getValues(domain).toList().subList(startIndex, endIndex)
-            userFragmentList = new UserFragmentList(
-                    totalResults: domainUserStore.size(domain),
-                    itemsPerPage: adjustedPageSize,
-                    startIndex: startIndex + 1)
-            userFragmentList.resources = overideLocation(listPage, request)
-            generatePage(listPage, overriddenPageable, userFragmentList, domain)
-        } else {
-            userFragmentList = new UserFragmentList(
-                    totalResults: 0,
-                    itemsPerPage: 0,
-                    startIndex: 0,
-                    resources: [])
-            generatePage([], overriddenPageable, userFragmentList, domain)
-        }
+
+        UserFragmentList userFragmentList = new UserFragmentList(overriddenPageable,domainUserStore.size(domain))
+        def listPage = domainUserStore.getValues(domain,userFragmentList)
+        userFragmentList.resources = overideLocation(listPage, request)
+        generatePage(listPage, overriddenPageable, userFragmentList, domain)
     }
 
     private ResponseEntity<UserFragmentList> generatePage(List<MemUser> listPage,

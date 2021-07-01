@@ -95,12 +95,12 @@ class DomainUserStore {
         }
     }
 
-    Collection<MemUser> getValues(String domain) {
+    List<MemUser> getValues(String domain, UserFragmentList userFragmentList) {
         Collection<MemUser> userCollection = []
         def id_userMap = domain_id_userMap.get(domain)
         if (id_userMap) {
             userCollection = id_userMap.values()
         }
-        return userCollection
+        userCollection.toList().subList(userFragmentList.springStartIndex, userFragmentList.endIndex)
     }
 }

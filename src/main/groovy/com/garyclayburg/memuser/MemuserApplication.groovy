@@ -2,6 +2,7 @@ package com.garyclayburg.memuser
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
+import com.fasterxml.jackson.annotation.JsonIgnore
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -156,7 +157,7 @@ class UserController {
 }
 
 @Canonical
-class MemUser {
+class MemUser implements MemScimResource {
     String id, userName
     String[] schemas
     Meta meta
@@ -196,8 +197,36 @@ class UserFragmentList {
     int itemsPerPage
     int startIndex
 
+    @JsonIgnore
+    int springStartIndex
+    @JsonIgnore
+    int endIndex
+
+    UserFragmentList() {
+    }
+
+    UserFragmentList(Pageable pageable, int totalResults) {
+        this.startIndex = (pageable.pageNumber) * pageable.pageSize
+        this.totalResults = totalResults
+        if (startIndex < totalResults) {
+            this.endIndex = startIndex + pageable.pageSize
+            itemsPerPage = pageable.pageSize
+            if ((endIndex >= totalResults)) {
+                endIndex = totalResults
+                itemsPerPage = totalResults - startIndex
+            }
+            this.springStartIndex = startIndex
+            this.startIndex++ //RFC7644 uses 1 based pages, spring pageable uses 0 based pages
+        } else {
+            this.startIndex = 0
+            this.itemsPerPage = 0
+            this.totalResults = 0
+            this.endIndex = 0
+        }
+    }
+
     @JsonProperty('Resources')
-    List<MemUser> Resources
+    List<MemScimResource> Resources
 
     @JsonProperty('Resources')
     void setResources(resources) {
