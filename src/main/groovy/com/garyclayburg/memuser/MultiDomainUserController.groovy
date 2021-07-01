@@ -87,7 +87,7 @@ class MultiDomainUserController {
 
         ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
         def listPage = domainUserStore.getValues(domain,userFragmentList)
-        userFragmentList.resources = overideLocation(listPage, request)
+        userFragmentList.resources = overrideLocation(listPage, request)
         generatePage(listPage, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
     }
 
@@ -234,42 +234,24 @@ class MultiDomainUserController {
         }
     }
 
-    def overideLocation(Collection<MemUser> memUsers, HttpServletRequest request) {
-        def locationFixedUsers = []
-        for (MemUser memUser1 : memUsers) {
-            locationFixedUsers += overrideLocation(memUser1, request)
+    static def overrideLocation(Collection<MemScimResource> memScimResources, HttpServletRequest request) {
+        for (MemScimResource memScimResource : memScimResources) {
+            overrideLocation(memScimResource, request)
         }
-        memUsers
+        memScimResources
     }
 
-    def overrideLocation(Collection<MemGroup> memGroups, HttpServletRequest request) {
-        def locationFixedUsers = []
-        for (MemGroup memGroup : memGroups) {
-            locationFixedUsers += overrideLocation(memGroup, request)
-        }
-        locationFixedUsers
-    }
+    static MemScimResource overrideLocation(MemScimResource memScimResource, HttpServletRequest request) {
+        if (memScimResource != null) {
+            StringBuffer urlCopy = new StringBuffer(request.requestURL)
 
-    MemUser overrideLocation(MemUser memUser, HttpServletRequest request) {
-        showHeaders(request)
-        if (memUser != null) {
-            def location = request.requestURL.append('/')
-                    .append(memUser.id).toString()
+            def location = urlCopy.append('/')
+                    .append(memScimResource.id).toString()
                     .replaceFirst('Users//', 'Users/')
-            memUser.meta.location = filterProxiedURL(request, location)
-        }
-        memUser
-    }
-
-    MemGroup overrideLocation(MemGroup memGroup, HttpServletRequest request) {
-        showHeaders(request)
-        if (memGroup != null) {
-            def location = request.requestURL.append('/')
-                    .append(memGroup.id).toString()
                     .replaceFirst('Groups//', 'Groups/')
-            memGroup.meta.location = filterProxiedURL(request, location)
+            memScimResource.meta.location = filterProxiedURL(request, location)
         }
-        memGroup
+        memScimResource
     }
 
     static String filterProxiedURL(HttpServletRequest request, String locationRaw) {

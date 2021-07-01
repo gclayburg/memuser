@@ -6,6 +6,8 @@ package com.garyclayburg.memuser
  *
  * @author Gary Clayburg
  */
-interface MemScimResource {
-
+class MemScimResource {
+    String id, externalId
+    String[] schemas
+    Meta meta
 }

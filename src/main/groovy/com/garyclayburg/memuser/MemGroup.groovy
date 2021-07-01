@@ -9,9 +9,7 @@ import groovy.transform.Canonical
  * @author Gary Clayburg
  */
 @Canonical
-class MemGroup implements MemScimResource {
-    String id, displayName, externalId
-    String[] schemas
-    Meta meta
+class MemGroup extends MemScimResource {
+    String displayName
     ArrayList<Members> members
 }

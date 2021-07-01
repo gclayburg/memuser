@@ -157,10 +157,8 @@ class UserController {
 }
 
 @Canonical
-class MemUser implements MemScimResource {
-    String id, userName
-    String[] schemas
-    Meta meta
+class MemUser extends MemScimResource {
+    String userName
     boolean active
     HashSet<UserGroup> groups
     protected Map<String, Object> data = [:]

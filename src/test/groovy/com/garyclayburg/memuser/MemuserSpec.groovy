@@ -120,6 +120,15 @@ class MemuserSpec extends Specification {
         getUser.body.meta.location == "http://localhost:1234/Users/${memUser.id}"
         testStart.isBefore(getUser.body.meta.created)
 
+        when: 'request all users from url'
+        mockGet = Mock()
+        mockGet.getRequestURL() >> new StringBuffer("http://localhost:4567/Users/")
+        getUser = userController.getUsers(mockGet,pageable)
+        println "user is: ${getUser.body.Resources[0]}"
+
+        then: 'first returned user has correct meta.location'
+        getUser.body.Resources[0].meta.location == "http://localhost:4567/Users/${mockgetid}"
+
         when: 'request user from proxyurl'
         def mockgetidProxy = ((MemUser) createdUser.body).id
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
