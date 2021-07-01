@@ -43,7 +43,7 @@ class MultiDomainUserController {
         this.domainUserStore = domainUserStore
     }
 
-    @GetMapping(value = '/{domain}/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = ['/{domain}/ServiceProviderConfig','/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text

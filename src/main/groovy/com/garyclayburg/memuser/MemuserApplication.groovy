@@ -113,7 +113,7 @@ class UserController {
         this.multiDomainUserController = multiDomainUserController
     }
 
-    @GetMapping(value = '/ServiceProviderConfig', produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = ['/ServiceProviderConfig','/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         return multiDomainUserController.getServiceProviderConfig()
