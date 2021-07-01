@@ -73,13 +73,13 @@ class DomainGroupStore {
         foundMemGroup
     }
 
-    Collection<MemGroup> getValues(String domain) {
+    List<MemGroup> getValues(String domain, ResourcesList resourcesList) {
         Collection<MemGroup> groupCollection = []
         def id_groupMap = domain_id_groupMap.get(domain)
         if (id_groupMap) {
             groupCollection = id_groupMap.values()
         }
-        return groupCollection
+        groupCollection.toList().subList(resourcesList.springStartIndex,resourcesList.endIndex)
     }
 
     void removeById(String domain, String id) {
