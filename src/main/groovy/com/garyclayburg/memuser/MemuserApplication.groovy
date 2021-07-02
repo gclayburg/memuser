@@ -2,8 +2,6 @@ package com.garyclayburg.memuser
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
-import com.fasterxml.jackson.annotation.JsonIgnore
-import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -113,7 +111,7 @@ class UserController {
         this.multiDomainUserController = multiDomainUserController
     }
 
-    @GetMapping(value = ['/ServiceProviderConfig','/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = ['/ServiceProviderConfig', '/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         return multiDomainUserController.getServiceProviderConfig()
@@ -177,12 +175,10 @@ class MemUser extends MemScimResource {
      * This is needed to enable shorthand access to unknown data fields.  Because of this
      * we can use filters containing data fields as if they were fields of MemUser itself, e.g.
      * <pre>
-     *  {it.dogtagid == '7'}
-     * </pre>
+     *{it.dogtagid == '7'} </pre>
      * instead of the client needing to know the internals of MemUser and that it was actually stored in 'data':
      * <pre>
-     *  {it.data.dogtagid == '7'}
-     * </pre>
+     *{it.data.dogtagid == '7'} </pre>
      * @param name the field stored in data
      * @return the value of the field
      */
@@ -192,7 +188,7 @@ class MemUser extends MemScimResource {
 
     void setPassword(String password) {}  //well, its secure anyway
     void addGroup(UserGroup userGroup) {
-        if (groups == null){
+        if (groups == null) {
             groups = []
         }
         groups.add(userGroup)
@@ -205,46 +201,3 @@ class Meta {
     ZonedDateTime created, lastModified
 }
 
-@Canonical
-class ResourcesList {
-    List<String> schemas = ['urn:ietf:params:scim:api:messages:2.0:ListResponse']
-    int totalResults
-    int itemsPerPage
-    int startIndex
-
-    @JsonIgnore
-    int springStartIndex
-    @JsonIgnore
-    int endIndex
-
-    ResourcesList() {
-    }
-
-    ResourcesList(Pageable pageable, int totalResults) {
-        this.startIndex = (pageable.pageNumber) * pageable.pageSize
-        this.totalResults = totalResults
-        if (startIndex < totalResults) {
-            this.endIndex = startIndex + pageable.pageSize
-            itemsPerPage = pageable.pageSize
-            if ((endIndex >= totalResults)) {
-                endIndex = totalResults
-                itemsPerPage = totalResults - startIndex
-            }
-            this.springStartIndex = startIndex
-            this.startIndex++ //RFC7644 uses 1 based pages, spring pageable uses 0 based pages
-        } else {
-            this.startIndex = 0
-            this.itemsPerPage = 0
-            this.totalResults = 0
-            this.endIndex = 0
-        }
-    }
-
-    @JsonProperty('Resources')
-    List<MemScimResource> Resources
-
-    @JsonProperty('Resources')
-    void setResources(resources) {
-        Resources = resources
-    }
-}
