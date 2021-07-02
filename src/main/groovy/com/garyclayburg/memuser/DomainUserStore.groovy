@@ -103,4 +103,9 @@ class DomainUserStore {
         }
         userCollection.toList().subList(userFragmentList.springStartIndex, userFragmentList.endIndex)
     }
+
+    List<MemUser> findFilter(String domain, Closure closure) {
+        def id_userMap = domain_userName_userMap.get(domain)
+        id_userMap.values().findAll(closure)
+    }
 }

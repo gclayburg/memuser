@@ -173,6 +173,23 @@ class MemUser extends MemScimResource {
         data.put(name, value)
     }
 
+    /**
+     * This is needed to enable shorthand access to unknown data fields.  Because of this
+     * we can use filters containing data fields as if they were fields of MemUser itself, e.g.
+     * <pre>
+     *  {it.dogtagid == '7'}
+     * </pre>
+     * instead of the client needing to know the internals of MemUser and that it was actually stored in 'data':
+     * <pre>
+     *  {it.data.dogtagid == '7'}
+     * </pre>
+     * @param name the field stored in data
+     * @return the value of the field
+     */
+    Object get(String name) {
+        return data.get(name)
+    }
+
     void setPassword(String password) {}  //well, its secure anyway
     void addGroup(UserGroup userGroup) {
         if (groups == null){
