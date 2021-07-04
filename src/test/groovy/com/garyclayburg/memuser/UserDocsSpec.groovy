@@ -359,6 +359,24 @@ class UserDocsSpec extends BaseDocsSpec {
         createActions.andExpect(status().isCreated())
                 .andDo(document('createbill'))
 
+        when: 'attempt to return user list with parsable filter'
+        ResultActions resultList = mockMvc.perform(get(USERS + '?filter=userName eq "billy"')
+                .accept(SCIM_JSON))
+
+        then: 'ok'
+        resultList.andExpect(status().isOk())
+
+        when: 'attempt to return user list with unparsable filter'
+        ResultActions resultListBad = mockMvc.perform(get(USERSD + '?filter=userName eq billy')
+                .accept(SCIM_JSON))
+        def MVCresult = resultListBad.andReturn()
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def scimException = jsonSlurper.parseText(MVCresult.response.contentAsString)
+
+        then: 'response body has scim exception details'
+        resultListBad.andExpect(status().isBadRequest())
+        scimException.scimType == 'invalidFilter'
+
     }
 
     ResourcesList unmarshaluserList(MvcResult mvcResult) {

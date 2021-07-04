@@ -26,7 +26,7 @@ class MemUserGroupSpec extends Specification {
         DomainUserStore domainUserStore = new DomainUserStore()
         MemuserSettings memuserSettings = new MemuserSettings()
         DomainGroupStore domainGroupStore = new DomainGroupStore(domainUserStore)
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, domainGroupStore)
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, domainGroupStore, objectMapper)
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
                 'http://www.example.com/Users',
                 'https',

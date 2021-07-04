@@ -13,13 +13,13 @@ import java.time.ZonedDateTime
  *
  * @author Gary Clayburg
  */
-class MultiDomainUserControllerSpec extends Specification {
+class MultiDomainUserControllerSpec extends HttpMockSpecification {
+
     def "OverrideLocation"() {
         given:
-        HttpServletRequest mockRequest = Mock()
-
         def requestURL = 'https://www.realserver.com/Users/'
-        mockRequest.requestURL >> new StringBuffer(requestURL)
+        HttpServletRequest mockRequest = setupMockRequest(requestURL)
+
         MemUser memUser = new MemUser(id: '999', userName: 'nines')
         def now = ZonedDateTime.now()
         memUser.setMeta(new Meta(location: 'http://example.com/Users/999',
@@ -37,10 +37,8 @@ class MultiDomainUserControllerSpec extends Specification {
 
     def "override location for memuser collection"() {
         given:
-        HttpServletRequest mockRequest = Mock()
-
         def requestURL = 'https://www.realserver.com/Users'
-        mockRequest.requestURL >> new StringBuffer(requestURL)
+        HttpServletRequest mockRequest = setupMockRequest(requestURL)
         MemUser memUser = new MemUser(id: '999', userName: 'nines')
         def now = ZonedDateTime.now()
         memUser.setMeta(new Meta(location: 'http://example.com/Users/999',
@@ -59,8 +57,8 @@ class MultiDomainUserControllerSpec extends Specification {
 
     def "override location with id"() {
         given:
-        HttpServletRequest mockRequest = Mock()
-        mockRequest.requestURL >> new StringBuffer(requestURL)
+        HttpServletRequest mockRequest = setupMockRequest(requestURL)
+
         expect: 'meta.location has location with id'
         MultiDomainUserController.overrideLocation(memScimResource,mockRequest).meta.location == expectedLocation
         where:

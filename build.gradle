@@ -66,8 +66,13 @@ configurations.all {
 }
 
 dependencies {
-//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3-SNAPSHOT'
-    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.2'
+    compile group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.3.6'
+    compile group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.3.6'
+    compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
+    compile group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.25.1'
+
+    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3-SNAPSHOT'
+//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.2'
     compile group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
     compile group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
     compile group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'

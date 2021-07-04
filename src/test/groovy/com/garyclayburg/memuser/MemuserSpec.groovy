@@ -1,11 +1,15 @@
 package com.garyclayburg.memuser
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.unboundid.scim2.common.exceptions.BadRequestException
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import spock.lang.Specification
+import org.springframework.web.util.UriUtils
 
 import javax.servlet.http.HttpServletRequest
+import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -16,8 +20,14 @@ import java.time.ZonedDateTime
  *
  * @author Gary Clayburg
  */
-@SpringBootTest
-class MemuserSpec extends Specification {
+@SpringBootTest(classes = [MemuserApplication])
+class MemuserSpec extends HttpMockSpecification {
+
+    @Autowired
+    ObjectMapper mapper
+
+    void setup() {
+    }
 
     def "contextok"() {
         expect:
@@ -30,7 +40,7 @@ class MemuserSpec extends Specification {
         MemuserSettings memuserSettings = new MemuserSettings()
 
         def domainUserStore = new DomainUserStore()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore), mapper)
         UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
         HttpServletRequest mockGetProxy = setupProxiedMockRequest(
@@ -65,6 +75,34 @@ class MemuserSpec extends Specification {
         users.resources.contains(memUser)
         users.resources[0].meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
 
+        when: 'get the user list via simulated proxy and filter'
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users?filter=userName%20eq%20%22hi%22',
+                'https',
+                'www.examplesecure.com:443')
+        users = userController.getUsers(mockGetProxy, pageable).body
+        then:
+        users.resources.contains(memUser)
+        users.resources[0].meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
+
+        when: 'get the user list via simulated proxy and unknownuser filter'
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users?filter=userName%20eq%20%22thisusershouldnotexist%22',
+                'https',
+                'www.examplesecure.com:443')
+        users = userController.getUsers(mockGetProxy, pageable).body
+        then:
+        !users.resources.contains(memUser)
+
+        when: 'get the user list via simulated proxy and unparsable filter'
+        mockGetProxy = setupProxiedMockRequest(
+                'http://www.example.com/Users?filter=userName%20eq%20thisusernameisnotsurroundedbyquotes',
+                'https',
+                'www.examplesecure.com:443')
+        userController.getUsers(mockGetProxy, pageable).body
+        then:
+        thrown BadRequestException
+
         when: 'get user again'
         mockGetProxy = setupProxiedMockRequest(
                 'http://www.example.com/Users/' + getUser.body.id,
@@ -76,12 +114,12 @@ class MemuserSpec extends Specification {
         getUser.body.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
     }
 
-    private HttpServletRequest setupProxiedMockRequest(String requestURL, String proto, String forwardedHost) {
-        HttpServletRequest mockGetProxy = Mock()
-        mockGetProxy.getHeader(UserController.X_FORWARDED_PROTO) >> proto
-        mockGetProxy.getHeader(UserController.X_FORWARDED_HOST) >> forwardedHost
-        mockGetProxy.requestURL >> new StringBuffer(requestURL)
-        mockGetProxy
+    def "decode uri "() {
+        given:
+        String url = 'http://www.example.com/Users?filter=userName%20eq%20hi'
+        expect:
+        UriUtils.decode(url, Charset.defaultCharset().toString()) == 'http://www.example.com/Users?filter=userName eq hi'
+        UriUtils.decode(url, 'UTF-8') == 'http://www.example.com/Users?filter=userName eq hi'
     }
 
     def "adduser"() {
@@ -93,12 +131,11 @@ class MemuserSpec extends Specification {
         memUser.setData("birthday", LocalDateTime.of(2018, 8, 9, 8, 18, 34, millis100).atZone(ZoneId.of("US/Mountain")))
         MemuserSettings memuserSettings = new MemuserSettings()
         def domainUserStore = new DomainUserStore()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore), mapper)
 
         UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
-        HttpServletRequest mockRequest = Mock()
-        mockRequest.requestURL >> new StringBuffer('http://www.example.com/Users')
+        HttpServletRequest mockRequest = setupMockRequest('http://www.example.com/Usersjunk')
         Pageable pageable = new PageRequest(0, 8)
 
         when: 'add user'
@@ -111,9 +148,8 @@ class MemuserSpec extends Specification {
         getUser.body == memUser
 
         when: 'request user from url'
-        HttpServletRequest mockGet = Mock()
         def mockgetid = ((MemUser) createdUser.body).id
-        mockGet.requestURL >> new StringBuffer("http://localhost:1234/Users/${mockgetid}")
+        HttpServletRequest mockGet = setupMockRequest("http://localhost:1234/Users/${mockgetid}")
         getUser = userController.getUser(mockGet, mockgetid)
 
         then: 'returned user has correct meta.location'
@@ -121,13 +157,12 @@ class MemuserSpec extends Specification {
         testStart.isBefore(getUser.body.meta.created)
 
         when: 'request all users from url'
-        mockGet = Mock()
-        mockGet.getRequestURL() >> new StringBuffer("http://localhost:4567/Users/")
-        getUser = userController.getUsers(mockGet,pageable)
+        mockGet = setupMockRequest('http://localhost:4567/Usershere')
+        getUser = userController.getUsers(mockGet, pageable)
         println "user is: ${getUser.body.Resources[0]}"
 
         then: 'first returned user has correct meta.location'
-        getUser.body.Resources[0].meta.location == "http://localhost:4567/Users/${mockgetid}"
+        getUser.body.Resources[0].meta.location == "http://localhost:4567/Usershere/${mockgetid}"
 
         when: 'request user from proxyurl'
         def mockgetidProxy = ((MemUser) createdUser.body).id
@@ -159,8 +194,7 @@ class MemuserSpec extends Specification {
 
 
         when: 'get list of all users'
-        HttpServletRequest mockGet2 = Mock()
-        mockGet2.requestURL >> new StringBuffer('http://nowherespecial:1234/Users')
+        HttpServletRequest mockGet2 = setupMockRequest('http://nowherespecial:1234/Users')
         def userList = userController.getUsers(mockGet2, pageable).body
 
         then: 'first user in list has meta.location'
@@ -217,7 +251,7 @@ class MemuserSpec extends Specification {
         MemUser memUser = new MemUser(userName: 'hi')
         MemuserSettings memuserSettings = new MemuserSettings()
         def domainUserStore = new DomainUserStore()
-        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore))
+        MultiDomainUserController multiDomainUserController = new MultiDomainUserController(memuserSettings, domainUserStore, new DomainGroupStore(domainUserStore), mapper)
 
         UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
@@ -240,8 +274,7 @@ class MemuserSpec extends Specification {
 
         hiTochangedusername.userName = 'changedusername'
         def returnedUser = userController.putUser(mockGetProxy, hiTochangedusername, memUser.id).body
-        HttpServletRequest mockRequestHi = Mock()
-        mockRequestHi.requestURL >> new StringBuffer('http://www.example.com/Users')
+        HttpServletRequest mockRequestHi = setupMockRequest('http://www.example.com/Users')
         ResourcesList usersAll = userController.getUsers(mockRequestHi, pageable).body
 
         then:
@@ -252,8 +285,7 @@ class MemuserSpec extends Specification {
 
         MemUser hiUser = new MemUser(userName: 'hi')
 
-        mockRequestHi = Mock()
-        mockRequestHi.requestURL >> new StringBuffer('http://www.example.com/Users')
+        mockRequestHi = setupMockRequest('http://www.example.com/Users')
         Object createdHiUser = userController.addUser(mockRequestHi, hiUser)
         usersAll = userController.getUsers(mockRequestHi, pageable).body
 

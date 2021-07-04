@@ -1,5 +1,12 @@
 package com.garyclayburg.memuser
 
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.unboundid.scim2.common.GenericScimResource
+import com.unboundid.scim2.common.ScimResource
+import com.unboundid.scim2.common.utils.SchemaUtils
+import com.unboundid.scim2.server.utils.ResourceTypeDefinition
+import com.unboundid.scim2.server.utils.SimpleSearchResults
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageImpl
@@ -33,11 +40,15 @@ class MultiDomainUserController {
     MemuserSettings memuserSettings
     DomainUserStore domainUserStore
     DomainGroupStore domainGroupStore
+    private ObjectMapper mapper
+    private ResourceTypeDefinition resourceTypeDefinition = createResourceTypeDefinition()
 
     @Autowired
     MultiDomainUserController(MemuserSettings memuserSettings,
                               DomainUserStore domainUserStore,
-                              DomainGroupStore domainGroupStore) {
+                              DomainGroupStore domainGroupStore,
+                              ObjectMapper mapper) {
+        this.mapper = mapper
         this.domainGroupStore = domainGroupStore
         this.memuserSettings = memuserSettings
         this.domainUserStore = domainUserStore
@@ -81,6 +92,53 @@ class MultiDomainUserController {
     @GetMapping('/{domain}/Users')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
     ResponseEntity<ResourcesList> getUsers(HttpServletRequest request, Pageable pageable,
+                                           @PathVariable(value = 'domain', required = true) String domain) {
+        showHeaders(request)
+        Pageable overriddenPageable = overrideScimPageable(request, pageable)
+        def uriInfoShim = new UriInfoShim(request)
+
+        SimpleSearchResults<GenericScimResource> results = new SimpleSearchResults<>(
+                resourceTypeDefinition,
+                uriInfoShim
+        )
+
+        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
+        def listPage = domainUserStore.getValues(domain,userFragmentList)
+        listPage.each {memuser ->
+            overrideLocation(memuser,request)
+            results.add(memUserToGenericScimResource(memuser)) //applies any requested filter
+        }
+        List<MemScimResource> filteredMemUsers = new ArrayList<>()
+        for (ScimResource resource: results.resources) {
+            filteredMemUsers.add(scimResourceToMemUser(resource))
+        }
+        userFragmentList.resources = filteredMemUsers
+        generatePage(filteredMemUsers, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
+    }
+
+    private static ResourceTypeDefinition createResourceTypeDefinition() {
+        ResourceTypeDefinition.Builder builder = new ResourceTypeDefinition.Builder('User', '')
+        builder.setDescription('User Account')
+        builder.setCoreSchema(SchemaUtils.getSchema(GenericScimResource.class))
+        builder.setDiscoverable(true)
+        def resourceTypeDefinition = builder.build()
+        resourceTypeDefinition
+    }
+
+    private MemUser scimResourceToMemUser(ScimResource resource) {
+        MemUser rehydratedMemuser = mapper.reader().forType(MemUser.class).readValue(resource.toString())
+        rehydratedMemuser
+    }
+
+    private GenericScimResource memUserToGenericScimResource(MemUser memuser) {
+        def memUserJson = mapper.writeValueAsString(memuser)
+        GenericScimResource genericScimResource = mapper.reader().forType(GenericScimResource.class).readValue(memUserJson)
+        genericScimResource
+    }
+
+    @GetMapping('/{domain}/Usersorig')
+    @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
+    ResponseEntity<ResourcesList> getUsersOrig(HttpServletRequest request, Pageable pageable,
                                            @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
@@ -241,9 +299,10 @@ class MultiDomainUserController {
         memScimResources
     }
 
+    // our location override is more complete than unboundid scim library, e.g. proxies
     static MemScimResource overrideLocation(MemScimResource memScimResource, HttpServletRequest request) {
         if (memScimResource != null) {
-            StringBuffer urlCopy = new StringBuffer(request.requestURL)
+            StringBuffer urlCopy = new StringBuffer(request.requestURI)
 
             def location = urlCopy.append('/')
                     .append(memScimResource.id).toString()
