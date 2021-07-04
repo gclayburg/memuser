@@ -23,6 +23,7 @@ node('any') {  //this node label must match jenkins slave with nodejs installed
     wrap([$class: 'TimestamperBuildWrapper']) {  //wrap each Jenkins job console output line with timestamp
         stage "build setup"
         checkout scm  // jenkins job config was using this branch to build:  */master
+        // build me
 //        whereami()
 
 
