@@ -1,12 +1,10 @@
 package com.garyclayburg.memuser
 
-
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.garyclayburg.memuser.scimtools.SimpleSearchResultsList
 import com.unboundid.scim2.common.GenericScimResource
-import com.unboundid.scim2.common.ScimResource
 import com.unboundid.scim2.common.utils.SchemaUtils
 import com.unboundid.scim2.server.utils.ResourceTypeDefinition
-import com.unboundid.scim2.server.utils.SimpleSearchResults
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageImpl
@@ -54,7 +52,7 @@ class MultiDomainUserController {
         this.domainUserStore = domainUserStore
     }
 
-    @GetMapping(value = ['/{domain}/ServiceProviderConfig','/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
+    @GetMapping(value = ['/{domain}/ServiceProviderConfig', '/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
@@ -80,11 +78,11 @@ class MultiDomainUserController {
     @GetMapping('/{domain}/Groups')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
     ResponseEntity<ResourcesList> getGroups(HttpServletRequest request, Pageable pageable,
-                                                @PathVariable(value = 'domain', required = true) String domain) {
+                                            @PathVariable(value = 'domain', required = true) String domain) {
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
 
-        ResourcesList resourcesList = new ResourcesList(overriddenPageable,domainGroupStore.size(domain))
-        List<MemGroup> listPage = domainGroupStore.getValues(domain,resourcesList)
+        ResourcesList resourcesList = new ResourcesList(overriddenPageable, domainGroupStore.size(domain))
+        List<MemGroup> listPage = domainGroupStore.getValues(domain, resourcesList)
         resourcesList.resources = overrideLocation(listPage, request)
         generatePage(listPage, overriddenPageable, resourcesList, domain, domainGroupStore.size(domain))
     }
@@ -95,26 +93,16 @@ class MultiDomainUserController {
                                            @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
-        def uriInfoShim = new UriInfoShim(request)
-
-        SimpleSearchResults<GenericScimResource> results = new SimpleSearchResults<>(
+        SimpleSearchResultsList<GenericScimResource> results = new SimpleSearchResultsList<>(
                 resourceTypeDefinition,
-                uriInfoShim
+                new UriInfoShim(request), mapper
         )
 
-        def listPage = domainUserStore.getValues(domain)
-        listPage.each {memuser ->
-            overrideLocation(memuser,request)
+        domainUserStore.getValues(domain).each { memuser ->
+            overrideLocation(memuser, request)
             results.add(memUserToGenericScimResource(memuser)) //applies any requested filter
         }
-        List<MemScimResource> filteredMemUsers = new ArrayList<>()
-        for (ScimResource resource: results.resources) {
-            filteredMemUsers.add(scimResourceToMemUser(resource))
-        }
-//        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,results.resources.size())
-        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
-        userFragmentList.resources = filteredMemUsers
-        generatePage(filteredMemUsers, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
+        generatePage(overriddenPageable, results.toResourcesList())
     }
 
     private static ResourceTypeDefinition createResourceTypeDefinition() {
@@ -126,10 +114,6 @@ class MultiDomainUserController {
         resourceTypeDefinition
     }
 
-    private MemUser scimResourceToMemUser(ScimResource resource) {
-        MemUser rehydratedMemuser = mapper.reader().forType(MemUser.class).readValue(resource.toString())
-        rehydratedMemuser
-    }
 
     private GenericScimResource memUserToGenericScimResource(MemUser memuser) {
         def memUserJson = mapper.writeValueAsString(memuser)
@@ -137,17 +121,14 @@ class MultiDomainUserController {
         genericScimResource
     }
 
-    @GetMapping('/{domain}/Usersorig')
-    @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
-    ResponseEntity<ResourcesList> getUsersOrig(HttpServletRequest request, Pageable pageable,
-                                           @PathVariable(value = 'domain', required = true) String domain) {
-        showHeaders(request)
-        Pageable overriddenPageable = overrideScimPageable(request, pageable)
-
-        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
-        def listPage = domainUserStore.getValues(domain,userFragmentList)
-        userFragmentList.resources = overrideLocation(listPage, request)
-        generatePage(listPage, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
+    private static ResponseEntity<ResourcesList> generatePage(
+            Pageable pageable,
+            ResourcesList resourcesList
+    ) {
+        def pageImpl = new PageImpl<>(resourcesList.resources, pageable, resourcesList.totalResults)
+        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(
+                ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
+        ResponseEntity.ok().headers(headers).body(resourcesList)
     }
 
     private static ResponseEntity<ResourcesList> generatePage(List<MemScimResource> listPage,
@@ -177,7 +158,7 @@ class MultiDomainUserController {
             domainGroupStore.put(domain, memGroup)
             return new ResponseEntity<>((MemGroup) memGroup, HttpStatus.CREATED)
         } catch (InvalidGroupChangeException invalidGroupChangeException) {
-            return createError(invalidGroupChangeException.message,HttpStatus.BAD_REQUEST)
+            return createError(invalidGroupChangeException.message, HttpStatus.BAD_REQUEST)
         }
     }
 
@@ -202,9 +183,9 @@ class MultiDomainUserController {
                 domainUserStore.putUserName(domain, memUser.userName, memUser)
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.CREATED)
             }
-            return createError("userName ${memUser.userName} already exists",HttpStatus.CONFLICT)
+            return createError("userName ${memUser.userName} already exists", HttpStatus.CONFLICT)
         }
-        return createError("userName must be specified",HttpStatus.BAD_REQUEST)
+        return createError("userName must be specified", HttpStatus.BAD_REQUEST)
     }
 
     @DeleteMapping('/{domain}/Users')
@@ -224,7 +205,7 @@ class MultiDomainUserController {
             if (domainUserStore.getById(domain, id) != null) {
                 def existingUserByUsername = domainUserStore.getByUserName(domain, memUser.userName)
                 if (existingUserByUsername != null && existingUserByUsername.id != id) {
-                    return createError("Cannot replace User with a userName that already exists with a different id (id=${existingUserByUsername.id})",HttpStatus.CONFLICT)
+                    return createError("Cannot replace User with a userName that already exists with a different id (id=${existingUserByUsername.id})", HttpStatus.CONFLICT)
                 }
                 def meta = domainUserStore.getById(domain, id).meta
                 meta.lastModified = ZonedDateTime.now()
@@ -237,9 +218,9 @@ class MultiDomainUserController {
                 domainUserStore.putUserName(domain, memUser.userName, memUser)
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
             }
-            return createError("User cannot be replaced because id ${id} does not exist in domain {$domain}",HttpStatus.CONFLICT)
+            return createError("User cannot be replaced because id ${id} does not exist in domain {$domain}", HttpStatus.CONFLICT)
         }
-        return createError("userName must be specified",HttpStatus.BAD_REQUEST)
+        return createError("userName must be specified", HttpStatus.BAD_REQUEST)
     }
 
     @PutMapping('/{domain}/Groups/{id}')
@@ -273,7 +254,7 @@ class MultiDomainUserController {
         def memUser = domainUserStore.getById(domain, id)
         if (memUser != null) {
             memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
-            return new ResponseEntity<>((MemUser) memUser,HttpStatus.OK)
+            return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
         } else {
             return createError("User with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
         }
@@ -289,7 +270,7 @@ class MultiDomainUserController {
             memGroup.meta.location = filterProxiedURL(request, request.requestURL.toString())
             memGroup
         } else {
-            return createError("Group with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
+            return createError("Group with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
         }
     }
 
@@ -349,7 +330,7 @@ class MultiDomainUserController {
             domainUserStore.removeById(domain, id)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         }
-        return createError("User with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
+        return createError("User with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
     }
 
     @DeleteMapping('/{domain}/Groups/{id}')
@@ -362,7 +343,7 @@ class MultiDomainUserController {
             domainGroupStore.removeById(domain, id)
             return new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
         }
-        return createError("Group with id ${id} does not exist in domain ${domain}",HttpStatus.NOT_FOUND)
+        return createError("Group with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
     }
 
     private static ResponseEntity<ErrorResponse> createError(String detail, HttpStatus httpStatus) {

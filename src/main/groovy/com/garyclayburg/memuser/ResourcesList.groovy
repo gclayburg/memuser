@@ -18,6 +18,9 @@ class ResourcesList {
     int itemsPerPage
     int startIndex
 
+    @JsonProperty('Resources')
+    List<MemScimResource> Resources
+
     /**
      * needed to return sublist of users from DomainUserController, DomainGroupController
      */
@@ -26,7 +29,7 @@ class ResourcesList {
     @JsonIgnore
     int endIndex
 
-    ResourcesList() {
+    ResourcesList() {  // used by jackson
     }
 
     ResourcesList(Pageable pageable, int totalResults) {
@@ -49,8 +52,12 @@ class ResourcesList {
         }
     }
 
-    @JsonProperty('Resources')
-    List<MemScimResource> Resources
+    ResourcesList(int totalResultsResourcesList, int startIndexResourcesList, int itemsPerPageResourcesList, List<MemScimResource> filteredResources) {
+        this.startIndex = startIndexResourcesList
+        this.totalResults = totalResultsResourcesList
+        this.resources = filteredResources
+        this.itemsPerPage = itemsPerPageResourcesList
+    }
 
     @JsonProperty('Resources')
     void setResources(resources) {

@@ -386,7 +386,7 @@ class UserDocsSpec extends BaseDocsSpec {
         harryObj.Resources.size() == 1
         harryObj.totalResults == 1
         harryObj.Resources[0].userName == 'harry'
-/*
+
         when: 'return filtered user with excluded attribute'
         def harryFilteredExcluded = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName eq "harry"&excludedAttributes=mailcode')
                 .accept(SCIM_JSON)).andReturn().response.contentAsString)
@@ -412,7 +412,7 @@ class UserDocsSpec extends BaseDocsSpec {
         alices2ndPage.totalResults == 2
         alices2ndPage.itemsPerPage == 1
         alices2ndPage.Resources[0].userName == 'alicebell'
- */
+
     }
 
     ResourcesList unmarshaluserList(MvcResult mvcResult) {

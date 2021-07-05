@@ -6,12 +6,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
-import org.springframework.web.util.UriUtils
 import org.springframework.http.HttpHeaders
-import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
-import java.nio.charset.Charset
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -116,14 +113,6 @@ class MemuserSpec extends HttpMockSpecification {
         getUser.body.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
     }
 
-    private HttpServletRequest setupProxiedMockRequest(String requestURL, String proto, String forwardedHost) {
-        HttpServletRequest mockGetProxy = Mock()
-        mockGetProxy.getHeader(UserController.X_FORWARDED_PROTO) >> proto
-        mockGetProxy.getHeader(UserController.X_FORWARDED_HOST) >> forwardedHost
-        mockGetProxy.requestURL >> new StringBuffer(requestURL)
-        mockGetProxy
-    }
-
     def "adduser"() {
         given: 'setup one user'
         ZonedDateTime testStart = ZonedDateTime.now()
@@ -218,7 +207,10 @@ class MemuserSpec extends HttpMockSpecification {
         userList2.startIndex == 1
 
         when: 'request page of 1'
-        ResourcesList page1of2 = userController.getUsers(mockRequest, new PageRequest(0, 1)).body
+        // filter=userName%20eq%20%22hi%22
+        ResourcesList page1of2 = userController.getUsers(
+                setupMockRequest('http://nowherespecial:1234/Users?startIndex=1&count=1'),
+                new PageRequest(0, 1)).body
 
         then: '1 user on first page'
         page1of2.totalResults == 2
@@ -238,7 +230,9 @@ class MemuserSpec extends HttpMockSpecification {
         page1of2Headers.getValuesAsList('Link')[2] == '<http://localhost?page=0&size=1>; rel="first"'
 
         when: 'request page 2'
-        ResourcesList page2of2 = userController.getUsers(mockRequest, new PageRequest(1, 1)).body
+        ResourcesList page2of2 = userController.getUsers(
+                setupMockRequest('http://nowherespecial:1234/Users?startIndex=2&count=1'),
+                new PageRequest(1, 1)).body
 
         then: 'last user on this page'
         page2of2.totalResults == 2
@@ -248,13 +242,14 @@ class MemuserSpec extends HttpMockSpecification {
         page2of2.resources[0].userName == 'justanewguy'
 
         when: 'request page out of bounds'
-        ResourcesList pageInvalid = userController.getUsers(mockRequest, new PageRequest(2, 1)).body
+        ResourcesList pageInvalid = userController.getUsers(
+                setupMockRequest('http://nowherespecial:1234/Users?startIndex=3&count=1'), new PageRequest(2, 1)).body
 
         then: 'return empty list'
-        pageInvalid.totalResults == 0
-        pageInvalid.startIndex == 0
-        pageInvalid.itemsPerPage == 0
         pageInvalid.resources.size() == 0
+        pageInvalid.totalResults == 2
+        pageInvalid.startIndex == 3
+        pageInvalid.itemsPerPage == 0
 
     }
 
