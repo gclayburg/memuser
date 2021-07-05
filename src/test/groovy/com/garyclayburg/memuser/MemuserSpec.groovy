@@ -7,6 +7,8 @@ import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
 import org.springframework.web.util.UriUtils
+import org.springframework.http.HttpHeaders
+import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
 import java.nio.charset.Charset
@@ -114,12 +116,12 @@ class MemuserSpec extends HttpMockSpecification {
         getUser.body.meta.location == 'https://www.examplesecure.com:443/Users/' + getUser.body.id
     }
 
-    def "decode uri "() {
-        given:
-        String url = 'http://www.example.com/Users?filter=userName%20eq%20hi'
-        expect:
-        UriUtils.decode(url, Charset.defaultCharset().toString()) == 'http://www.example.com/Users?filter=userName eq hi'
-        UriUtils.decode(url, 'UTF-8') == 'http://www.example.com/Users?filter=userName eq hi'
+    private HttpServletRequest setupProxiedMockRequest(String requestURL, String proto, String forwardedHost) {
+        HttpServletRequest mockGetProxy = Mock()
+        mockGetProxy.getHeader(UserController.X_FORWARDED_PROTO) >> proto
+        mockGetProxy.getHeader(UserController.X_FORWARDED_HOST) >> forwardedHost
+        mockGetProxy.requestURL >> new StringBuffer(requestURL)
+        mockGetProxy
     }
 
     def "adduser"() {
@@ -224,6 +226,16 @@ class MemuserSpec extends HttpMockSpecification {
         page1of2.itemsPerPage == 1
         page1of2.resources[0].userName == 'girlgotmarried'
         page1of2.resources.size() == 1
+
+        when: 'request page 1 headers'
+        HttpHeaders page1of2Headers = userController.getUsers(mockRequest, new PageRequest(0, 1)).getHeaders()
+
+        then: '1 user on first page has RFC 5988 navigation headers'
+        println 'headers are: ' + page1of2Headers.toString()
+        page1of2Headers.getValuesAsList('X-Total-Count')[0] == '2'
+        page1of2Headers.getValuesAsList('Link')[0] == '<http://localhost?page=1&size=1>; rel="next"'
+        page1of2Headers.getValuesAsList('Link')[1] == '<http://localhost?page=1&size=1>; rel="last"'
+        page1of2Headers.getValuesAsList('Link')[2] == '<http://localhost?page=0&size=1>; rel="first"'
 
         when: 'request page 2'
         ResourcesList page2of2 = userController.getUsers(mockRequest, new PageRequest(1, 1)).body
