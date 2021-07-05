@@ -367,7 +367,7 @@ class UserDocsSpec extends BaseDocsSpec {
         resultList.andExpect(status().isOk())
 
         when: 'attempt to return user list with unparsable filter'
-        ResultActions resultListBad = mockMvc.perform(get(USERSD + '?filter=userName eq billy')
+        ResultActions resultListBad = mockMvc.perform(get(USERS + '?filter=userName eq billy')
                 .accept(SCIM_JSON))
         def MVCresult = resultListBad.andReturn()
         JsonSlurper jsonSlurper = new JsonSlurper()
@@ -377,6 +377,42 @@ class UserDocsSpec extends BaseDocsSpec {
         resultListBad.andExpect(status().isBadRequest())
         scimException.scimType == 'invalidFilter'
 
+        when: 'return filtered user with correct size'
+        ResultActions resultListTrimmed = mockMvc.perform(get(USERS + '?filter=userName eq "harry"')
+                .accept(SCIM_JSON))
+        def harryObj = jsonSlurper.parseText(resultListTrimmed.andReturn().response.contentAsString)
+
+        then:
+        harryObj.Resources.size() == 1
+        harryObj.totalResults == 1
+        harryObj.Resources[0].userName == 'harry'
+/*
+        when: 'return filtered user with excluded attribute'
+        def harryFilteredExcluded = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName eq "harry"&excludedAttributes=mailcode')
+                .accept(SCIM_JSON)).andReturn().response.contentAsString)
+
+        then:
+        harryFilteredExcluded.Resources[0].userName == 'harry'
+        harryFilteredExcluded.Resources[0].mailcode == null
+
+        when: 'return first page of all alices with pagesize 1'
+        def alices = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=1&count=1')
+                .accept(SCIM_JSON)).andReturn().response.contentAsString)
+
+        then:
+        alices.totalResults == 2
+        alices.itemsPerPage == 1
+        alices.Resources[0].userName == 'alicejones'
+
+        when: 'return second page of all alices with pagesize 1'
+        def alices2ndPage = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=2&count=1')
+                .accept(SCIM_JSON)).andReturn().response.contentAsString)
+
+        then:
+        alices2ndPage.totalResults == 2
+        alices2ndPage.itemsPerPage == 1
+        alices2ndPage.Resources[0].userName == 'alicebell'
+ */
     }
 
     ResourcesList unmarshaluserList(MvcResult mvcResult) {

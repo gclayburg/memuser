@@ -18,6 +18,9 @@ class ResourcesList {
     int itemsPerPage
     int startIndex
 
+    /**
+     * needed to return sublist of users from DomainUserController, DomainGroupController
+     */
     @JsonIgnore
     int springStartIndex
     @JsonIgnore

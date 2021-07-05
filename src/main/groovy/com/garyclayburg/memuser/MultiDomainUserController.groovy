@@ -102,8 +102,7 @@ class MultiDomainUserController {
                 uriInfoShim
         )
 
-        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
-        def listPage = domainUserStore.getValues(domain,userFragmentList)
+        def listPage = domainUserStore.getValues(domain)
         listPage.each {memuser ->
             overrideLocation(memuser,request)
             results.add(memUserToGenericScimResource(memuser)) //applies any requested filter
@@ -112,6 +111,8 @@ class MultiDomainUserController {
         for (ScimResource resource: results.resources) {
             filteredMemUsers.add(scimResourceToMemUser(resource))
         }
+//        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,results.resources.size())
+        ResourcesList userFragmentList = new ResourcesList(overriddenPageable,domainUserStore.size(domain))
         userFragmentList.resources = filteredMemUsers
         generatePage(filteredMemUsers, overriddenPageable, userFragmentList, domain, domainUserStore.size(domain))
     }
