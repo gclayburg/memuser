@@ -3,6 +3,7 @@ package com.garyclayburg.memuser
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.http.HttpHeaders
 import spock.lang.Specification
 
 import javax.servlet.http.HttpServletRequest
@@ -190,6 +191,16 @@ class MemuserSpec extends Specification {
         page1of2.itemsPerPage == 1
         page1of2.resources[0].userName == 'girlgotmarried'
         page1of2.resources.size() == 1
+
+        when: 'request page 1 headers'
+        HttpHeaders page1of2Headers = userController.getUsers(mockRequest, new PageRequest(0, 1)).getHeaders()
+
+        then: '1 user on first page has RFC 5988 navigation headers'
+        println 'headers are: ' + page1of2Headers.toString()
+        page1of2Headers.getValuesAsList('X-Total-Count')[0] == '2'
+        page1of2Headers.getValuesAsList('Link')[0] == '<http://localhost?page=1&size=1>; rel="next"'
+        page1of2Headers.getValuesAsList('Link')[1] == '<http://localhost?page=1&size=1>; rel="last"'
+        page1of2Headers.getValuesAsList('Link')[2] == '<http://localhost?page=0&size=1>; rel="first"'
 
         when: 'request page 2'
         ResourcesList page2of2 = userController.getUsers(mockRequest, new PageRequest(1, 1)).body
