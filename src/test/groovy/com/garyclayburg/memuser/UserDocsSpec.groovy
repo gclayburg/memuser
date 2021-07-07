@@ -380,7 +380,7 @@ class UserDocsSpec extends BaseDocsSpec {
         when: 'return filtered user with correct size'
         ResultActions resultListTrimmed = mockMvc.perform(get(USERS + '?filter=userName eq "harry"')
                 .accept(SCIM_JSON))
-        def harryObj = jsonSlurper.parseText(resultListTrimmed.andReturn().response.contentAsString)
+        def harryObj = (ResourcesList) jsonSlurper.parseText(resultListTrimmed.andReturn().response.contentAsString)
 
         then:
         harryObj.Resources.size() == 1
@@ -388,7 +388,7 @@ class UserDocsSpec extends BaseDocsSpec {
         harryObj.Resources[0].userName == 'harry'
 
         when: 'return filtered user with excluded attribute'
-        def harryFilteredExcluded = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName eq "harry"&excludedAttributes=mailcode')
+        def harryFilteredExcluded = (ResourcesList) jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName eq "harry"&excludedAttributes=mailcode')
                 .accept(SCIM_JSON)).andReturn().response.contentAsString)
 
         then:
@@ -396,7 +396,7 @@ class UserDocsSpec extends BaseDocsSpec {
         harryFilteredExcluded.Resources[0].mailcode == null
 
         when: 'return first page of all alices with pagesize 1'
-        def alices = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=1&count=1')
+        def alices = (ResourcesList) jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=1&count=1')
                 .accept(SCIM_JSON)).andReturn().response.contentAsString)
 
         then:
@@ -405,7 +405,7 @@ class UserDocsSpec extends BaseDocsSpec {
         alices.Resources[0].userName == 'alicejones'
 
         when: 'return second page of all alices with pagesize 1'
-        def alices2ndPage = jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=2&count=1')
+        def alices2ndPage = (ResourcesList) jsonSlurper.parseText(mockMvc.perform(get(USERS + '?filter=userName sw "alice"&startIndex=2&count=1')
                 .accept(SCIM_JSON)).andReturn().response.contentAsString)
 
         then:

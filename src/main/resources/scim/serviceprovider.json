@@ -3,7 +3,7 @@
   ["urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig"],
   "documentationUri": "https://github.com/gclayburg/memuser",
   "patch": {
-    "supported":false
+    "supported":true
   },
   "bulk": {
     "supported":false,
@@ -11,7 +11,7 @@
     "maxPayloadSize":1048576
   },
   "filter": {
-    "supported":false,
+    "supported":true,
     "maxResults": 200
   },
   "changePassword": {

@@ -63,4 +63,8 @@ class ResourcesList {
     void setResources(resources) {
         Resources = resources
     }
+
+    List<MemScimResource> getResources() {
+        return Resources
+    }
 }

@@ -1,9 +1,18 @@
 package com.garyclayburg.memuser
 
+import com.fasterxml.jackson.core.JsonProcessingException
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.node.ObjectNode
 import com.garyclayburg.memuser.scimtools.SimpleSearchResultsList
 import com.unboundid.scim2.common.GenericScimResource
+import com.unboundid.scim2.common.exceptions.ResourceNotFoundException
+import com.unboundid.scim2.common.exceptions.ServerErrorException
+import com.unboundid.scim2.common.messages.PatchOperation
+import com.unboundid.scim2.common.messages.PatchRequest
+import com.unboundid.scim2.common.utils.ApiConstants
+import com.unboundid.scim2.common.utils.JsonUtils
 import com.unboundid.scim2.common.utils.SchemaUtils
+import com.unboundid.scim2.server.utils.ResourcePreparer
 import com.unboundid.scim2.server.utils.ResourceTypeDefinition
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -121,6 +130,10 @@ class MultiDomainUserController {
         genericScimResource
     }
 
+    private MemUser genericScimResourceToMemUser(GenericScimResource resource) throws IOException {
+        return this.mapper.reader().forType(MemUser.class).readValue(resource.toString());
+    }
+
     private static ResponseEntity<ResourcesList> generatePage(
             Pageable pageable,
             ResourcesList resourcesList
@@ -140,6 +153,7 @@ class MultiDomainUserController {
                 ServletUriComponentsBuilder.fromCurrentRequest(), pageImpl)
         ResponseEntity.ok().headers(headers).body(resourcesList)
     }
+
 
     @PostMapping('/{domain}/Groups')
     @CrossOrigin(origins = '*')
@@ -193,6 +207,43 @@ class MultiDomainUserController {
     def deleteAllUsers(@PathVariable(value = 'domain', required = true) String domain) {
         domainUserStore.wipeClean(domain)
         new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
+    }
+
+    @PatchMapping(value = '/{domain}/Users/{id}', consumes = [ApiConstants.MEDIA_TYPE_SCIM, MediaType.APPLICATION_JSON_VALUE], produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = '*')
+    def patchUsers(HttpServletRequest request, @RequestBody PatchRequest patchRequest,
+                   @PathVariable(value = 'domain', required = true) String domain,
+                   @PathVariable(value = 'id', required = true) String id) {
+        log.info("patching $domain $id")
+
+        def memUser = domainUserStore.getById(domain, id)
+        log.info("patching ${memUser.userName}")
+        if (memUser != null) {
+            def genericScimResource = memUserToGenericScimResource(memUser)
+            ObjectNode node = JsonUtils.valueToNode(genericScimResource)
+            for (PatchOperation operation : patchRequest) {
+                operation.apply(node)
+            }
+            GenericScimResource patchedFound = null
+            try {
+                patchedFound = JsonUtils.getObjectReader().treeToValue(node, GenericScimResource.class)
+
+            } catch (JsonProcessingException e) {
+                throw new ServerErrorException(e.getMessage(), null, e)
+            }
+
+            def updatedMemuser = genericScimResourceToMemUser(patchedFound)
+            domainUserStore.putId(domain, id, updatedMemuser)
+            if (memUser.userName != updatedMemuser.userName) {
+                //PATCH updated userName
+                domainUserStore.removeByUserName(domain, memUser.userName)
+            }
+            domainUserStore.putUserName(domain, updatedMemuser.userName, updatedMemuser)
+            ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
+            return resourcePreparer.trimModifiedResource(patchedFound, patchRequest)
+        } else {
+            throw new ResourceNotFoundException("User not found with id: ${id}")
+        }
     }
 
     @PutMapping('/{domain}/Users/{id}')
