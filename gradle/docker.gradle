@@ -3,15 +3,16 @@ import com.bmuschko.gradle.docker.tasks.image.DockerPushImage
 
 buildscript {
     repositories {
-        jcenter()
+        gradlePluginPortal()
+        mavenCentral()
         maven {
             url "https://plugins.gradle.org/m2/"
         }
     }
 
     dependencies {
-        classpath 'com.bmuschko:gradle-docker-plugin:3.2.7'
-        classpath 'gradle.plugin.com.garyclayburg:dockerPreparePlugin:1.4.0'
+        classpath 'com.bmuschko:gradle-docker-plugin:6.7.0'
+        classpath 'com.garyclayburg:dockerPreparePlugin:1.4.1'
     }
 }
 
@@ -21,34 +22,30 @@ dockerprepare {
     commonService = ['org.springframework.boot:spring-boot-starter-web']
     dockerfileSet = '8u151-jre-alpine-buildlabels'
 }
-springBoot.executable = false
 
 task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
     description = "Package application as Docker image"
     group = "Docker"
     inputDir = project.file(dockerprepare.dockerBuildDirectory)
-
-    tags = [dockerimage + ':' + version, dockerimage + ':latest']
+    images.add('registry:5000/' + rootProject.name + ':latest')
 
     if (project.hasProperty('dockerhubimage')) {
         println('configure dockerhub images')
-        tags.add(dockerhubimage + ':' + version)
-        tags.add(dockerhubimage + ':latest')
+        images.add(dockerhubimage + ':' + version)
+        images.add(dockerhubimage + ':latest')
 
     }
-    buildArgs = bootArgMap
-
-//    tags = ["${project.name}:latest".toString(), "${project.name}:${project.version}".toString()]
+//    buildArgs = bootArgMap
 
 }
 
 task pushVersion(type: DockerPushImage, dependsOn: buildImage) {
     description = "docker push <imageName>:<version>"
-    imageName = dockerimage + ":" + version
+    images.add(dockerimage + ":" + version)
 }
 
 task pushLatest(type: DockerPushImage, dependsOn: buildImage) {
     description = "docker push <imageName>:latest"
-    imageName = dockerimage + ":latest"
+    images.add(dockerimage + ":latest")
 }
 

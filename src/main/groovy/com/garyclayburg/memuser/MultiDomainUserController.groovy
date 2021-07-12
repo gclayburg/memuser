@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpHeaders
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
@@ -76,7 +77,7 @@ class MultiDomainUserController {
                 //SCIM RFC7644 uses 1 based pages, while spring data uses 0 based
                 int itemsPerPage = Integer.parseInt(parameterMap.get(COUNT)[0])
                 int pageNumber = (int) (startIndex / itemsPerPage)
-                modifiedPageable = new PageRequest(pageNumber, itemsPerPage)
+                modifiedPageable = new PageRequest(pageNumber, itemsPerPage, Sort.unsorted())
             }
         } catch (NumberFormatException ignored) {
             log.warn('invalid SCIM page parameters {}', request.queryString)
@@ -131,7 +132,7 @@ class MultiDomainUserController {
     }
 
     private MemUser genericScimResourceToMemUser(GenericScimResource resource) throws IOException {
-        return this.mapper.reader().forType(MemUser.class).readValue(resource.toString());
+        return this.mapper.reader().forType(MemUser.class).readValue(resource.toString())
     }
 
     private static ResponseEntity<ResourcesList> generatePage(

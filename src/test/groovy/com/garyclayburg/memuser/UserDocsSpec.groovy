@@ -33,7 +33,16 @@ class UserDocsSpec extends BaseDocsSpec {
 
     def "hello info"() {
         when:
-        ResultActions resultActions = mockMvc.perform(get('/info')
+        ResultActions resultActions = mockMvc.perform(get('/actuator/info')
+                .accept(MediaType.APPLICATION_JSON))
+
+        then:
+        resultActions.andExpect(status().isOk())
+    }
+
+    def "hello health"() {
+        when:
+        ResultActions resultActions = mockMvc.perform(get('/actuator/health')
                 .accept(MediaType.APPLICATION_JSON))
 
         then:

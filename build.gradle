@@ -6,27 +6,26 @@ buildscript {
         }
     }
     dependencies {
-        classpath "org.asciidoctor:asciidoctor-gradle-plugin:${asciidoctorVersion}"
-        classpath "org.kordamp.gradle:livereload-gradle-plugin:0.2.1"
         classpath "org.owasp:dependency-check-gradle:3.1.2"
     }
 }
 
 plugins {
-    id 'com.gorylenko.gradle-git-properties' version '2.0.0'
-    id 'org.springframework.boot' version '1.5.21.RELEASE'
+    id 'org.asciidoctor.jvm.convert' version '3.1.0'
+    id "org.kordamp.gradle.livereload" version "0.4.0"
+    id 'com.gorylenko.gradle-git-properties' version '2.3.1'
+    id 'org.springframework.boot' version '2.5.2'
+    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "org.sonarqube" version "2.8"
+    id 'groovy'
 }
 apply plugin: 'groovy'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
-apply plugin: 'org.asciidoctor.convert'
 apply plugin: 'codenarc'
-apply plugin: 'org.kordamp.gradle.livereload'
 apply plugin: 'idea'
 apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'com.jfrog.artifactory'
-group = "${group}"
 
 sonarqube {
     properties {
@@ -51,6 +50,7 @@ jar {
 repositories {
     maven {
         url "${artifactory_contexturl}/${artifactory_resolve_repo}"
+        allowInsecureProtocol = true
     }
     mavenCentral()
     mavenLocal()
@@ -60,45 +60,58 @@ repositories {
 }
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
+    asciidoctorExt
 }
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 4, 'minutes'  // I want to make sure to try to download the latest snapshot
 }
 
 dependencies {
-    compile group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.3.6'
-    compile group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.3.6'
-    compile group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
-    compile group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.25.1'
+    asciidoctorExt 'io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.5.0'
+    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.3.6'
+    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.3.6'
+    implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.25.1'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-common', version:'2.25.1'
 
-    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3-SNAPSHOT'
-//    compile group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.2'
-    compile group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
-    compile group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
-    compile group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'
-    compileOnly 'org.springframework.boot:spring-boot-devtools'
-    compile 'org.codehaus.groovy:groovy-all'
-    compile('org.springframework.boot:spring-boot-starter-web') {
+    implementation group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3-SNAPSHOT'
+//    implementation group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.2'
+    implementation group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
+    implementation group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
+    implementation group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'
+    implementation 'org.springframework.boot:spring-boot-devtools'
+    implementation 'org.codehaus.groovy:groovy-all:3.0.4'
+    implementation('org.springframework.boot:spring-boot-starter-web') {
         exclude(module: 'spring-boot-starter-tomcat',group: 'org.springframework.boot')
     }
-    compile "org.springframework.boot:spring-boot-starter-undertow"
-    compile 'org.springframework.boot:spring-boot-starter-actuator'
-    compile('org.springframework.boot:spring-boot-starter-security')
-    compile 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    compile 'org.springframework.data:spring-data-commons'
-    testCompile 'org.springframework.boot:spring-boot-starter-test'
-    testCompile('org.springframework.security:spring-security-test')
-    testCompile "org.spockframework:spock-spring:${spockVersion}"
-    testCompile "org.spockframework:spock-core:${spockVersion}"
-    testCompile 'com.jayway.jsonpath:json-path-assert:0.8.1'
-    testCompile "org.springframework.restdocs:spring-restdocs-mockmvc:${springRestDocsVersion}"
+    implementation "org.springframework.boot:spring-boot-starter-undertow"
+    implementation('org.springframework.boot:spring-boot-starter-actuator') {
+//       nn exclude(group: 'com.fasterxml.jackson.core', module: 'jackson-databind')
+    }
+    implementation('org.springframework.boot:spring-boot-starter-security')
+//    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
+    implementation 'org.springframework.data:spring-data-commons'
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation 'org.springframework.security:spring-security-test'
+    testImplementation platform("org.spockframework:spock-bom:2.0-groovy-3.0")
+    testImplementation group: 'org.spockframework', name: 'spock-spring', version: '2.0-groovy-3.0'
+    testImplementation group: 'org.spockframework', name: 'spock-core', version: '2.0-groovy-3.0'
+    testImplementation 'org.spockframework:spock-junit4'
+    testImplementation 'junit:junit:4.13.1'
+
+    testImplementation 'com.jayway.jsonpath:json-path-assert:0.8.1'
+    testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:${springRestDocsVersion}"
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
 }
 
 ext {
     snippetsDir = file('target/generated-snippets')
 }
 
-apply from: 'gradle/buildinfo.gradle'
+//apply from: 'gradle/buildinfo.gradle'
 apply from: 'gradle/docker.gradle'
 
 processResources {
@@ -113,13 +126,10 @@ gitProperties {
 
 asciidoctor {
     dependsOn test
-    sourceDir = file('src/main/asciidoc')
-    outputDir 'build/asciidoc'
+    configurations 'asciidoctorExt'
+    sourceDir file('src/main/asciidoc')
+    outputDir file('build/asciidoc')
     inputs.dir snippetsDir
-    backends 'html5'
-    dependencies {
-        asciidoctor 'io.spring.asciidoctor:spring-asciidoctor-extensions:0.1.1.RELEASE'
-    }
 
     attributes 'source-highlighter': 'prettify',
             'imagesdir': 'images',
@@ -149,12 +159,13 @@ clean {
 build {
     dependsOn asciidoctor
 }
-
+/*
 springBoot {
     buildInfo {
         additionalProperties = bootmap
     }
 }
+*/
 
 /*
 java -jar build/libs/memuser-0.5.0.jar
@@ -165,7 +176,7 @@ This allows us to include static files like /docs/index.html
 task bootJarRun(type: JavaExec) {
     description 'Run the project from generated spring boot jar'
     group 'application'
-    dependsOn bootRepackage
+    dependsOn bootJar
     main = "-jar"
     args jar.archivePath.getPath()
 }
@@ -188,7 +199,7 @@ task publish(type: GradleBuild) {
     tasks = ['gitPublishPush']
 }
 
-ext['spring-restdocs.version'] = '1.2.1.RELEASE'
+ext['spring-restdocs.version'] = '2.0.5.RELEASE'
 
 /*
 gradle continuous build in one terminal:

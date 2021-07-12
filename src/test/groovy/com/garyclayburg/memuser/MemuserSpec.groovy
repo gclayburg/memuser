@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Pageable
+import org.springframework.data.domain.Sort
 import org.springframework.http.HttpHeaders
 
 import javax.servlet.http.HttpServletRequest
@@ -46,7 +47,7 @@ class MemuserSpec extends HttpMockSpecification {
                 'http://www.example.com/Users',
                 'https',
                 'www.examplesecure.com:443')
-        Pageable pageable = new PageRequest(0, 8)
+        Pageable pageable = new PageRequest(0, 8, Sort.unsorted())
 
         when: 'add user'
         Object createdUser = userController.addUser(mockGetProxy, memUser)
@@ -127,7 +128,7 @@ class MemuserSpec extends HttpMockSpecification {
         UserController userController = new UserController(memuserSettings, multiDomainUserController)
 
         HttpServletRequest mockRequest = setupMockRequest('http://www.example.com/Usersjunk')
-        Pageable pageable = new PageRequest(0, 8)
+        Pageable pageable = new PageRequest(0, 8,Sort.unsorted())
 
         when: 'add user'
         Object createdUser = userController.addUser(mockRequest, memUser)
@@ -210,7 +211,7 @@ class MemuserSpec extends HttpMockSpecification {
         // filter=userName%20eq%20%22hi%22
         ResourcesList page1of2 = userController.getUsers(
                 setupMockRequest('http://nowherespecial:1234/Users?startIndex=1&count=1'),
-                new PageRequest(0, 1)).body
+                new PageRequest(0, 1,Sort.unsorted())).body
 
         then: '1 user on first page'
         page1of2.totalResults == 2
@@ -220,7 +221,7 @@ class MemuserSpec extends HttpMockSpecification {
         page1of2.resources.size() == 1
 
         when: 'request page 1 headers'
-        HttpHeaders page1of2Headers = userController.getUsers(mockRequest, new PageRequest(0, 1)).getHeaders()
+        HttpHeaders page1of2Headers = userController.getUsers(mockRequest, new PageRequest(0, 1,Sort.unsorted())).getHeaders()
 
         then: '1 user on first page has RFC 5988 navigation headers'
         println 'headers are: ' + page1of2Headers.toString()
@@ -232,7 +233,7 @@ class MemuserSpec extends HttpMockSpecification {
         when: 'request page 2'
         ResourcesList page2of2 = userController.getUsers(
                 setupMockRequest('http://nowherespecial:1234/Users?startIndex=2&count=1'),
-                new PageRequest(1, 1)).body
+                new PageRequest(1, 1,Sort.unsorted())).body
 
         then: 'last user on this page'
         page2of2.totalResults == 2
@@ -243,7 +244,7 @@ class MemuserSpec extends HttpMockSpecification {
 
         when: 'request page out of bounds'
         ResourcesList pageInvalid = userController.getUsers(
-                setupMockRequest('http://nowherespecial:1234/Users?startIndex=3&count=1'), new PageRequest(2, 1)).body
+                setupMockRequest('http://nowherespecial:1234/Users?startIndex=3&count=1'), new PageRequest(2, 1,Sort.unsorted())).body
 
         then: 'return empty list'
         pageInvalid.resources.size() == 0
@@ -266,7 +267,7 @@ class MemuserSpec extends HttpMockSpecification {
                 'http://www.example.com/Users',
                 'https',
                 'www.examplesecure.com:443')
-        Pageable pageable = new PageRequest(0, 8)
+        Pageable pageable = new PageRequest(0, 8,Sort.unsorted())
 
         when: 'add user'
         Object createdUser = userController.addUser(mockGetProxy, memUser)

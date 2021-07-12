@@ -9,8 +9,8 @@ import com.unboundid.scim2.common.types.UserResource
 import groovy.util.logging.Slf4j
 import org.glassfish.jersey.client.HttpUrlConnectorProvider
 import org.glassfish.jersey.logging.LoggingFeature
-import org.springframework.boot.context.embedded.LocalServerPort
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.boot.web.server.LocalServerPort
 import spock.lang.Specification
 
 import javax.ws.rs.client.Client
@@ -29,7 +29,7 @@ import javax.ws.rs.core.Feature
 class ScimServiceUserSpec extends Specification {
 
     @LocalServerPort
-    private int randomServerPort;
+    private int randomServerPort
 
     def "retrieve non-existing user"() {
         given:
@@ -61,30 +61,30 @@ class ScimServiceUserSpec extends Specification {
         given:
         ScimService scimService = getScimService(true)
 
-        UserResource newUser = new UserResource().setUserName("patchUser");
-        newUser.setDisplayName("removeMe");
-        newUser.setName(new Name().setGivenName("Bob").setFamilyName("Tester"));
+        UserResource newUser = new UserResource().setUserName("patchUser")
+        newUser.setDisplayName("removeMe")
+        newUser.setName(new Name().setGivenName("Bob").setFamilyName("Tester"))
         newUser.setEmails(Collections.singletonList(
-                new Email().setValue("bob@tester.com").setType("work")));
+                new Email().setValue("bob@tester.com").setType("work")))
 
         when: 'Create a new user.'
         UserResource createdUser =
-                scimService.create("Users", newUser);
+                scimService.create("Users", newUser)
         then:
         createdUser.id != null
         createdUser.userName == 'patchUser'
 
         when: 'update user'
         PhoneNumber phone1 = new PhoneNumber().
-                setValue("1234567890").setType("home");
+                setValue("1234567890").setType("home")
         PhoneNumber phone2 = new PhoneNumber().
-                setValue("123123123").setType("work").setPrimary(true);
+                setValue("123123123").setType("work").setPrimary(true)
 
         UserResource updatedUser = scimService.modifyRequest(createdUser).
                 removeValues("displayName").
                 replaceValue("name.middleName", "the").
                 replaceValue("emails[type eq \"work\"].value", "bobNew@tester.com").
-                addValues("phoneNumbers", phone1, phone2).invoke();
+                addValues("phoneNumbers", phone1, phone2).invoke()
 
         then:
         updatedUser.displayName == null
@@ -113,21 +113,21 @@ class ScimServiceUserSpec extends Specification {
     }
 
     ScimService getScimService(boolean logrequests) {
-        Client client;
+        Client client
         if (logrequests) {
             //log Jersey request/response
             //JUL logging.  bleh.  whatever.
-            java.util.logging.Logger logger = java.util.logging.Logger.getLogger(getClass().getName());
-            Feature feature = new LoggingFeature(logger, java.util.logging.Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, null);
-            client = ClientBuilder.newBuilder().register(feature).property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true).build();
+            java.util.logging.Logger logger = java.util.logging.Logger.getLogger(getClass().getName())
+            Feature feature = new LoggingFeature(logger, java.util.logging.Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, null)
+            client = ClientBuilder.newBuilder().register(feature).property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true).build()
             // ugly, ugly hack to get PATCH to sorta work
             // https://stackoverflow.com/questions/22355235/patch-request-using-jersey-client
             // https://github.com/payara/Payara/issues/5097
         } else {
-            client = ClientBuilder.newClient();
+            client = ClientBuilder.newClient()
         }
-        log.info("try port: " + randomServerPort);
-        WebTarget target = client.target("http://localhost:" + randomServerPort + "/api/multiv2/spectestdomain");
-        return new ScimService(target);
+        log.info("try port: " + randomServerPort)
+        WebTarget target = client.target("http://localhost:" + randomServerPort + "/api/multiv2/spectestdomain")
+        return new ScimService(target)
     }
 }
