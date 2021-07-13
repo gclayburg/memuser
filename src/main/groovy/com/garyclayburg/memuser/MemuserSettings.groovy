@@ -14,4 +14,8 @@ import org.springframework.stereotype.Component
 class MemuserSettings {
     boolean showHeaders = false
     int userCount = 0
+    /**
+     * when true, PATCH will return a 204 response instead of 200 if possible
+     */
+    boolean patchRequestsReturn204 = false
 }

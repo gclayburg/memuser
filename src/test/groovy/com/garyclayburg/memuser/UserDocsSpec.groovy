@@ -26,7 +26,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserDocsSpec extends BaseDocsSpec {
 
     public static final String SCIM_JSON = 'application/scim+json'
-    public static final String USERS = '/api/v2/Users'
+    public static final String APPLICATION_JSON_VALUE = 'application/json'
+    public static final String USERS = '/api/multiv2/specdomain1/Users'
     public static final String USERSD = USERS + '/'
     @Autowired
     ObjectMapper objectMapper
@@ -145,6 +146,28 @@ class UserDocsSpec extends BaseDocsSpec {
         bobParsed.userName == 'MSbob'
         bobParsed.UserName == null // even though we sent UserName, the returned name is userName which is legal
 
+        when: 'change userName with Replace patch operation'
+        println 'do the patch already'
+        ResultActions changedBobRA = mockMvc.perform(patch(USERSD +bobParsed.id)
+        .contentType(APPLICATION_JSON_VALUE).content("""
+{ "schemas":
+       ["urn:ietf:params:scim:api:messages:2.0:PatchOp"],
+     "Operations":[
+       {
+        "op":"Replace",
+        "path":"userName",
+        "value":"newusername"
+       }]
+   }
+""")
+        .accept(APPLICATION_JSON_VALUE))
+
+        then: 'username was changed'
+        println 'can we change bob or no?'
+        println "content is ${changedBobRA.andReturn().response.getContentAsString()}"
+        def changeBobContent = changedBobRA.andExpect(status().isOk()).andReturn().response.getContentAsString()
+        def newusernameparsed = new JsonSlurper().parseText(changeBobContent)
+        newusernameparsed.userName == 'newusername'
     }
 
     def "username NOT supplied"() {

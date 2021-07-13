@@ -86,10 +86,8 @@ dependencies {
     }
     implementation "org.springframework.boot:spring-boot-starter-undertow"
     implementation('org.springframework.boot:spring-boot-starter-actuator') {
-//       nn exclude(group: 'com.fasterxml.jackson.core', module: 'jackson-databind')
     }
     implementation('org.springframework.boot:spring-boot-starter-security')
-//    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
     implementation 'org.springframework.data:spring-data-commons'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'

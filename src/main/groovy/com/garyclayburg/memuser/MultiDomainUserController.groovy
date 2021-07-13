@@ -99,7 +99,8 @@ class MultiDomainUserController {
 
     @GetMapping('/{domain}/Users')
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
-    ResponseEntity<ResourcesList> getUsers(HttpServletRequest request, Pageable pageable,
+    ResponseEntity<ResourcesList> getUsers(HttpServletRequest request,
+                                           Pageable pageable,
                                            @PathVariable(value = 'domain', required = true) String domain) {
         showHeaders(request)
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
@@ -107,10 +108,10 @@ class MultiDomainUserController {
                 resourceTypeDefinition,
                 new UriInfoShim(request), mapper
         )
-
         domainUserStore.getValues(domain).each { memuser ->
             overrideLocation(memuser, request)
-            results.add(memUserToGenericScimResource(memuser)) //applies any requested filter
+            def resource = memUserToGenericScimResource(memuser)
+            results.add(resource) //applies any requested filter
         }
         generatePage(overriddenPageable, results.toResourcesList())
     }
@@ -210,22 +211,30 @@ class MultiDomainUserController {
         new ResponseEntity<>((MemUser) null, HttpStatus.NO_CONTENT)
     }
 
-    @PatchMapping(value = '/{domain}/Users/{id}', consumes = [ApiConstants.MEDIA_TYPE_SCIM, MediaType.APPLICATION_JSON_VALUE], produces = MediaType.APPLICATION_JSON_VALUE)
+    @PatchMapping(value = '/{domain}/Users/{id}', consumes = [
+            ApiConstants.MEDIA_TYPE_SCIM,
+            MediaType.APPLICATION_JSON_VALUE], produces = [
+            ApiConstants.MEDIA_TYPE_SCIM,
+            MediaType.APPLICATION_JSON_VALUE])
     @CrossOrigin(origins = '*')
-    def patchUsers(HttpServletRequest request, @RequestBody PatchRequest patchRequest,
+    def patchUsers(HttpServletRequest request,
+                   @RequestParam Map<String,String> queryParams,
+                   @RequestBody PatchRequest patchRequest,
                    @PathVariable(value = 'domain', required = true) String domain,
                    @PathVariable(value = 'id', required = true) String id) {
         log.info("patching $domain $id")
+        queryParams.forEach((key,value) -> {
+            log.info("  qparam: ${key}: ${value}")
+        })
 
         def memUser = domainUserStore.getById(domain, id)
-        log.info("patching ${memUser.userName}")
         if (memUser != null) {
             def genericScimResource = memUserToGenericScimResource(memUser)
             ObjectNode node = JsonUtils.valueToNode(genericScimResource)
             for (PatchOperation operation : patchRequest) {
                 operation.apply(node)
             }
-            GenericScimResource patchedFound = null
+            GenericScimResource patchedFound
             try {
                 patchedFound = JsonUtils.getObjectReader().treeToValue(node, GenericScimResource.class)
 
@@ -241,10 +250,43 @@ class MultiDomainUserController {
             }
             domainUserStore.putUserName(domain, updatedMemuser.userName, updatedMemuser)
             ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
-            return resourcePreparer.trimModifiedResource(patchedFound, patchRequest)
+
+            def resource = resourcePreparer.trimModifiedResource(patchedFound, patchRequest)
+            return wrapPatchResponse(queryParams, resource)
         } else {
             throw new ResourceNotFoundException("User not found with id: ${id}")
         }
+    }
+
+    /**
+     * Microsoft wants to see a 204 response with no content<br>
+     * Unboundid/ping library wants to return a 200 OK with response by default<br>
+     * It seems both can be considered correct as per RFC7644 section 3.5.2:
+     * <br>
+     * <blockquote><pre>
+     On successful completion, the server either MUST return a 200 OK
+     response code and the entire resource within the response body,
+     subject to the "attributes" query parameter (see Section 3.9), or MAY
+     return HTTP status code 204 (No Content) and the appropriate response
+     headers for a successful PATCH request.  The server MUST return a 200
+     OK if the "attributes" parameter is specified in the request.
+     </pre></blockquote>
+<br>
+     *
+     * @param queryParams http request query params
+     * @param resource resource to return or suppress
+     * @return suitable response
+     */
+    private ResponseEntity<GenericScimResource> wrapPatchResponse(Map<String, String> queryParams, GenericScimResource resource) {
+        if (memuserSettings.patchRequestsReturn204 && !isCustomAttributesRequested(queryParams)) {
+            return new ResponseEntity<>(null, HttpStatus.NO_CONTENT)
+        } else {
+            return new ResponseEntity<>(resource, HttpStatus.OK)
+        }
+    }
+
+    static boolean isCustomAttributesRequested(Map<String, String> queryParams){
+        return queryParams != null && (queryParams.get("attributes") != null || queryParams.get("excludedAttributes") != null)
     }
 
     @PutMapping('/{domain}/Users/{id}')

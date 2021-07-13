@@ -7,6 +7,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
 import com.fasterxml.jackson.datatype.jsr310.ser.ZonedDateTimeSerializer
+import com.unboundid.scim2.common.utils.JsonUtils
+import com.unboundid.scim2.common.utils.MapperFactory
 import groovy.transform.Canonical
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,6 +35,12 @@ import java.time.format.DateTimeFormatter
 @SpringBootApplication
 class MemuserApplication {
     static void main(String[] args) {
+        MapperFactory mf = new MapperFactory()
+        def map1 = [:]
+        map1[MapperFeature.ACCEPT_CASE_INSENSITIVE_VALUES] = true
+        map1[MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES] = true
+        mf.setMapperCustomFeatures(map1)
+        JsonUtils.setCustomMapperFactory(mf)
         SpringApplication.run(MemuserApplication, args)
     }
 }
@@ -62,6 +70,7 @@ class ConfigMe {
         objectMapper.configure(SerializationFeature.
                 WRITE_DATES_AS_TIMESTAMPS, false)
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
+        objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_VALUES, true)
         objectMapper
     }
 }
