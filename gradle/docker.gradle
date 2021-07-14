@@ -20,7 +20,7 @@ apply plugin: com.bmuschko.gradle.docker.DockerRemoteApiPlugin
 apply plugin: com.garyclayburg.docker.DockerPreparePlugin
 dockerprepare {
     commonService = ['org.springframework.boot:spring-boot-starter-web']
-    dockerfileSet = '8u151-jre-alpine-buildlabels'
+    snapshotLayer = true
 }
 
 task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
