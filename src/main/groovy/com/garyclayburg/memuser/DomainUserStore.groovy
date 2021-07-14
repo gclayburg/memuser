@@ -1,5 +1,6 @@
 package com.garyclayburg.memuser
 
+import com.unboundid.scim2.common.exceptions.BadRequestException
 import org.springframework.stereotype.Service
 
 /**
@@ -20,6 +21,19 @@ class DomainUserStore {
             size = domain_id_userMap.get(domain).size()
         }
         return size
+    }
+
+    MemUser put(String domain, MemUser memUser, MemUser existingMemUser) {
+        MemUser previous
+        if (memUser != null && memUser.userName != null &&
+                existingMemUser != null && existingMemUser.userName != null) {
+            removeByUserName(domain,existingMemUser.userName) //change request may change userName
+            putUserName(domain,memUser.userName,memUser)
+            previous = putId(domain,memUser.id,memUser)
+        } else {
+            throw new BadRequestException("cannot replace stored User",BadRequestException.INVALID_VALUE)
+        }
+        return previous
     }
 
     MemUser putId(String domain, String id, MemUser memUser) {

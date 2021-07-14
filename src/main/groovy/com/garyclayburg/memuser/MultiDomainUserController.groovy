@@ -253,12 +253,7 @@ class MultiDomainUserController {
             }
 
             def updatedMemuser = genericScimResourceToMemUser(patchedFound)
-            domainUserStore.putId(domain, id, updatedMemuser)
-            if (memUser.userName != updatedMemuser.userName) {
-                //PATCH updated userName
-                domainUserStore.removeByUserName(domain, memUser.userName)
-            }
-            domainUserStore.putUserName(domain, updatedMemuser.userName, updatedMemuser)
+            domainUserStore.put(domain,updatedMemuser,memUser)
             ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
 
             def resource = resourcePreparer.trimModifiedResource(patchedFound, patchRequest)
@@ -315,11 +310,8 @@ class MultiDomainUserController {
                 meta.lastModified = ZonedDateTime.now()
                 memUser.meta = meta
                 memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
-                domainUserStore.removeByUserName(domain, domainUserStore.getById(domain, id).userName)
-                //userName for id may have changed
                 memUser.setId(id) //preserve original id
-                domainUserStore.putId(domain, id, memUser)
-                domainUserStore.putUserName(domain, memUser.userName, memUser)
+                domainUserStore.put(domain,memUser,domainUserStore.getById(domain, id))
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
             }
             return createError("User cannot be replaced because id ${id} does not exist in domain {$domain}", HttpStatus.CONFLICT)

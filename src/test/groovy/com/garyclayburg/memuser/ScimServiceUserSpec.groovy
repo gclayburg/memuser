@@ -17,6 +17,8 @@ import javax.ws.rs.client.Client
 import javax.ws.rs.client.ClientBuilder
 import javax.ws.rs.client.WebTarget
 import javax.ws.rs.core.Feature
+import java.util.logging.Level
+import java.util.logging.Logger
 
 /**
  * <br><br>
@@ -94,6 +96,16 @@ class ScimServiceUserSpec extends Specification {
         updatedUser.phoneNumbers.contains(phone1)
         updatedUser.phoneNumbers.contains(phone2)
 
+        when: 'lookup old username before we change it'
+        def oldUserNameUser = scimService.searchRequest("Users").filter("userName eq \"patchUser\"").invoke(UserResource.class)
+        then:
+        oldUserNameUser.totalResults == 1
+
+        when: 'count users'
+        def listResponse = scimService.searchRequest("Users").invoke(UserResource.class)
+        then:
+        listResponse.getTotalResults() == 1
+
         when: 'change username'
         def userResource = scimService.modifyRequest(updatedUser).replaceValue("userName", "marriedlady").invoke()
 
@@ -102,14 +114,20 @@ class ScimServiceUserSpec extends Specification {
         userResource.id == updatedUser.id
 
         when: 'lookup old username'
-        def oldUserNameUser = scimService.searchRequest("Users").filter("userName eq \"patchUser\"").invoke(UserResource.class)
-        then:
-        oldUserNameUser.totalResults == 0
+        def oldUserNameUserResource = scimService.searchRequest("Users").filter("userName eq \"patchUser\"").invoke(UserResource.class)
+        then: 'we cannnot get the user by the old username'
+        oldUserNameUserResource.totalResults == 0
 
         when: 'lookup new username'
         def newUserListed = scimService.searchRequest("Users").filter("userName eq \"marriedlady\"").invoke(UserResource.class)
         then:
         newUserListed.totalResults == 1
+
+        when: 'count users'
+        listResponse = scimService.searchRequest("Users").invoke(UserResource.class)
+        then:
+        listResponse.getTotalResults() == 1
+
     }
 
     ScimService getScimService(boolean logrequests) {
@@ -117,8 +135,8 @@ class ScimServiceUserSpec extends Specification {
         if (logrequests) {
             //log Jersey request/response
             //JUL logging.  bleh.  whatever.
-            java.util.logging.Logger logger = java.util.logging.Logger.getLogger(getClass().getName())
-            Feature feature = new LoggingFeature(logger, java.util.logging.Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, null)
+            Logger logger = Logger.getLogger(getClass().getName())
+            Feature feature = new LoggingFeature(logger, Level.INFO, LoggingFeature.Verbosity.PAYLOAD_ANY, null)
             client = ClientBuilder.newBuilder().register(feature).property(HttpUrlConnectorProvider.SET_METHOD_WORKAROUND, true).build()
             // ugly, ugly hack to get PATCH to sorta work
             // https://stackoverflow.com/questions/22355235/patch-request-using-jersey-client
