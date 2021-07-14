@@ -2,6 +2,7 @@ package com.garyclayburg.memuser
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
+import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
@@ -71,6 +72,30 @@ class ConfigMe {
                 WRITE_DATES_AS_TIMESTAMPS, false)
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_PROPERTIES, true)
         objectMapper.configure(MapperFeature.ACCEPT_CASE_INSENSITIVE_VALUES, true)
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,false) //
+        /*
+microsoft likes to send a patch request with extra fields like "name"
+"name" exists neither in the spec nor PatchOperation.class, e.g.
+{
+    "schemas": [
+        "urn:ietf:params:scim:api:messages:2.0:PatchOp"
+    ],
+    "Operations": [
+        {
+            "name": "addMember",
+            "op": "add",
+            "path": "members",
+            "value": [
+            	{
+            		"displayName":"new User",
+            		"value":"{{id4}}"
+            	}
+            	]
+
+        }
+    ]
+}
+         */
         objectMapper
     }
 }

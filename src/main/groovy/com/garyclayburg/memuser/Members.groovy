@@ -11,4 +11,6 @@ import groovy.transform.Canonical
 @Canonical
 class Members {
     String value, display, ref
+    String displayName
+    // this is only here to satisfy microsoft postman test, even though it seems to violate the Scim SPEC
 }

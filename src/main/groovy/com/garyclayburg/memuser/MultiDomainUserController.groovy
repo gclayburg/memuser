@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.garyclayburg.memuser.scimtools.SimpleSearchResultsList
 import com.unboundid.scim2.common.GenericScimResource
+import com.unboundid.scim2.common.exceptions.BadRequestException
 import com.unboundid.scim2.common.exceptions.ResourceNotFoundException
 import com.unboundid.scim2.common.exceptions.ServerErrorException
 import com.unboundid.scim2.common.messages.PatchOperation
@@ -89,10 +90,14 @@ class MultiDomainUserController {
     @CrossOrigin(origins = '*', exposedHeaders = ['Link', 'x-total-count'])
     ResponseEntity<ResourcesList> getGroups(HttpServletRequest request, Pageable pageable,
                                             @PathVariable(value = 'domain', required = true) String domain) {
+        // todo allow groups to be filtered
         Pageable overriddenPageable = overrideScimPageable(request, pageable)
 
         ResourcesList resourcesList = new ResourcesList(overriddenPageable, domainGroupStore.size(domain))
         List<MemGroup> listPage = domainGroupStore.getValues(domain, resourcesList)
+//        listPage.each { memGroup ->
+//            overrideLocation(memGroup,request)
+//        }
         resourcesList.resources = overrideLocation(listPage, request)
         generatePage(listPage, overriddenPageable, resourcesList, domain, domainGroupStore.size(domain))
     }
@@ -110,7 +115,7 @@ class MultiDomainUserController {
         )
         domainUserStore.getValues(domain).each { memuser ->
             overrideLocation(memuser, request)
-            def resource = memUserToGenericScimResource(memuser)
+            def resource = memScimResourceToGenericScimResource(memuser)
             results.add(resource) //applies any requested filter
         }
         generatePage(overriddenPageable, results.toResourcesList())
@@ -126,7 +131,7 @@ class MultiDomainUserController {
     }
 
 
-    private GenericScimResource memUserToGenericScimResource(MemUser memuser) {
+    private GenericScimResource memScimResourceToGenericScimResource(MemScimResource memuser) {
         def memUserJson = mapper.writeValueAsString(memuser)
         GenericScimResource genericScimResource = mapper.reader().forType(GenericScimResource.class).readValue(memUserJson)
         genericScimResource
@@ -134,6 +139,11 @@ class MultiDomainUserController {
 
     private MemUser genericScimResourceToMemUser(GenericScimResource resource) throws IOException {
         return this.mapper.reader().forType(MemUser.class).readValue(resource.toString())
+    }
+
+    private MemGroup genericScimResourceToMemGroup(GenericScimResource resource) throws IOException {
+//        log.info("memgroup string value to convert to memgroup is: ${resource.toString()}")
+        return this.mapper.reader().forType(MemGroup.class).readValue(resource.toString())
     }
 
     private static ResponseEntity<ResourcesList> generatePage(
@@ -229,7 +239,7 @@ class MultiDomainUserController {
 
         def memUser = domainUserStore.getById(domain, id)
         if (memUser != null) {
-            def genericScimResource = memUserToGenericScimResource(memUser)
+            def genericScimResource = memScimResourceToGenericScimResource(memUser)
             ObjectNode node = JsonUtils.valueToNode(genericScimResource)
             for (PatchOperation operation : patchRequest) {
                 operation.apply(node)
@@ -354,6 +364,47 @@ class MultiDomainUserController {
         }
     }
 
+    @PatchMapping(value = '/{domain}/Groups/{id}', consumes = [
+            ApiConstants.MEDIA_TYPE_SCIM,
+            MediaType.APPLICATION_JSON_VALUE], produces = [
+            ApiConstants.MEDIA_TYPE_SCIM,
+            MediaType.APPLICATION_JSON_VALUE])
+    @CrossOrigin(origins = '*')
+    def patchGroup(HttpServletRequest request,
+                   @RequestParam Map<String,String> queryParams,
+                   @RequestBody PatchRequest patchRequest,
+                   @PathVariable(value = 'domain', required = true) String domain,
+                   @PathVariable(value = 'id', required = true) String id) {
+        log.info("patching group $domain $id")
+        def memGroup = domainGroupStore.get(domain,id)
+        if (memGroup != null) {
+            def genericScimResource = memScimResourceToGenericScimResource(memGroup)
+            ObjectNode node = JsonUtils.valueToNode(genericScimResource)
+            for (PatchOperation operation : patchRequest) {
+                operation.apply(node)
+            }
+            GenericScimResource patchedGroup
+            def updatedGroup
+            try {
+                patchedGroup = JsonUtils.getObjectReader().treeToValue(node, GenericScimResource.class)
+                updatedGroup = genericScimResourceToMemGroup(patchedGroup)
+            } catch (JsonProcessingException e) {
+//                log.error("jackson problem",e)
+                throw new BadRequestException(e.getMessage(),BadRequestException.INVALID_SYNTAX,e)
+            }
+            try {
+                domainGroupStore.put(domain,updatedGroup)
+                ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
+                def resource = resourcePreparer.trimModifiedResource(patchedGroup,patchRequest)
+                return wrapPatchResponse(queryParams,resource)
+            } catch (InvalidGroupChangeException invalidGroupChangeException) {
+                return createError(invalidGroupChangeException.message,HttpStatus.BAD_REQUEST)
+            }
+        } else {
+            throw new ResourceNotFoundException("Group not found with id: ${id}")
+        }
+    }
+
     @GetMapping('/{domain}/Groups/{id}')
     @CrossOrigin(origins = '*')
     def getGroup(HttpServletRequest request, @PathVariable('id') String id,
@@ -440,6 +491,7 @@ class MultiDomainUserController {
         return createError("Group with id ${id} does not exist in domain ${domain}", HttpStatus.NOT_FOUND)
     }
 
+    //todo make this error more consistent with ScimException? replace it?
     private static ResponseEntity<ErrorResponse> createError(String detail, HttpStatus httpStatus) {
         new ResponseEntity<>(new ErrorResponse(
                 detail: detail,
