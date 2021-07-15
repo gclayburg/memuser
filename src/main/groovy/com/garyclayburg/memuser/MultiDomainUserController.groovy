@@ -6,15 +6,21 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.garyclayburg.memuser.scimtools.SimpleSearchResultsList
 import com.unboundid.scim2.common.GenericScimResource
 import com.unboundid.scim2.common.exceptions.BadRequestException
+import com.unboundid.scim2.common.exceptions.ForbiddenException
 import com.unboundid.scim2.common.exceptions.ResourceNotFoundException
 import com.unboundid.scim2.common.exceptions.ServerErrorException
+import com.unboundid.scim2.common.messages.ListResponse
 import com.unboundid.scim2.common.messages.PatchOperation
 import com.unboundid.scim2.common.messages.PatchRequest
+import com.unboundid.scim2.common.types.GroupResource
+import com.unboundid.scim2.common.types.SchemaResource
+import com.unboundid.scim2.common.types.UserResource
 import com.unboundid.scim2.common.utils.ApiConstants
 import com.unboundid.scim2.common.utils.JsonUtils
 import com.unboundid.scim2.common.utils.SchemaUtils
 import com.unboundid.scim2.server.utils.ResourcePreparer
 import com.unboundid.scim2.server.utils.ResourceTypeDefinition
+import groovy.json.JsonSlurper
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageImpl
@@ -63,10 +69,64 @@ class MultiDomainUserController {
         this.domainUserStore = domainUserStore
     }
 
+    static String stripAnyTrailingSlash(String value) {
+//        value != null ? value.replaceFirst('/*\\s*$','') : value
+//        value != null ? value.replaceFirst(/\/*\s*$/,'') : value
+        value != null ? value.replaceFirst(~/\/*\s*$/, '') : value
+    }
+
     @GetMapping(value = ['/{domain}/ServiceProviderConfig', '/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
         new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
+    }
+
+    @GetMapping(value = ['/{domain}/ResourceTypes',], produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = '*')
+    def getResourcetypes(HttpServletRequest request,
+                         @RequestParam Map<String, String> queryParams) {
+        forbidFilter(queryParams)
+        showResourcetypes(request)
+    }
+
+    @GetMapping(value = ['/{domain}/Schemas',], produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = '*')
+    def getSchemas(HttpServletRequest request,
+                   @RequestParam Map<String, String> queryParams) {
+        forbidFilter(queryParams)
+        showSchemas()
+    }
+
+    @GetMapping(value = ['/{domain}/Schemas/{schema}',], produces = MediaType.APPLICATION_JSON_VALUE)
+    @CrossOrigin(origins = '*')
+    def getIndividualSchema(HttpServletRequest request,
+                            @RequestParam Map<String, String> queryParams,
+                            @PathVariable(value = 'schema', required = true) schema) {
+        forbidFilter(queryParams)
+        if (schema != null) {
+            if (schema == 'urn:ietf:params:scim:schemas:core:2.0:User') {
+                return SchemaUtils.getSchema(UserResource.class)
+            } else if (schema == 'urn:ietf:params:scim:schemas:core:2.0:Group') {
+                return SchemaUtils.getSchema(GroupResource.class)
+            }
+        }
+        throw new ResourceNotFoundException("schema not found")
+    }
+
+    static showSchemas() {
+        List<SchemaResource> schemaResourceList = [SchemaUtils.getSchema(UserResource.class), SchemaUtils.getSchema(GroupResource.class)]
+        ListResponse listResponse = new ListResponse(schemaResourceList)
+        log.info("size is " + listResponse.totalResults)
+        listResponse
+    }
+
+    static showResourcetypes(HttpServletRequest request) {
+        def resourceTypesJson = new File(getClass().getResource('/scim/resourcetypes.json').toURI()).text
+        JsonSlurper jsonSlurper = new JsonSlurper()
+        def resourceTypesObj = jsonSlurper.parseText(resourceTypesJson)
+        resourceTypesObj.Resources[0].meta.location = generateLocation(request) + '/User'
+        resourceTypesObj.Resources[1].meta.location = generateLocation(request) + '/Group'
+        resourceTypesObj
     }
 
     private static Pageable overrideScimPageable(HttpServletRequest request, Pageable pageable) {
@@ -228,12 +288,12 @@ class MultiDomainUserController {
             MediaType.APPLICATION_JSON_VALUE])
     @CrossOrigin(origins = '*')
     def patchUsers(HttpServletRequest request,
-                   @RequestParam Map<String,String> queryParams,
+                   @RequestParam Map<String, String> queryParams,
                    @RequestBody PatchRequest patchRequest,
                    @PathVariable(value = 'domain', required = true) String domain,
                    @PathVariable(value = 'id', required = true) String id) {
         log.info("patching $domain $id")
-        queryParams.forEach((key,value) -> {
+        queryParams.forEach((key, value) -> {
             log.info("  qparam: ${key}: ${value}")
         })
 
@@ -253,7 +313,7 @@ class MultiDomainUserController {
             }
 
             def updatedMemuser = genericScimResourceToMemUser(patchedFound)
-            domainUserStore.put(domain,updatedMemuser,memUser)
+            domainUserStore.put(domain, updatedMemuser, memUser)
             ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
 
             def resource = resourcePreparer.trimModifiedResource(patchedFound, patchRequest)
@@ -276,7 +336,7 @@ class MultiDomainUserController {
      headers for a successful PATCH request.  The server MUST return a 200
      OK if the "attributes" parameter is specified in the request.
      </pre></blockquote>
-<br>
+     <br>
      *
      * @param queryParams http request query params
      * @param resource resource to return or suppress
@@ -290,7 +350,7 @@ class MultiDomainUserController {
         }
     }
 
-    static boolean isCustomAttributesRequested(Map<String, String> queryParams){
+    static boolean isCustomAttributesRequested(Map<String, String> queryParams) {
         return queryParams != null && (queryParams.get("attributes") != null || queryParams.get("excludedAttributes") != null)
     }
 
@@ -311,7 +371,7 @@ class MultiDomainUserController {
                 memUser.meta = meta
                 memUser.meta.location = filterProxiedURL(request, request.requestURL.toString())
                 memUser.setId(id) //preserve original id
-                domainUserStore.put(domain,memUser,domainUserStore.getById(domain, id))
+                domainUserStore.put(domain, memUser, domainUserStore.getById(domain, id))
                 return new ResponseEntity<>((MemUser) memUser, HttpStatus.OK)
             }
             return createError("User cannot be replaced because id ${id} does not exist in domain {$domain}", HttpStatus.CONFLICT)
@@ -363,12 +423,12 @@ class MultiDomainUserController {
             MediaType.APPLICATION_JSON_VALUE])
     @CrossOrigin(origins = '*')
     def patchGroup(HttpServletRequest request,
-                   @RequestParam Map<String,String> queryParams,
+                   @RequestParam Map<String, String> queryParams,
                    @RequestBody PatchRequest patchRequest,
                    @PathVariable(value = 'domain', required = true) String domain,
                    @PathVariable(value = 'id', required = true) String id) {
         log.info("patching group $domain $id")
-        def memGroup = domainGroupStore.get(domain,id)
+        def memGroup = domainGroupStore.get(domain, id)
         if (memGroup != null) {
             def genericScimResource = memScimResourceToGenericScimResource(memGroup)
             ObjectNode node = JsonUtils.valueToNode(genericScimResource)
@@ -382,15 +442,15 @@ class MultiDomainUserController {
                 updatedGroup = genericScimResourceToMemGroup(patchedGroup)
             } catch (JsonProcessingException e) {
 //                log.error("jackson problem",e)
-                throw new BadRequestException(e.getMessage(),BadRequestException.INVALID_SYNTAX,e)
+                throw new BadRequestException(e.getMessage(), BadRequestException.INVALID_SYNTAX, e)
             }
             try {
-                domainGroupStore.put(domain,updatedGroup)
+                domainGroupStore.put(domain, updatedGroup)
                 ResourcePreparer<GenericScimResource> resourcePreparer = new ResourcePreparer<>(createResourceTypeDefinition(), new UriInfoShim(request))
-                def resource = resourcePreparer.trimModifiedResource(patchedGroup,patchRequest)
-                return wrapPatchResponse(queryParams,resource)
+                def resource = resourcePreparer.trimModifiedResource(patchedGroup, patchRequest)
+                return wrapPatchResponse(queryParams, resource)
             } catch (InvalidGroupChangeException invalidGroupChangeException) {
-                return createError(invalidGroupChangeException.message,HttpStatus.BAD_REQUEST)
+                return createError(invalidGroupChangeException.message, HttpStatus.BAD_REQUEST)
             }
         } else {
             throw new ResourceNotFoundException("Group not found with id: ${id}")
@@ -418,15 +478,18 @@ class MultiDomainUserController {
         memScimResources
     }
 
+    static String generateLocation(HttpServletRequest request) {
+        def requestURI = stripAnyTrailingSlash(request.requestURI)
+        def proxiedUrl = filterProxiedURL(request, requestURI)
+        proxiedUrl
+    }
+
     // our location override is more complete than unboundid scim library, e.g. proxies
     static MemScimResource overrideLocation(MemScimResource memScimResource, HttpServletRequest request) {
         if (memScimResource != null) {
-            StringBuffer urlCopy = new StringBuffer(request.requestURI)
-
+            StringBuffer urlCopy = new StringBuffer(stripAnyTrailingSlash(request.requestURI))
             def location = urlCopy.append('/')
                     .append(memScimResource.id).toString()
-                    .replaceFirst('Users//', 'Users/')
-                    .replaceFirst('Groups//', 'Groups/')
             memScimResource.meta.location = filterProxiedURL(request, location)
         }
         memScimResource
@@ -492,5 +555,11 @@ class MultiDomainUserController {
 
     static boolean isForwardedRequest(HttpServletRequest request) {
         request.getHeader(X_FORWARDED_PROTO) != null && request.getHeader(X_FORWARDED_HOST) != null
+    }
+
+    def static forbidFilter(Map<String, String> queryParams) {
+        if (queryParams != null && queryParams.get("filter") != null) {
+            throw new ForbiddenException("response cannot be filtered")
+        }
     }
 }

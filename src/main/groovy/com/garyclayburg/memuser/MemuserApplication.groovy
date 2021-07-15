@@ -2,6 +2,7 @@ package com.garyclayburg.memuser
 
 import com.fasterxml.jackson.annotation.JsonAnyGetter
 import com.fasterxml.jackson.annotation.JsonAnySetter
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.databind.DeserializationFeature
 import com.fasterxml.jackson.databind.MapperFeature
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -64,6 +65,8 @@ class ConfigMe {
     @Primary
     ObjectMapper serializingObjectMapper() {
         ObjectMapper objectMapper = new ObjectMapper()
+        objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
+        objectMapper.enable(SerializationFeature.INDENT_OUTPUT)
         JavaTimeModule javaTimeModule = new JavaTimeModule()
         javaTimeModule.addSerializer(ZonedDateTime.class,
                 new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")))

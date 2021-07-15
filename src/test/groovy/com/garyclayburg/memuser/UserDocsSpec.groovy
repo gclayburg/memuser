@@ -50,6 +50,23 @@ class UserDocsSpec extends BaseDocsSpec {
         resultActions.andExpect(status().isOk())
     }
 
+    def "schemas"() {
+        when:
+        ResultActions resultActions = mockMvc.perform(get('/api/multiv2/specdomain/Schemas').accept(MediaType.APPLICATION_JSON))
+        then:
+        resultActions.andExpect(status().isOk())
+        def schemaResultParsed = resultToObject(resultActions)
+        resultActions.andExpect(status().isOk())
+        schemaResultParsed.totalResults == 2
+
+        when: ' get User schema'
+        resultActions = mockMvc.perform(get('/api/multiv2/specdomain/Schemas/urn:ietf:params:scim:schemas:core:2.0:User').accept(MediaType.APPLICATION_JSON))
+        schemaResultParsed = resultToObject(resultActions)
+        then:
+        resultActions.andExpect(status().isOk())
+        schemaResultParsed.description == 'User Account'
+
+    }
     def "nobody"() {
         when:
         ResultActions resultActions = mockMvc.perform(get(USERSD + 'nobodyhere')
@@ -459,5 +476,9 @@ class UserDocsSpec extends BaseDocsSpec {
     def "contextok"() {
         expect:
         true
+    }
+
+    static Object resultToObject(ResultActions resultActions) {
+        new JsonSlurper().parseText(resultActions.andReturn().response.contentAsString)
     }
 }

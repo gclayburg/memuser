@@ -1,8 +1,11 @@
 package com.garyclayburg.memuser
 
-import org.springframework.data.domain.PageRequest
-import org.springframework.data.domain.Pageable
-import spock.lang.Specification
+
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.unboundid.scim2.common.types.SchemaResource
+import com.unboundid.scim2.common.types.UserResource
+import com.unboundid.scim2.common.utils.SchemaUtils
+import groovy.json.JsonBuilder
 
 import javax.servlet.http.HttpServletRequest
 import java.time.ZonedDateTime
@@ -48,7 +51,7 @@ class MultiDomainUserControllerSpec extends HttpMockSpecification {
 
         def users = [memUser]
         when:
-        users = MultiDomainUserController.overrideLocation(users,mockRequest)
+        users = MultiDomainUserController.overrideLocation(users, mockRequest)
 
         then:
         users[0].meta.location == 'https://www.realserver.com/Users/999'
@@ -60,13 +63,52 @@ class MultiDomainUserControllerSpec extends HttpMockSpecification {
         HttpServletRequest mockRequest = setupMockRequest(requestURL)
 
         expect: 'meta.location has location with id'
-        MultiDomainUserController.overrideLocation(memScimResource,mockRequest).meta.location == expectedLocation
+        MultiDomainUserController.overrideLocation(memScimResource, mockRequest).meta.location == expectedLocation
         where:
-        requestURL | memScimResource | expectedLocation
-        'https://www.hi.com/Users' | new MemUser(id: 12345,meta: new Meta()) | 'https://www.hi.com/Users/12345'
-        'https://www.hi.com/Users/' | new MemUser(id: 12345,meta: new Meta()) | 'https://www.hi.com/Users/12345'
-        'https://www.hi.com/Groups' | new MemGroup(id: 12345,meta: new Meta()) | 'https://www.hi.com/Groups/12345'
-        'https://www.hi.com/Groups/' | new MemGroup(id: 12345,meta: new Meta()) | 'https://www.hi.com/Groups/12345'
+        requestURL                   | memScimResource                           | expectedLocation
+        'https://www.hi.com/Users'   | new MemUser(id: 12345, meta: new Meta())  | 'https://www.hi.com/Users/12345'
+        'https://www.hi.com/Users/'  | new MemUser(id: 12345, meta: new Meta())  | 'https://www.hi.com/Users/12345'
+        'https://www.hi.com/Groups'  | new MemGroup(id: 12345, meta: new Meta()) | 'https://www.hi.com/Groups/12345'
+        'https://www.hi.com/Groups/' | new MemGroup(id: 12345, meta: new Meta()) | 'https://www.hi.com/Groups/12345'
+    }
+
+    def "showresourcetypes"() {
+        when:
+        def requestURL = 'https://www.realserver.com/somejunk/ResourceTypes/'
+        HttpServletRequest mockRequest = setupMockRequest(requestURL)
+        def resourcetypes = MultiDomainUserController.showResourcetypes(mockRequest)
+        then:
+        String json = new JsonBuilder(resourcetypes).toPrettyString()
+        println "real jsonpretty is ${json}"
+        resourcetypes.Resources[1].meta.location == 'https://www.realserver.com/somejunk/ResourceTypes/Group'
+        resourcetypes.Resources[0].meta.location == 'https://www.realserver.com/somejunk/ResourceTypes/User'
+
+    }
+
+    def "print schema"() {
+        given:
+        SchemaResource schemaResource = SchemaUtils.getSchema(UserResource.class)
+        def schemaResponse = MultiDomainUserController.showSchemas()
+        expect:
+        schemaResource != null
+        schemaResponse.totalResults == 2
+        println "pretty schemas: " + prettyJson(schemaResponse)
+    }
+
+    static String prettyJson(Object object) {
+        ObjectMapper mapper = new ConfigMe().serializingObjectMapper()
+        mapper.writeValueAsString(object)
+    }
+
+    def "stripslash"() {
+        expect:
+        MultiDomainUserController.stripAnyTrailingSlash("hi/") == 'hi'
+        MultiDomainUserController.stripAnyTrailingSlash("hi/ ") == 'hi'
+        MultiDomainUserController.stripAnyTrailingSlash("hi//") == 'hi'
+        MultiDomainUserController.stripAnyTrailingSlash("hi") == 'hi'
+        MultiDomainUserController.stripAnyTrailingSlash("hi/there") == 'hi/there'
+        MultiDomainUserController.stripAnyTrailingSlash("") == ''
+        MultiDomainUserController.stripAnyTrailingSlash() == null
     }
 
     def "filter proxy"(String x_forwarded_proto, String x_forwarded_host, String location, String expectedLocation) {
@@ -77,14 +119,14 @@ class MultiDomainUserControllerSpec extends HttpMockSpecification {
             mockRequest.getHeader(UserController.X_FORWARDED_HOST) >> x_forwarded_host
         }
         expect: 'meta.location is correct when using frontend proxy'
-        MultiDomainUserController.filterProxiedURL(mockRequest,location) == expectedLocation
+        MultiDomainUserController.filterProxiedURL(mockRequest, location) == expectedLocation
 
         where:
-        x_forwarded_proto | x_forwarded_host |  location  |  expectedLocation
-        'https' | 'www.a.com' | 'https://www.realserver.com/Users/qwerty' |  'https://www.a.com/Users/qwerty'
-        'https' | 'www.a.com' | 'https://www.realserver.com/Users/qwerty/' |  'https://www.a.com/Users/qwerty/'
-        'https' | 'www.a.com' | 'https://www.realserver.com/Groups/qwerty/' |  'https://www.a.com/Groups/qwerty/'
-        'http' | 'www.a.com'  | 'https://www.realserver.com/stuff/Users/qwerty' |  'http://www.a.com/stuff/Users/qwerty'
-        null    | null        | 'https://www.realserver.com/Users/qwerty' |  'https://www.realserver.com/Users/qwerty'
+        x_forwarded_proto | x_forwarded_host | location                                        | expectedLocation
+        'https'           | 'www.a.com'      | 'https://www.realserver.com/Users/qwerty'       | 'https://www.a.com/Users/qwerty'
+        'https'           | 'www.a.com'      | 'https://www.realserver.com/Users/qwerty/'      | 'https://www.a.com/Users/qwerty/'
+        'https'           | 'www.a.com'      | 'https://www.realserver.com/Groups/qwerty/'     | 'https://www.a.com/Groups/qwerty/'
+        'http'            | 'www.a.com'      | 'https://www.realserver.com/stuff/Users/qwerty' | 'http://www.a.com/stuff/Users/qwerty'
+        null              | null             | 'https://www.realserver.com/Users/qwerty'       | 'https://www.realserver.com/Users/qwerty'
     }
 }
