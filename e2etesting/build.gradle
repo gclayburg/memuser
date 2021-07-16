@@ -1,0 +1,36 @@
+plugins {
+    id 'groovy'
+    id 'java'
+    id 'com.avast.gradle.docker-compose' version '0.10.9'
+}
+
+group 'com.garyclayburg'
+version '0.9.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+}
+
+dockerCompose {
+    isRequiredBy(project.tasks.test)
+    useComposeFiles = ['docker-compose.yml']
+    waitForTcpPorts = true
+    captureContainersOutput = true
+    waitForHealthyStateTimeout = Duration.ofMinutes(5)
+    waitForTcpPortsTimeout = Duration.ofMinutes(5)
+    buildBeforePull = false
+}
+
+dependencies {
+    implementation 'org.codehaus.groovy:groovy-all:3.0.5'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
+}
+
+test {
+    useJUnitPlatform()
+}
+composeUp.dependsOn(composePull) // makes sure latest memuser image is being tested
+composeUp.dependsOn(':buildImage')

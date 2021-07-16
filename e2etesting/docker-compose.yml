@@ -1,0 +1,25 @@
+version: '3'
+
+services:
+  proxy:
+    image: registry:5000/nginxtlsproxy:latest
+    ports:
+      - 80:80
+      - 443:443
+  memuser:
+    container_name: frontdoor
+    image: 'registry:5000/memuser:latest'
+    environment:
+      - JAVA_OPTS=-Xmx64m -XX:TieredStopAtLevel=1 -noverify
+    ports:
+      - "8091:8080"
+  newmanwait:
+    image: 'registry:5000/newmanwait'
+    depends_on:
+      - memuser
+      - proxy
+    entrypoint: /etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure /src/SCIM_Tests.postman_collection.json --supress-exit-code 1
+    volumes:
+#      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
+#      - "./src/test/resources:/src"
+      - "${E2ETESTINGDIR:-.}/src/test/resources:/src"
