@@ -23,3 +23,22 @@ services:
 #      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
 #      - "./src/test/resources:/src"
       - "${E2ETESTINGDIR:-.}/src/test/resources:/src"
+volumes:
+  jenkins2_agent4nodehome:
+    external: true
+  jenkins2_agent3nodehome:
+    external: true
+  jenkins2_agent2home:
+    external: true
+  jenkins2_agenthome:
+    external: true
+  jenkins2_agent5home:
+    external: true
+#these agents must all be created ahead of time on each
+#  jenkins agent host like this:
+# $ docker volume create jenkins2_agent2home
+#
+# docker-compose will complain even if the volume will never be used on this jenkins agent
+# But they must all be listed here in case jenkins decides
+# to schedule this build on an agent where another
+# volume will be used
