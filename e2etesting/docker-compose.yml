@@ -18,7 +18,8 @@ services:
     depends_on:
       - memuser
       - proxy
-    entrypoint: ls -l /e2e && /etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure /e2e/src/test/resources/SCIM_Tests.postman_collection.json --suppress-exit-code 1
+    entrypoint: find /e2e
+    #/etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure /e2e/src/test/resources/SCIM_Tests.postman_collection.json --suppress-exit-code 1
     volumes:
 #      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
 #      - "./src/test/resources:/src"
