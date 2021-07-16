@@ -10,7 +10,7 @@ pipeline {
     }
     environment {
         TZ='America/Denver'
-        E2ETESTINGDIR="${AGENT_VOLUME}/workspace/memuser/"
+        E2ETESTINGDIR="${AGENT_VOLUME}"
     }
     stages {
         stage('build setup') {
