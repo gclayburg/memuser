@@ -22,7 +22,7 @@ pipeline {
         stage('build/test') {
             steps {
                 sh 'env'
-                sh './gradlew --nodaemon clean build buildImage pushVersion pushLatest'
+                sh './gradlew --no-daemon clean build buildImage pushVersion pushLatest'
             }
         }
         stage('docker') {
