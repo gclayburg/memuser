@@ -26,10 +26,14 @@ pipeline {
             }
         }
         stage('docker') {
-            sh 'pwd && ls'
+            steps {
+                sh 'pwd && ls'
+            }
         }
         stage('archive') {
-            sh 'echo archivemeplease'
+            steps {
+                sh 'echo archivemeplease'
+            }
         }
     }
     post {

@@ -28,6 +28,7 @@ task buildImage(type: DockerBuildImage, dependsOn: 'dockerLayerPrepare') {
     group = "Docker"
     inputDir = project.file(dockerprepare.dockerBuildDirectory)
     images.add('registry:5000/' + rootProject.name + ':latest')
+    images.add('registry:5000/' + rootProject.name + ':' + version)
 
     if (project.hasProperty('dockerhubimage')) {
         println('configure dockerhub images')
