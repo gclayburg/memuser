@@ -1,5 +1,28 @@
 # Changelog
 
+## [0.9.0-SNAPSHOT]
+SCIM 2.0 PATCH/filter/Groups
+
+### Fixed
+- better error messages when user cannot be created
+- Json requests now use case-insensitive parsing
+
+### Added
+- /{domain}/Groups support per SCIM 2.0 spec
+- /{domain}/ServiceProviderConfig and /{domain}/serviceConfiguration
+- now using unboundid SCIM library
+- now using Spring Boot 2.5.2
+- upgraded many dependencies for compatibility with Spring Boot 2.5.2
+- /{domain}/User now supports SCIM features like filter,sort,attributes,excludedAttributes
+- support for SCIM PATCH /{domain}/Users/{id}
+- support for SCIM PATCH /{domain}/Groups/{id}
+- upgrade gradle wrapper to version 7.0.2
+- optimized docker image layers
+- upgrade upbanner-starter to 2.3.3
+- support for SCIM GET /{domain}/ResourceTypes
+- support for SCIM GET /{domain}/Schemas
+
+
 ## [0.8.1] - 2021-6-23
 Bug fix release
 

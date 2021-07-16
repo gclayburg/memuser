@@ -168,7 +168,7 @@ springBoot {
 /*
 java -jar build/libs/memuser-0.5.0.jar
 
-This is simlar to bootRun, except that we are executing the jar file instead of the exploded build dir.
+This is similar to bootRun, except that we are executing the jar file instead of the exploded build dir.
 This allows us to include static files like /docs/index.html
  */
 task bootJarRun(type: JavaExec) {
@@ -176,7 +176,7 @@ task bootJarRun(type: JavaExec) {
     group 'application'
     dependsOn bootJar
     main = "-jar"
-    args jar.archivePath.getPath()
+    args bootJar.outputs.getFiles().getSingleFile()
 }
 
 codenarcMain {

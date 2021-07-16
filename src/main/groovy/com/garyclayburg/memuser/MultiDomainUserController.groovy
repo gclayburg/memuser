@@ -78,7 +78,7 @@ class MultiDomainUserController {
     @GetMapping(value = ['/{domain}/ServiceProviderConfig', '/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
-        new File(getClass().getResource('/scim/serviceprovider.json').toURI()).text
+        new File(MultiDomainUserController.class.getResource('/scim/serviceprovider.json').toURI()).text
     }
 
     @GetMapping(value = ['/{domain}/ResourceTypes',], produces = MediaType.APPLICATION_JSON_VALUE)
@@ -121,7 +121,7 @@ class MultiDomainUserController {
     }
 
     static showResourcetypes(HttpServletRequest request) {
-        def resourceTypesJson = new File(getClass().getResource('/scim/resourcetypes.json').toURI()).text
+        def resourceTypesJson = new File(MultiDomainUserController.class.getResource('/scim/resourcetypes.json').toURI()).text
         JsonSlurper jsonSlurper = new JsonSlurper()
         def resourceTypesObj = jsonSlurper.parseText(resourceTypesJson)
         resourceTypesObj.Resources[0].meta.location = generateLocation(request) + '/User'
