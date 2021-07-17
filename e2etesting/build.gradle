@@ -40,6 +40,6 @@ task garynewman {
     }
 }
 composeDown.dependsOn(garynewman)
-composeUp.dependsOn(composePull) // makes sure latest memuser image is being tested
+//composeUp.dependsOn(composePull) // makes sure latest memuser image is being tested
 composeUp.dependsOn(':buildImage')
 dockerCompose.servicesInfos
