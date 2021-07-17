@@ -29,7 +29,7 @@ pipeline {
         }
         stage('docker') {
             steps {
-                sh 'pwd && ls'
+                build 'panorama_integration_tests'
             }
         }
         stage('archive') {
