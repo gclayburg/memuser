@@ -10,6 +10,10 @@ FROM openjdk:8u151-jre-alpine
 
 RUN adduser -D -s /bin/sh springboot
 COPY ./*.sh users/ /home/springboot/
+
+RUN  apk add --update curl && \
+     rm -rf /var/cache/apk/*
+
 WORKDIR /home/springboot
 USER springboot
 # We add a special springboot user for running our application.
