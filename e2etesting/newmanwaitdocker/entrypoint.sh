@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 do_shell_fail(){
 # Execute command in shell, while logging complete command to stdout
@@ -12,5 +12,5 @@ do_shell_fail(){
 }
 echo "TEST RESOURCES are ${TEST_RESOURCES}"
 
-do_shell_fail /etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure ${TEST_RESOURCES}/SCIM_Tests.postman_collection.json
+do_shell_fail newman run --env-var Server=localhost --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --insecure src/test/resources/SCIM_Tests.postman_collection.json --reporters cli,junit --reporter-junit-export "build/test-results/TEST-postman-newman.xml"
 #/etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure ${TEST_RESOURCES}/SCIM_Tests.postman_collection.json --suppress-exit-code 1

@@ -13,19 +13,19 @@ services:
       - JAVA_OPTS=-Xmx64m -XX:TieredStopAtLevel=1 -noverify
     ports:
       - "8091:8080"
-  newmanwait:
-    image: 'registry:5000/newmanwait'
-    depends_on:
-      - memuser
-      - proxy
-    entrypoint: /etc/newman/entrypoint.sh
-    #/etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure ${TEST_RESOURCES}/SCIM_Tests.postman_collection.json --suppress-exit-code 1
-    environment:
-      TEST_RESOURCES: ${E2ETESTMODULE:-/e2e}/src/test/resources/
-    volumes:
-#      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
-#      - "./src/test/resources:/src"
-      - "${E2ETESTINGDIR:-./}:${JENKINSHOMEMOUNT:-/e2e}:ro"
+#  newmanwait:
+#    image: 'registry:5000/newmanwait'
+#    depends_on:
+#      - memuser
+#      - proxy
+#    entrypoint: /etc/newman/entrypoint.sh
+#    #/etc/newman/wait-for.sh -t 600 memuser:8080 -- /usr/local/bin/newman run --env-var Server=proxy --env-var Port=:443 --env-var Api=api/multiv2/sometestdomain --ssl-extra-ca-certs /etc/newman/certstargaryclayburgcom.pem --insecure ${TEST_RESOURCES}/SCIM_Tests.postman_collection.json --suppress-exit-code 1
+#    environment:
+#      TEST_RESOURCES: ${E2ETESTMODULE:-/e2e}/src/test/resources/
+#    volumes:
+##      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
+##      - "./src/test/resources:/src"
+#      - "${E2ETESTINGDIR:-./}:${JENKINSHOMEMOUNT:-/e2e}:ro"
 volumes:
   jenkins2_agent4nodehome:
     external: true
