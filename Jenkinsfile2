@@ -11,6 +11,8 @@ pipeline {
     environment {
         TZ='America/Denver'
         E2ETESTINGDIR="${AGENT_VOLUME}"
+        JENKINSHOMEMOUNT='/jenkinshome'
+        E2ETESTMODULE='/jenkinshome/workspace/memuser/e2etesting/'
     }
     stages {
         stage('build setup') {
