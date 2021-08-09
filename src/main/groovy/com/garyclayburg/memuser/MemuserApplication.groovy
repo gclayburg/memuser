@@ -125,6 +125,9 @@ class PreloadUsers {
                 newuser.setData('firstname', 'George')
                 newuser.setData('lastname', 'Washington')
                 userController.addUser(null, newuser)
+                if (i % 1000 == 0) {
+                    log.info("loading users: ${i}/${memuserSettings.userCount}")
+                }
             }
             log.info("loading users: $memuserSettings.userCount DONE")
         }
