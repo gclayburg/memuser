@@ -8,7 +8,7 @@ SCIM 2.0 PATCH/filter/Groups
 - Json requests now use case-insensitive parsing
 
 ### Added
-- /{domain}/Groups support per SCIM 2.0 spec
+- /{domain}/Groups support per SCIM 2.0 spec (RFC 7643 RFC 7644) 
 - /{domain}/ServiceProviderConfig and /{domain}/serviceConfiguration
 - now using unboundid SCIM library
 - now using Spring Boot 2.5.2
