@@ -69,12 +69,6 @@ class MultiDomainUserController {
         this.domainUserStore = domainUserStore
     }
 
-    static String stripAnyTrailingSlash(String value) {
-//        value != null ? value.replaceFirst('/*\\s*$','') : value
-//        value != null ? value.replaceFirst(/\/*\s*$/,'') : value
-        value != null ? value.replaceFirst(~/\/*\s*$/, '') : value
-    }
-
     @GetMapping(value = ['/{domain}/ServiceProviderConfig', '/{domain}/serviceConfiguration'], produces = MediaType.APPLICATION_JSON_VALUE)
     @CrossOrigin(origins = '*')
     def getServiceProviderConfig() {
@@ -479,7 +473,7 @@ class MultiDomainUserController {
     }
 
     static String generateLocation(HttpServletRequest request) {
-        def requestURI = stripAnyTrailingSlash(request.requestURI)
+        def requestURI = stripAnyTrailingSlash(request.requestURL.toString())
         def proxiedUrl = filterProxiedURL(request, requestURI)
         proxiedUrl
     }
@@ -487,7 +481,8 @@ class MultiDomainUserController {
     // our location override is more complete than unboundid scim library, e.g. proxies
     static MemScimResource overrideLocation(MemScimResource memScimResource, HttpServletRequest request) {
         if (memScimResource != null) {
-            StringBuffer urlCopy = new StringBuffer(stripAnyTrailingSlash(request.requestURI))
+            def strippedOfQueryString = stripURLofQueryString(request.requestURL.toString())
+            StringBuffer urlCopy = new StringBuffer(stripAnyTrailingSlash(strippedOfQueryString))
             def location = urlCopy.append('/')
                     .append(memScimResource.id).toString()
             memScimResource.meta.location = filterProxiedURL(request, location)
@@ -506,6 +501,14 @@ class MultiDomainUserController {
 
     static String extractURI(String locationRaw) {
         locationRaw.replaceFirst('^http.*//[^/]*', '')
+    }
+
+    static String stripURLofQueryString(String uriStrippedOfProtoAndHost) {
+        uriStrippedOfProtoAndHost.replaceFirst("\\?.*", '')
+    }
+
+    static String stripAnyTrailingSlash(String value) {
+        value != null ? value.replaceFirst(~/\/*\s*$/, '') : value
     }
 
     private void showHeaders(HttpServletRequest request) {

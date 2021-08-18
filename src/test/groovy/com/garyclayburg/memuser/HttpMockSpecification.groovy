@@ -30,10 +30,15 @@ class HttpMockSpecification extends Specification {
 
         mockGetProxy.parameterMap >> parameters
         URI uri = new URL(requestURL).toURI()
+        //sadly, the URI returned here is NOT the same as the URI returned from request.requestURI
+        // request.requestURI has all the hostname ane proto stripped out, so we need to mimic that here too
 
-        def stripped = uri.toString().replaceFirst("\\?.*", '')
-        mockGetProxy.requestURI >> stripped
+        def uriStrippedOfProtoAndHost = MultiDomainUserController.extractURI(uri.toString())
+
+        def uriStrippedOfQueryString = MultiDomainUserController.stripURLofQueryString(uriStrippedOfProtoAndHost)
+        mockGetProxy.requestURI >> uriStrippedOfQueryString
         mockGetProxy
     }
+
 
 }

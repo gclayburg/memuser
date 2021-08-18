@@ -38,6 +38,26 @@ class MultiDomainUserControllerSpec extends HttpMockSpecification {
         mockRequest.requestURL.toString() == requestURL
     }
 
+    def "OverrideLocation with incomplete location"() {
+        given:
+        def requestURL = 'https://www.realserver.com/Users/'
+        HttpServletRequest mockRequest = setupMockRequest(requestURL)
+
+        MemUser memUser = new MemUser(id: '999', userName: 'nines')
+        def now = ZonedDateTime.now()
+        memUser.setMeta(new Meta(location: '/Users/999',
+                created: now,
+                lastModified: now,
+                resourceType: 'User'))
+
+        when:
+        MultiDomainUserController.overrideLocation(memUser, mockRequest)
+
+        then: 'location proto and host is corrected to match request, not whatever was stored before'
+        memUser.meta.location == 'https://www.realserver.com/Users/999'
+        mockRequest.requestURL.toString() == requestURL
+    }
+
     def "override location for memuser collection"() {
         given:
         def requestURL = 'https://www.realserver.com/Users'
