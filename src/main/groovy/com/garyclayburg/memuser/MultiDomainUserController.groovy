@@ -514,10 +514,14 @@ class MultiDomainUserController {
     private void showHeaders(HttpServletRequest request) {
         if (memuserSettings.showHeaders) {
             Enumeration<String> headerNames = request.headerNames
-            log.info(request.method + ' ' + request.requestURL + '   headers:')
-            while (headerNames?.hasMoreElements()) {
-                String headerName = headerNames.nextElement()
-                log.info(headerName + ': ' + request.getHeader(headerName))
+            if (headerNames != null) {
+                log.info(request.method + ' ' + request.requestURL + '   headers:')
+                while (headerNames?.hasMoreElements()) {
+                    String headerName = headerNames.nextElement()
+                    log.info(headerName + ': ' + request.getHeader(headerName))
+                }
+            } else {
+                log.info("cannot show HTTP request headers")
             }
         }
     }
