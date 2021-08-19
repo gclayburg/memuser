@@ -68,6 +68,7 @@ class ConfigMe {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT)
         JavaTimeModule javaTimeModule = new JavaTimeModule()
+        objectMapper.setTimeZone(TimeZone.getDefault())
         javaTimeModule.addSerializer(ZonedDateTime.class,
                 new ZonedDateTimeSerializer(DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSSXXX")))
         objectMapper.registerModule(javaTimeModule)
