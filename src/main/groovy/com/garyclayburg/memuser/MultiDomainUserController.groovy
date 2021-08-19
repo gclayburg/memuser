@@ -512,7 +512,7 @@ class MultiDomainUserController {
     }
 
     private void showHeaders(HttpServletRequest request) {
-        if (memuserSettings.showHeaders) {
+        if (memuserSettings.showHeaders && request != null) {
             Enumeration<String> headerNames = request.headerNames
             if (headerNames != null) {
                 log.info(request.method + ' ' + request.requestURL + '   headers:')
