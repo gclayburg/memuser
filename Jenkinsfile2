@@ -1,7 +1,7 @@
 pipeline {
     agent {
-        label 'guthrie'
-//        label 'bayard'
+//        label 'guthrie'
+        label 'bayard'
     }
     options {
         timestamps()
