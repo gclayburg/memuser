@@ -1,6 +1,6 @@
 pipeline {
     agent {
-        label 'dockernode'
+        label 'guthrie'
 //        label 'bayard'
     }
     options {
