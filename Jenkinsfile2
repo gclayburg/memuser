@@ -1,6 +1,7 @@
 pipeline {
     agent {
-        label 'bayard'
+        label 'dockernode'
+//        label 'bayard'
     }
     options {
         timestamps()

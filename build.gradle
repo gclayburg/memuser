@@ -54,9 +54,9 @@ repositories {
     }
     mavenCentral()
     mavenLocal()
-    maven {
-        url 'https://repo.spring.io/release'
-    }
+//    maven {
+//        url 'https://repo.spring.io/release'
+//    }
 }
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
@@ -68,6 +68,12 @@ configurations.all {
 
 dependencies {
     asciidoctorExt 'io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.5.0'
+    /*
+    These files are no longer on the Internet after spring disabled their repo.spring.io/release.
+    This jar and its pom were manually installed into artifactory on ralston to make the build work.
+    todo: This version of asciidoctor and extensions should be upgraded to something current.
+    https://spring.io/blog/2022/12/14/notice-of-permissions-changes-to-repo-spring-io-january-2023/#comment-6197778931
+     */
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.3.6'
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.3.6'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
