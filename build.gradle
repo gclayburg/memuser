@@ -14,7 +14,7 @@ plugins {
     id 'org.asciidoctor.jvm.convert' version '3.1.0'
     id "org.kordamp.gradle.livereload" version "0.4.0"
     id 'com.gorylenko.gradle-git-properties' version '2.3.2'
-    id 'org.springframework.boot' version '2.5.2'
+    id 'org.springframework.boot' version '2.5.15'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "org.sonarqube" version "2.8"
     id 'groovy'
@@ -74,19 +74,17 @@ dependencies {
     todo: This version of asciidoctor and extensions should be upgraded to something current.
     https://spring.io/blog/2022/12/14/notice-of-permissions-changes-to-repo-spring-io-january-2023/#comment-6197778931
      */
-    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.3.6'
-    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.3.6'
+    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.4.0'
+    implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.4.0'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
-    implementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.25.1'
-    implementation group: 'org.glassfish.jersey.core', name: 'jersey-common', version:'2.25.1'
-
-//    implementation group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3-SNAPSHOT'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-client', version:'2.41'
+    implementation group: 'org.glassfish.jersey.core', name: 'jersey-common', version:'2.41'
     implementation group: 'com.garyclayburg', name:'upbanner-starter', version: '2.3.3'
     implementation group: 'com.github.oshi', name: 'oshi-core', version: '5.6.0'
     implementation group: 'net.java.dev.jna', name:'jna', version:'5.7.0'
     implementation group: 'net.java.dev.jna', name:'jna-platform', version: '5.7.0'
     implementation 'org.springframework.boot:spring-boot-devtools'
-    implementation 'org.codehaus.groovy:groovy-all:3.0.4'
+    implementation 'org.codehaus.groovy:groovy-all:3.0.19'
     implementation('org.springframework.boot:spring-boot-starter-web') {
         exclude(module: 'spring-boot-starter-tomcat',group: 'org.springframework.boot')
     }
