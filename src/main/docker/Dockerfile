@@ -42,7 +42,7 @@ ADD snapshotLayer3/ /home/springboot/app/
 # Since they are snapshots, they will likely change more often
 # than regular dependencies in layer 2, but probably not as much as
 # regular classes and resources of layer4
-
+RUN true  # workaround build bug https://github.com/moby/moby/issues/37965
 ADD classesLayer4/ /home/springboot/app/
 # This layer contains your application classes.  It will
 # likely change on each docker image build so we expect a docker cache miss.
