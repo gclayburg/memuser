@@ -26,17 +26,17 @@ services:
 ##      - "/home/gclaybur/dev/memuser/e2etesting/src/test/resources:/src"
 ##      - "./src/test/resources:/src"
 #      - "${E2ETESTINGDIR:-./}:${JENKINSHOMEMOUNT:-/e2e}:ro"
-volumes:
-  jenkins2_agent4nodehome:
-    external: true
-  jenkins2_agent3nodehome:
-    external: true
-  jenkins2_agent2home:
-    external: true
-  jenkins2_agenthome:
-    external: true
-  jenkins2_agent5home:
-    external: true
+#volumes:
+#  jenkins2_agent4nodehome:
+#    external: true
+#  jenkins2_agent3nodehome:
+#    external: true
+#  jenkins2_agent2home:
+#    external: true
+#  jenkins2_agenthome:
+#    external: true
+#  jenkins2_agent5home:
+#    external: true
 #these agents must all be created ahead of time on each
 #  jenkins agent host like this:
 # $ docker volume create jenkins2_agent2home
