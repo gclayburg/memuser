@@ -34,6 +34,9 @@ test {
 }
 task garynewman {
     doLast {
+        def localHost = java.net.InetAddress.getLocalHost()
+        def hostName = localHost.getHostName()
+        println "Gradle is running on Hostname: $hostName"
         exec {
             commandLine 'newmanwaitdocker/entrypoint.sh'
         }
