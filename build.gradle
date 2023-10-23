@@ -11,21 +11,20 @@ buildscript {
 }
 
 plugins {
-    id 'org.asciidoctor.jvm.convert' version '3.1.0'
+    id 'org.asciidoctor.jvm.convert' version '3.3.2'
     id "org.kordamp.gradle.livereload" version "0.4.0"
     id 'com.gorylenko.gradle-git-properties' version '2.3.2'
     id 'org.springframework.boot' version '2.5.15'
-    id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id "org.sonarqube" version "2.8"
     id 'groovy'
 }
 apply plugin: 'groovy'
-apply plugin: 'org.springframework.boot'
 apply plugin: 'application'
 apply plugin: 'codenarc'
 apply plugin: 'idea'
 apply plugin: 'org.owasp.dependencycheck'
 apply plugin: 'com.jfrog.artifactory'
+apply plugin: 'io.spring.dependency-management'
 
 sonarqube {
     properties {
@@ -53,27 +52,19 @@ repositories {
         allowInsecureProtocol = true
     }
     mavenCentral()
-    mavenLocal()
-//    maven {
-//        url 'https://repo.spring.io/release'
-//    }
 }
 configurations {
     compile.exclude module: "spring-boot-starter-tomcat"
-    asciidoctorExt
+    asciidoctorExtensions
 }
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 4, 'minutes'  // I want to make sure to try to download the latest snapshot
 }
 
+ext['spring-restdocs.version'] = '2.0.7.RELEASE'
+
 dependencies {
-    asciidoctorExt 'io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.5.0'
-    /*
-    These files are no longer on the Internet after spring disabled their repo.spring.io/release.
-    This jar and its pom were manually installed into artifactory on ralston to make the build work.
-    todo: This version of asciidoctor and extensions should be upgraded to something current.
-    https://spring.io/blog/2022/12/14/notice-of-permissions-changes-to-repo-spring-io-january-2023/#comment-6197778931
-     */
+    asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.4.0'
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.4.0'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
@@ -105,15 +96,18 @@ dependencies {
     testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:${springRestDocsVersion}"
 }
 
-tasks.withType(Test).configureEach {
-    useJUnitPlatform()
-}
-
 ext {
     snippetsDir = file('target/generated-snippets')
 }
 
-//apply from: 'gradle/buildinfo.gradle'
+test {
+    outputs.dir snippetsDir
+}
+
+tasks.withType(Test).configureEach {
+    useJUnitPlatform()
+}
+
 apply from: 'gradle/docker.gradle'
 
 processResources {
@@ -128,7 +122,7 @@ gitProperties {
 
 asciidoctor {
     dependsOn test
-    configurations 'asciidoctorExt'
+    configurations 'asciidoctorExtensions'
     sourceDir file('src/main/asciidoc')
     outputDir file('build/asciidoc')
     inputs.dir snippetsDir
@@ -169,6 +163,13 @@ springBoot {
 }
 */
 
+bootJar {
+    dependsOn asciidoctor
+    from ("${asciidoctor.outputDir}/html5") {
+        into 'static/docs'
+    }
+}
+
 /*
 java -jar build/libs/memuser-0.5.0.jar
 
@@ -201,7 +202,6 @@ task publish(type: GradleBuild) {
     tasks = ['gitPublishPush']
 }
 
-ext['spring-restdocs.version'] = '2.0.5.RELEASE'
 
 /*
 gradle continuous build in one terminal:
