@@ -9,7 +9,7 @@ services:
     command: >
       --security.require-ssl=true
       --server.port=443
-      --server.ssl.key-store=/tlskey/insecuretlswrapperwithgibberishhostname.p12
+      --server.ssl.key-store=classpath:insecuretlswrapperwithgibberishhostname.p12
       --server.ssl.key-store-password=changeit
       --server.ssl.key-store-type=PKCS12
       --server.ssl.key-alias=gibberishhostname
