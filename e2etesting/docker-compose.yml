@@ -1,18 +1,22 @@
 version: '3'
 
 services:
-  proxy:
-    image: registry:5000/nginxtlsproxy:latest
-    ports:
-      - 80:80
-      - 443:443
   memuser:
     container_name: frontdoor
     image: 'registry:5000/memuser:latest'
     environment:
       - JAVA_OPTS=-Xmx64m -XX:TieredStopAtLevel=1 -noverify
+    command: >
+      --security.require-ssl=true
+      --server.port=443
+      --server.ssl.key-store=/tlskey/insecuretlswrapperwithgibberishhostname.p12
+      --server.ssl.key-store-password=changeit
+      --server.ssl.key-store-type=PKCS12
+      --server.ssl.key-alias=gibberishhostname
+    volumes:
+      - "./src/test/resources:/tlskey"
     ports:
-      - "8091:8080"
+      - "443:443"
 #  newmanwait:
 #    image: 'registry:5000/newmanwait'
 #    depends_on:
