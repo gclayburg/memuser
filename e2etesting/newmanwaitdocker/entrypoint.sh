@@ -12,6 +12,8 @@ do_shell_fail(){
 }
 echo "REAL_HOSTNAME is ${REAL_HOSTNAME}"
 env
+echo "newman is running from:"
+which newman
 # REAL_HOSTNAME is a env variable that exists
 # on the jenkins agent running the build, e.g.:
 # REAL_HOSTNAME=bayard
