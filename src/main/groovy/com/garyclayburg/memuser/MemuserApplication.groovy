@@ -16,6 +16,7 @@ import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
+import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -35,6 +36,7 @@ import java.time.format.DateTimeFormatter
 
 @Slf4j
 @SpringBootApplication
+@EnableConfigurationProperties(MemuserSettings)
 class MemuserApplication {
     static void main(String[] args) {
         MapperFactory mf = new MapperFactory()

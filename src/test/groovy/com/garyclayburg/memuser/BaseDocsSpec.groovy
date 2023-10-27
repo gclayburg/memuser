@@ -23,7 +23,7 @@ import static org.springframework.restdocs.mockmvc.MockMvcRestDocumentation.docu
 class BaseDocsSpec extends Specification {
 
     @Rule
-    JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('target/generated-snippets')
+    JUnitRestDocumentation restDocumentation = new JUnitRestDocumentation('build/generated-snippets')
 
     protected MockMvc mockMvc
 

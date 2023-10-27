@@ -60,11 +60,16 @@ configurations {
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 4, 'minutes'  // I want to make sure to try to download the latest snapshot
 }
+ext {
+    snippetsDir = file('build/generated-snippets')
+}
 
-ext['spring-restdocs.version'] = '2.0.7.RELEASE'
+ext['springRestDocsVersion'] = '2.0.7.RELEASE'
 
 dependencies {
     asciidoctorExtensions 'org.springframework.restdocs:spring-restdocs-asciidoctor'
+    asciidoctorExtensions 'io.spring.asciidoctor:spring-asciidoctor-extensions-spring-boot:0.6.2'
+    asciidoctorExtensions 'io.spring.asciidoctor:spring-asciidoctor-extensions-block-switch:0.6.2'
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-client', version:'2.4.0'
     implementation group: 'com.unboundid.product.scim2', name: 'scim2-sdk-server', version:'2.4.0'
     implementation group: 'javax.ws.rs', name: 'javax.ws.rs-api', version:'2.0.1'
@@ -94,10 +99,10 @@ dependencies {
 
     testImplementation 'com.jayway.jsonpath:json-path-assert:0.8.1'
     testImplementation "org.springframework.restdocs:spring-restdocs-mockmvc:${springRestDocsVersion}"
-}
 
-ext {
-    snippetsDir = file('target/generated-snippets')
+    annotationProcessor group: 'org.springframework.boot', name: 'spring-boot-configuration-processor'
+//    compileOnly 'org.springframework.boot:spring-boot-configuration-processor'
+
 }
 
 test {
@@ -141,7 +146,8 @@ asciidoctor {
 }
 
 liveReload {
-    description = 'run in a terminal window, view docs in browser http://localhost:35729/html5/index.html'
+    description = 'run in a terminal window, view docs in browser http://localhost:35729/index.html'
+    println "liveReload on path: $asciidoctor.outputDir.canonicalPath"
     docRoot asciidoctor.outputDir.canonicalPath
     dependsOn asciidoctor
 }
@@ -214,9 +220,13 @@ enable livereload in another terminal:
 $ cd dev/memuser
 $ ./gradlew liveReload
 
-in the browser open url http://localhost:35729/html5/index.html
+in the browser open url http://localhost:35729/index.html
 -enable livereload browser plugin
+- now save the *.adoc file and the browser will update automatically as soon as compilation is finished. no need to
+  hit refresh in the browser
 
+The created html can also be located in the build without using liveReload:
+file:///home/gclaybur/dev/memuser/build/asciidoc/index.html
 
 when running from spring boot jar or docker, content available at:
 http://localhost:8080/docs/index.html
