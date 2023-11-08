@@ -18,6 +18,7 @@ import org.springframework.security.provisioning.InMemoryUserDetailsManager
  *
  * @author Gary Clayburg
  */
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @Profile('secure')
@@ -41,7 +42,16 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Bean
     @Override
     UserDetailsService userDetailsService() {
-        UserDetails user = User.withDefaultPasswordEncoder().username('user').password('password').roles(USER).build()
+        def username = System.'MEMUSER_USERNAME'
+        def password = System.'MEMUSER_PASSWORD'
+        UserDetails user
+        if (user && password) {
+            user = User.withDefaultPasswordEncoder().username(username).password(password).roles(USER).build()
+            log.info("Using basic authentiation with custom user and password")
+        } else {
+            user = User.withDefaultPasswordEncoder().username('user').password('passwordiswrong').roles(USER).build()
+            log.info("Using basic authentication with standard user and password")
+        }
         List<UserDetails> userList = [user]
         return new InMemoryUserDetailsManager(userList)
     }
