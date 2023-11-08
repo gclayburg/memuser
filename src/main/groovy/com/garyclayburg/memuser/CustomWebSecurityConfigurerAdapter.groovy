@@ -42,10 +42,10 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
     @Bean
     @Override
     UserDetailsService userDetailsService() {
-        def username = System.'MEMUSER_USERNAME'
-        def password = System.'MEMUSER_PASSWORD'
+        def username = System.getenv('MEMUSER_USERNAME')
+        def password = System.getenv('MEMUSER_PASSWORD')
         UserDetails user
-        if (user && password) {
+        if (username && password) {
             user = User.withDefaultPasswordEncoder().username(username).password(password).roles(USER).build()
             log.info("Using basic authentiation with custom user and password")
         } else {
