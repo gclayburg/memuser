@@ -49,7 +49,7 @@ class CustomWebSecurityConfigurerAdapter extends WebSecurityConfigurerAdapter {
             user = User.withDefaultPasswordEncoder().username(username).password(password).roles(USER).build()
             log.info("Using basic authentiation with custom user and password")
         } else {
-            user = User.withDefaultPasswordEncoder().username('user').password('passwordiswrong').roles(USER).build()
+            user = User.withDefaultPasswordEncoder().username('user').password('password').roles(USER).build()
             log.info("Using basic authentication with standard user and password")
         }
         List<UserDetails> userList = [user]
