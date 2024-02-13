@@ -25,7 +25,7 @@ pipeline {
         stage('build/test') {
             steps {
                 sh 'env'
-                sh './gradlew --no-daemon clean build buildImage pushVersion pushLatest'
+                sh './gradlew --no-daemon clean build buildImage pushVersion pushLatest --info'
             }
         }
         stage('docker') {
