@@ -14,6 +14,7 @@ pipeline {
         E2ETESTINGDIR="${AGENT_VOLUME}"
         JENKINSHOMEMOUNT='/jenkinshome'
         E2ETESTMODULE='/jenkinshome/workspace/memuser/e2etesting/'
+        JAVA_HOME ='/usr/local/sdk/.sdkman/candidates/java/8.0.402-tem'
     }
     stages {
         stage('build setup') {
@@ -25,6 +26,8 @@ pipeline {
         stage('build/test') {
             steps {
                 sh 'env'
+                sh 'java -version'
+                sh 'which java'
                 sh './gradlew --no-daemon clean build buildImage pushVersion pushLatest --info'
             }
         }
