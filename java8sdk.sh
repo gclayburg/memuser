@@ -52,4 +52,4 @@ do_shell_fail "$*"
 
 
 #running
-$ ./java8sdk.sh 11.0.22-tem ./gradlew clean build --info
+#$ ./java8sdk.sh 11.0.22-tem ./gradlew clean build --info
