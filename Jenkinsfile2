@@ -26,7 +26,7 @@ pipeline {
         stage('build/test') {
             steps {
                 sh 'env'
-                sh './java8sdk.sh 8.0.402-tem ./gradlew --no-daemon clean build buildImage pushVersion pushLatest --info'
+                sh './java8sdk.sh 8.0.402-tem ./gradlew --no-daemon clean build buildImage pushVersion pushLatest --info 2>&1'
             }
         }
         stage('docker') {
@@ -43,6 +43,14 @@ pipeline {
     post {
         always {
             junit '**/build/**/TEST-*.xml'
+            def buildoutput = currentBuild.rawBuild.getLog()
+            def warningFound = buildoutput =~ /^WARNING/
+            if (warningFound) {
+                echo 'Warnings found in build output.  Boo.'
+                currentBuild.result = 'FAILED'
+            } else {
+                echo 'No build warnings found in the output log.'
+            }
         }
     }
 }
