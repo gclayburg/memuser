@@ -43,7 +43,7 @@ pipeline {
     post {
         always {
             junit '**/build/**/TEST-*.xml'
-            steps {
+            script {
                 def buildoutput = currentBuild.rawBuild.getLog()
                 def warningFound = buildoutput =~ /^WARNING/
                 if (warningFound) {
