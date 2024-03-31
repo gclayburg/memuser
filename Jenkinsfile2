@@ -43,13 +43,15 @@ pipeline {
     post {
         always {
             junit '**/build/**/TEST-*.xml'
-            def buildoutput = currentBuild.rawBuild.getLog()
-            def warningFound = buildoutput =~ /^WARNING/
-            if (warningFound) {
-                echo 'Warnings found in build output.  Boo.'
-                currentBuild.result = 'FAILED'
-            } else {
-                echo 'No build warnings found in the output log.'
+            steps {
+                def buildoutput = currentBuild.rawBuild.getLog()
+                def warningFound = buildoutput =~ /^WARNING/
+                if (warningFound) {
+                    echo 'Warnings found in build output.  Boo.'
+                    currentBuild.result = 'FAILED'
+                } else {
+                    echo 'No build warnings found in the output log.'
+                }
             }
         }
     }
