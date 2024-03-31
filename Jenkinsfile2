@@ -50,8 +50,7 @@ pipeline {
                 def buildoutput = currentBuild.rawBuild.getLog()
                 def warningFound = buildoutput =~ /WARNING/
                 if (warningFound) {
-                    echo 'Warnings found in build output.  Boo.'
-                    manager.buildFailureDescription = 'Warnings found in build output.  Maybe from asciidoc?.'
+                    echo 'Warnings found in build output. asciidoc failure? Boooooooooooo.'
                     currentBuild.result = 'FAILED'
                 } else {
                     echo 'No build warnings found in the output log.'

@@ -313,7 +313,7 @@ If you have troubles starting up, try turning on debug from https://github.com/g
 [source,properties,configprops]
 ----
 upbanner.debug=true <1>
-memuser.showHeaders=true <2>
+memuser.show-headers=true <2>
 memuser.user-count=10000 <3>
 ----
 <1> on startup, print out many debugging details to the stdout log about the environment it is running on
