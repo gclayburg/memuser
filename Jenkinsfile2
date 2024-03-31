@@ -45,7 +45,7 @@ pipeline {
             junit '**/build/**/TEST-*.xml'
             script {
                 def buildoutput = currentBuild.rawBuild.getLog()
-                def warningFound = buildoutput =~ /^WARNING/
+                def warningFound = buildoutput =~ /WARNING/
                 if (warningFound) {
                     echo 'Warnings found in build output.  Boo.'
                     currentBuild.result = 'FAILED'
