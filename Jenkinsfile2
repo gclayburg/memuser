@@ -26,7 +26,7 @@ pipeline {
         stage('build/test') {
             steps {
                 sh 'env'
-                sh './java8sdk.sh 8.0.402-tem ./gradlew --no-daemon clean build buildImage pushVersion pushLatest --info 2>&1'
+                sh "./java8sdk.sh 8.0.402-tem './gradlew --no-daemon clean build buildImage pushVersion pushLatest --info 2>&1'"
             }
         }
         stage('docker') {
