@@ -310,6 +310,7 @@ Memuser is based on spring boot, so there are a few settings that can be adjuste
 === startup
 If you have troubles starting up, try turning on debug from https://github.com/gclayburg/upbanner[upbanner]:
 
+[source,properties,configprops]
 ----
 upbanner.debug=true <1>
 memuser.showHeaders=true <2>
@@ -366,3 +367,22 @@ server:
 
 By default, there is no authentication required to make http requests to memuser.  However, memuser
 can be deployed to require basic authentication.
+
+==== Basic Authentication defaults
+
+Set this property to require basic authentication credentials:
+
+----
+spring.profiles.active=secure
+----
+
+This will force clients to supply basic authentication credentials.  The username is "user". The password is "password".
+
+==== Custom username and password
+
+If you want to use your own credentials, set environment variables named MEMUSER_USERNAME and MEMUSER_PASSWORD.  For example, lets use scott/tiger:
+
+----
+MEMUSER_USERNAME=scott
+MEMUSER_PASSWORD=tiger
+----
