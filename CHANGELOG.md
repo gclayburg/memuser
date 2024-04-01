@@ -1,6 +1,24 @@
 # Changelog
 
-## [0.9.0-SNAPSHOT]
+## [0.9.1] - 2024-3-28
+Custom basic authentication
+
+### Fixed
+- meta.location needs to show protocol and port
+- memuser.showHeaders now works without error
+
+### Added
+- added basic auth option with custom user and password
+- use default JVM timezone for showing timestamps, e.g. meta.created, etc
+- created simple index.html home page with getting started links
+
+### Changed
+- bump versions of several dependencies to fix security warnings
+- remove nginxtlsproxy image for e2e testing
+- we now use spring TLS configuration for e2e testing
+- updated documentation
+
+## [0.9.0] - 2021-8-9
 SCIM 2.0 PATCH/filter/Groups
 
 ### Fixed

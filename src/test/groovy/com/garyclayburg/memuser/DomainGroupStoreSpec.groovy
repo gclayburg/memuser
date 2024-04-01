@@ -81,4 +81,46 @@ class DomainGroupStoreSpec extends Specification {
         memGroup1Returned.displayName == 'group one'
 
     }
+
+    def "warning messages"() {
+        when:
+        def logmsg = """
+Mar 31, 2024 4:34:34 PM asciidoctor
+WARNING: Configuration property 'memuser.showHeaders' not found.
+Watching 409 directories to track changes
+WARNING: Configuration property 'memuser.whatisthis' not found.
+:asciidoctor (Thread[Execution worker for ':',5,main]) completed. Took 6.399 secs.
+"""
+        def warningFound = logmsg =~ /WARNING/
+        then:
+        warningFound
+
+        and: 'we can show the WARNING line'
+        def warningPattern = ~/.*WARNING.*/
+        warningPattern.matcher('WARNING morestuff3').matches()
+
+        and: 'matcher works'
+        "WARNING more of the line" ==~ /WARNING.*/
+
+        and: 'multiline fails'
+        !("""
+not a match
+WARNING more here"""  ==~ /WARNING.*/)
+
+        and: 'we can find all WARNING lines'
+        def linesWithWarning = logmsg.findAll(/.*WARNING.*/)
+        String foundlines = new String()
+        if (linesWithWarning.size() >0) {
+            linesWithWarning.each {
+                foundlines += it + '\n'
+            }
+            println "found WARNING messages\n$foundlines"
+        }
+        foundlines.size() >0
+    }
+
+    def "true"(){
+        expect:
+        true
+    }
 }

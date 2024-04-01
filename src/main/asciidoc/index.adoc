@@ -310,15 +310,40 @@ Memuser is based on spring boot, so there are a few settings that can be adjuste
 === startup
 If you have troubles starting up, try turning on debug from https://github.com/gclayburg/upbanner[upbanner]:
 
-[source,properties,configprops]
+[source,yaml,configblocks]
 ----
-upbanner.debug=true <1>
-memuser.show-headers=true <2>
-memuser.user-count=10000 <3>
+upbanner:
+  debug: true <1>
+memuser:
+  show-headers: true <2>
+  user-count: 10000 <3>
 ----
 <1> on startup, print out many debugging details to the stdout log about the environment it is running on
-<2> show all http headers to the stdout log
+<2> show all incoming http request headers to the stdout log
 <3> on startup, add 10000 users to the domain, default is 0.
+
+=== Fine tuning
+
+PATCH requests normally return HTTP code 200 when successful.  Some systems (ahem, Microsoft) seems to expect a return code of 204.
+
+It seems both can be considered correct as per RFC7644 section 3.5.2:
+
+[NOTE]
+====
+On successful completion, the server either MUST return a 200 OK
+response code and the entire resource within the response body,
+subject to the "attributes" query parameter (see Section 3.9), or MAY
+return HTTP status code 204 (No Content) and the appropriate response
+headers for a successful PATCH request.  The server MUST return a 200
+OK if the "attributes" parameter is specified in the request.
+====
+
+This setting will force memuser to return 204 instead of 200 for successful patch requests:
+
+[source,properties,configprops]
+----
+memuser.patch-requests-return204=true
+----
 
 == Security
 
