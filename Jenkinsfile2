@@ -48,9 +48,20 @@ pipeline {
             junit '**/build/**/TEST-*.xml'
             script {
                 def buildoutput = currentBuild.rawBuild.getLog()
-                def warningFound = buildoutput =~ /WARNING/
-                if (warningFound) {
-                    echo 'Warnings found in build output. asciidoc failure? Boooooooooooo.'
+                def foundWARNING = false
+                if (buildoutput != null) {
+                    def linesWithWarning = buildoutput.findAll(/.*WARNING.*/)
+                    String foundlines = ""
+                    if (linesWithWarning.size() > 0) {
+                        foundWARNING = true
+                        linesWithWarning.each {
+                            foundlines += it + '\n'
+                        }
+                        echo "found WARNING messages\n$foundlines"
+                    }
+                }
+                if (foundWARNING) {
+                    echo '\nWarnings found in build output. asciidoc failure? Boooooooooooo.'
                     currentBuild.result = 'FAILED'
                 } else {
                     echo 'No build warnings found in the output log.'
