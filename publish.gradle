@@ -1,5 +1,5 @@
 plugins {
-    id 'org.ajoberstar.git-publish' version '0.3.0'
+    id 'org.ajoberstar.git-publish' version '3.0.1'
 }
 
 gitPublish {

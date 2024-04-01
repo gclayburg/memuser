@@ -1,5 +1,8 @@
 # Changelog
 
+## [0.9.2-SNAPSHOT] - 
+
+
 ## [0.9.1] - 2024-3-28
 Custom basic authentication
 
