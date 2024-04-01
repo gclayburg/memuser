@@ -7,7 +7,7 @@ gitPublish {
     branch = 'gh-pages'
 
     contents {
-        from 'build/asciidoc/html5'
+        from 'build/asciidoc'
     }
 
     commitMessage = 'publish generated docs'
