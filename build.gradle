@@ -1,4 +1,14 @@
 buildscript {
+    configurations.all {
+        resolutionStrategy {
+            // build-info-extractor-gradle 4.35+ pulls in jackson-core 2.15+, which contains
+            // Java 21 multi-release jar entries that Gradle 7's bundled ASM cannot instrument.
+            // Force to 2.14.x (last series without Java 21 MR-JAR entries).
+            force 'com.fasterxml.jackson.core:jackson-core:2.14.3'
+            force 'com.fasterxml.jackson.core:jackson-databind:2.14.3'
+            force 'com.fasterxml.jackson.core:jackson-annotations:2.14.3'
+        }
+    }
     repositories {
         mavenCentral()
         dependencies {
